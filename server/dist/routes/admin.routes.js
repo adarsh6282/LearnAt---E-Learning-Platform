@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const admin_controller_1 = require("../controllers/implementations/admin.controller");
+const admin_sevices_1 = require("../services/implementation/admin.sevices");
+const admin_repository_1 = require("../repository/implementations/admin.repository");
+const instructorAuth_repository_1 = require("../repository/implementations/instructorAuth.repository");
+const adminRepository = new admin_repository_1.AdminRepository();
+const instructorRepository = new instructorAuth_repository_1.InstructorAuth();
+const adminService = new admin_sevices_1.AdminService(adminRepository, instructorRepository);
+const adminController = new admin_controller_1.AdminController(adminService);
+const router = (0, express_1.Router)();
+router.get("/users", adminController.getAllUsers.bind(adminController));
+router.get("/tutors", adminController.getAllTutors.bind(adminController));
+router.put("/tutors/verify", adminController.approveTutor.bind(adminController));
+router.delete("/tutors/reject/:email", adminController.rejectTutor.bind(adminController));
+exports.default = router;

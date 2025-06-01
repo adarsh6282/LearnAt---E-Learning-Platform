@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_controller_1 = require("../controllers/implementations/auth.controller");
+const auth_repository_1 = require("../repository/implementations/auth.repository");
+const otp_repository_1 = require("../repository/implementations/otp.repository");
+const auth_services_1 = require("../services/implementation/auth.services");
+const passport_config_1 = __importDefault(require("../config/passport.config"));
+const authRepository = new auth_repository_1.AuthRepository();
+const otpRepository = new otp_repository_1.OtpRepository();
+const authService = new auth_services_1.AuthService(authRepository, otpRepository);
+const authController = new auth_controller_1.Authcontroller(authService);
+const router = (0, express_1.Router)();
+router.post("/register", authController.signup.bind(authController));
+router.post("/login", authController.signin.bind(authController));
+router.post("/verify-otp", authController.verifyOtp.bind(authController));
+router.post("/forgotpassword", authController.forgotPassword.bind(authController));
+router.post("/reset-verify-otp", authController.verifyForgotOtp.bind(authController));
+router.put("/resetpassword", authController.resetPassword.bind(authController));
+router.post("/resend-otp", authController.resentOtp.bind(authController));
+router.get("/auth/google", passport_config_1.default.authenticate("google", { scope: ["profile", "email"], session: false }));
+router.get("/auth/google/callback", passport_config_1.default.authenticate("google", { failureRedirect: "/register", session: false }), authController.googleAuth.bind(authController));
+exports.default = router;
