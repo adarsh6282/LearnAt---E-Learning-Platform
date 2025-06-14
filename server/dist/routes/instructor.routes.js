@@ -1,13 +1,24 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const instructorAuth_repository_1 = require("../repository/implementations/instructorAuth.repository");
 const instructorAuth_controller_1 = require("../controllers/implementations/instructorAuth.controller");
 const instructorAuth_services_1 = require("../services/implementation/instructorAuth.services");
 const otp_repository_1 = require("../repository/implementations/otp.repository");
+const auth_repository_1 = require("../repository/implementations/auth.repository");
+const admin_repository_1 = require("../repository/implementations/admin.repository");
+const authInstructor_1 = __importDefault(require("../middlewares/authInstructor"));
+const multer_1 = __importDefault(require("../utils/multer"));
+const course_repository_1 = require("../repository/implementations/course.repository");
 const instructorAuthRepository = new instructorAuth_repository_1.InstructorAuth();
+const userRepository = new auth_repository_1.AuthRepository();
+const adminRepository = new admin_repository_1.AdminRepository();
 const otpRepository = new otp_repository_1.OtpRepository();
-const instructorAuthService = new instructorAuth_services_1.InstructorAuthSerivce(instructorAuthRepository, otpRepository);
+const courseRepository = new course_repository_1.CourseRepository();
+const instructorAuthService = new instructorAuth_services_1.InstructorAuthSerivce(instructorAuthRepository, otpRepository, adminRepository, userRepository, courseRepository);
 const instructorAuthController = new instructorAuth_controller_1.InstructorAuthController(instructorAuthService);
 const router = (0, express_1.Router)();
 router.post("/register", instructorAuthController.signup.bind(instructorAuthController));
@@ -17,4 +28,7 @@ router.post("/forgotpassword", instructorAuthController.forgotPassword.bind(inst
 router.post("/reset-verify-otp", instructorAuthController.verifyForgotOtp.bind(instructorAuthController));
 router.put("/resetpassword", instructorAuthController.resetPassword.bind(instructorAuthController));
 router.post("/resend-otp", instructorAuthController.resentOtp.bind(instructorAuthController));
+router.get("/profile", authInstructor_1.default, instructorAuthController.getProfile.bind(instructorAuthController));
+router.get("/courses", authInstructor_1.default, instructorAuthController.getCourses.bind(instructorAuthController));
+router.put("/profile", authInstructor_1.default, multer_1.default.single("profilePicture"), instructorAuthController.updateProfile.bind(instructorAuthController));
 exports.default = router;

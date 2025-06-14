@@ -14,11 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OtpRepository = void 0;
 const otpModel_1 = __importDefault(require("../../models/implementations/otpModel"));
-class OtpRepository {
+const base_repository_1 = require("../base.repository");
+class OtpRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(otpModel_1.default);
+    }
     saveOTP(data) {
         return __awaiter(this, void 0, void 0, function* () {
             let saveotp;
-            const existing = yield otpModel_1.default.findOne({ email: data.email });
+            const existing = yield this.model.findOne({ email: data.email });
             if (existing) {
                 saveotp = yield otpModel_1.default.findOneAndUpdate({ email: data.email }, { otp: data.otp, expiresAt: new Date() }, { new: true });
             }
@@ -30,13 +34,13 @@ class OtpRepository {
     }
     findOtpbyEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const otp = yield otpModel_1.default.findOne({ email });
+            const otp = yield this.model.findOne({ email });
             return otp;
         });
     }
     deleteOtpbyEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield otpModel_1.default.findOneAndDelete({ email });
+            yield this.model.findOneAndDelete({ email });
         });
     }
 }

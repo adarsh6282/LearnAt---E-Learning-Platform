@@ -49,86 +49,102 @@ exports.InstructorAuthSerivce = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const otpGenerator_1 = __importStar(require("../../utils/otpGenerator"));
 const sendMail_1 = require("../../utils/sendMail");
+const generateToken_1 = require("../../utils/generateToken");
+const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 class InstructorAuthSerivce {
-    constructor(instructorAuthRepository, otpRepository) {
-        this.instructorAuthRepository = instructorAuthRepository;
-        this.otpRepository = otpRepository;
+    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository) {
+        this._instructorAuthRepository = _instructorAuthRepository;
+        this._otpRepository = _otpRepository;
+        this._adminRepository = _adminRepository;
+        this._userRepository = _userRepository;
+        this._courseRepository = _courseRepository;
     }
     registerInstructor(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const existing = yield this.instructorAuthRepository.findByEmail(email);
+            const existingAdmin = yield this._adminRepository.findAdminByEmail(email);
+            if (existingAdmin) {
+                throw new Error("This email is used by admin. Please register with new one");
+            }
+            const existingUser = yield this._userRepository.findByEmail(email);
+            if (existingUser) {
+                throw new Error("This email is used by user. Please register with new one");
+            }
+            const existing = yield this._instructorAuthRepository.findByEmail(email);
             if (existing) {
                 throw new Error("Instructor already exists");
             }
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
         });
     }
     verifyOtp(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this.otpRepository.findOtpbyEmail(data.email);
-            console.log(data.otp);
-            console.log(otpRecord === null || otpRecord === void 0 ? void 0 : otpRecord.otp);
+            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
             if (!otpRecord)
                 throw new Error("OTP not found");
             if (otpRecord.otp !== data.otp) {
                 throw new Error("Invalid OTP");
             }
             const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
-            const instructor = yield this.instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword }));
-            yield this.otpRepository.deleteOtpbyEmail(data.email);
-            return instructor;
+            const instructor = yield this._instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword }));
+            yield this._otpRepository.deleteOtpbyEmail(data.email);
+            const token = (0, generateToken_1.generateToken)(instructor._id, instructor.email);
+            return { instructor, token };
         });
     }
     loginInstructor(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this.instructorAuthRepository.findByEmail(email);
+            const instructor = yield this._instructorAuthRepository.findByEmail(email);
             if (!instructor) {
                 throw new Error("Instructor not registered");
+            }
+            if (instructor.isBlocked) {
+                throw new Error("Instructor is blocked");
             }
             const isMatch = yield bcrypt_1.default.compare(password, instructor.password);
             if (!isMatch) {
                 throw new Error("Passowrd doesn't match");
             }
-            return { instructor };
+            const token = (0, generateToken_1.generateToken)(instructor._id, instructor.email);
+            return { instructor, token };
         });
     }
     handleForgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this.instructorAuthRepository.findByEmail(email);
+            const instructor = yield this._instructorAuthRepository.findByEmail(email);
             if (!instructor) {
                 throw new Error("No Instructor found");
             }
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
         });
     }
     verifyForgotOtp(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this.otpRepository.findOtpbyEmail(data.email);
+            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
             if (!otpRecord) {
                 throw new Error("Couldn't find otp in email");
             }
             if (otpRecord.otp !== data.otp) {
                 throw new Error("otp doesn't match");
             }
-            yield this.otpRepository.deleteOtpbyEmail(data.email);
+            yield this._otpRepository.deleteOtpbyEmail(data.email);
             return true;
         });
     }
     handleResetPassword(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this.instructorAuthRepository.findByEmail(data.email);
+            const instructor = yield this._instructorAuthRepository.findByEmail(data.email);
             if (!instructor) {
                 throw new Error("User not found");
             }
@@ -143,17 +159,48 @@ class InstructorAuthSerivce {
     }
     handleResendOtp(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this.otpRepository.findOtpbyEmail(email);
+            const instructor = yield this._otpRepository.findOtpbyEmail(email);
             if (!instructor) {
                 throw new Error("NO user found");
             }
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
+        });
+    }
+    getProfileService(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructor = yield this._instructorAuthRepository.findForProfile(email);
+            if (!instructor) {
+                throw new Error("Inbstructor not exist");
+            }
+            return instructor;
+        });
+    }
+    updateProfileService(email_1, _a) {
+        return __awaiter(this, arguments, void 0, function* (email, { name, phone, title, yearsOfExperience, education, profilePicture, }) {
+            const updateFields = { name, phone, title, yearsOfExperience, education };
+            if (profilePicture === null || profilePicture === void 0 ? void 0 : profilePicture.path) {
+                const result = yield cloudinary_config_1.default.uploader.upload(profilePicture.path, {
+                    folder: "profilePicture",
+                    use_filename: true,
+                    unique_filename: true,
+                });
+                updateFields.profilePicture = result.secure_url;
+            }
+            const instructor = yield this._instructorAuthRepository.updateInstructorByEmail(email, updateFields);
+            if (!instructor)
+                throw new Error("Instructor not found");
+            return instructor;
+        });
+    }
+    getCoursesByInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._courseRepository.findCoursesByInstructor(instructorId);
         });
     }
 }

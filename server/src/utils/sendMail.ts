@@ -28,3 +28,23 @@ export const sendMail=async(email:string,otp:string)=>{
 
     await transporter.sendMail(mailOptions)
 }
+
+export const sendRejectionMail = async (email: string, reason: string) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: `Tutor Application Rejected`,
+    html: `
+      <p>We regret to inform you that your tutor application has been rejected.</p>
+      <p><strong>Reason:</strong></p>
+      <div style="text-align: center; margin: 20px 0;">
+        <div style="display: inline-block; background-color: #fef2f2; border: 1px dashed #f87171; border-radius: 6px; padding: 15px 30px;">
+          <span style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #b91c1c;">${reason}</span>
+        </div>
+      </div>
+      <p style="text-align: center;">If you believe this is a mistake or want more details, please contact support.</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};

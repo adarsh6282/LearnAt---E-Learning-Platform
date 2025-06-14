@@ -1,141 +1,228 @@
 import { IInstructorAuthService } from "../interfaces/instructorAuth.services";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 import generateOtp, { otpExpiry } from "../../utils/otpGenerator";
 import { IOtpRepository } from "../../repository/interfaces/otp.interface";
+import { IAuthRepository } from "../../repository/interfaces/auth.interface";
+import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { sendMail } from "../../utils/sendMail";
+import { generateToken } from "../../utils/generateToken";
+import cloudinary from "../../config/cloudinary.config";
+import { ICourse } from "../../models/interfaces/course.interface";
+import { ICourseRepository } from "../../repository/interfaces/course.interface";
 
+export class InstructorAuthSerivce implements IInstructorAuthService {
+  constructor(
+    private _instructorAuthRepository: IInstructorAuthRepository,
+    private _otpRepository: IOtpRepository,
+    private _adminRepository: IAdminRepository,
+    private _userRepository: IAuthRepository,
+    private _courseRepository:ICourseRepository
+  ) {}
 
-export class InstructorAuthSerivce implements IInstructorAuthService{
-    constructor(private instructorAuthRepository:IInstructorAuthRepository,private otpRepository:IOtpRepository){
+  async registerInstructor(email: string): Promise<void> {
+    const existingAdmin = await this._adminRepository.findAdminByEmail(email);
+    if (existingAdmin) {
+      throw new Error(
+        "This email is used by admin. Please register with new one"
+      );
+    }
+    const existingUser = await this._userRepository.findByEmail(email);
+    if (existingUser) {
+      throw new Error(
+        "This email is used by user. Please register with new one"
+      );
+    }
+    const existing = await this._instructorAuthRepository.findByEmail(email);
+    if (existing) {
+      throw new Error("Instructor already exists");
     }
 
-    async registerInstructor(email: string): Promise<void> {
-        const existing=await this.instructorAuthRepository.findByEmail(email)
-        if(existing){
-            throw new Error("Instructor already exists")
-        }
+    const otp = generateOtp();
 
-        const otp=generateOtp()
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
 
-        await this.otpRepository.saveOTP({
-            email:email,
-            otp:otp,
-            expiresAt:otpExpiry
-        })
+    await sendMail(email, otp);
+  }
 
-        await sendMail(email,otp)
+  async verifyOtp(
+    data: IInstructor & { otp: string }
+  ): Promise<{ instructor: IInstructor; token: string }> {
+    const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
+
+    if (!otpRecord) throw new Error("OTP not found");
+
+    if (otpRecord.otp !== data.otp) {
+      throw new Error("Invalid OTP");
     }
 
-    async verifyOtp(data: IInstructor & { otp: string; }): Promise<IInstructor> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        const otpRecord = await this.otpRepository.findOtpbyEmail(data.email)
-        console.log(data.otp)
-        console.log(otpRecord?.otp)
+    const instructor = await this._instructorAuthRepository.createInstructor({
+      ...data,
+      password: hashedPassword,
+    });
 
-        if(!otpRecord) throw new Error("OTP not found")
-        
-        if(otpRecord.otp!==data.otp){
-            throw new Error("Invalid OTP")
-        }
+    await this._otpRepository.deleteOtpbyEmail(data.email);
 
-        const hashedPassword=await bcrypt.hash(data.password,10)
+    const token = generateToken(instructor._id, instructor.email);
 
-        const instructor=await this.instructorAuthRepository.createInstructor({
-            ...data,
-            password:hashedPassword
-        })
+    return { instructor, token };
+  }
 
-        await this.otpRepository.deleteOtpbyEmail(data.email)
+  async loginInstructor(
+    email: string,
+    password: string
+  ): Promise<{ instructor: IInstructor; token: string }> {
+    const instructor = await this._instructorAuthRepository.findByEmail(email);
 
-        return instructor
+    if (!instructor) {
+      throw new Error("Instructor not registered");
     }
 
-    async loginInstructor(email: string, password: string): Promise<{ instructor: IInstructor}> {
-        const instructor=await this.instructorAuthRepository.findByEmail(email)
-
-        if(!instructor){
-            throw new Error("Instructor not registered")
-        }
-
-        const isMatch=await bcrypt.compare(password,instructor.password)
-
-        if(!isMatch){
-            throw new Error("Passowrd doesn't match")
-        }
-
-        return {instructor}
+    if (instructor.isBlocked) {
+      throw new Error("Instructor is blocked");
     }
 
-    async handleForgotPassword(email: string): Promise<void> {
-        const instructor= await this.instructorAuthRepository.findByEmail(email)
+    const isMatch = await bcrypt.compare(password, instructor.password);
 
-        if(!instructor){
-        throw new Error("No Instructor found")
-        }
-
-        const otp=generateOtp()
-
-        await this.otpRepository.saveOTP({
-            email:email,
-            otp:otp,
-            expiresAt:otpExpiry
-        })
-
-        await sendMail(email,otp)
+    if (!isMatch) {
+      throw new Error("Passowrd doesn't match");
     }
 
-    async verifyForgotOtp(data: { email: string; otp: string; }): Promise<boolean> {
-         const otpRecord =await this.otpRepository.findOtpbyEmail(data.email)
+    const token = generateToken(instructor._id, instructor.email);
 
-       if(!otpRecord){
-        throw new Error("Couldn't find otp in email")
-       }
+    return { instructor, token };
+  }
 
-       if(otpRecord.otp!==data.otp){
-        throw new Error("otp doesn't match")
-       }
+  async handleForgotPassword(email: string): Promise<void> {
+    const instructor = await this._instructorAuthRepository.findByEmail(email);
 
-       await this.otpRepository.deleteOtpbyEmail(data.email)
-
-       return true
+    if (!instructor) {
+      throw new Error("No Instructor found");
     }
 
-    async handleResetPassword(data: { email: string; newPassword: string; confirmPassword: string; }): Promise<boolean> {
-        const instructor=await this.instructorAuthRepository.findByEmail(data.email)
-        
-        if(!instructor){
-        throw new Error("User not found")
-        }
+    const otp = generateOtp();
 
-        if(data.newPassword!==data.confirmPassword){
-        throw new Error("Password didn't match")
-        }
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
 
-        const hashedPassword=await bcrypt.hash(data.newPassword,10)
+    await sendMail(email, otp);
+  }
 
-        instructor.password=hashedPassword
-        await instructor.save()
+  async verifyForgotOtp(data: {
+    email: string;
+    otp: string;
+  }): Promise<boolean> {
+    const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
 
-        return true
+    if (!otpRecord) {
+      throw new Error("Couldn't find otp in email");
     }
 
-    async handleResendOtp(email: string): Promise<void> {
-        const instructor=await this.otpRepository.findOtpbyEmail(email)
-        
-        if(!instructor){
-        throw new Error("NO user found")
-        }
+    if (otpRecord.otp !== data.otp) {
+      throw new Error("otp doesn't match");
+    }
 
-        const otp=generateOtp()
+    await this._otpRepository.deleteOtpbyEmail(data.email);
 
-        await this.otpRepository.saveOTP({
-        email:email,
-        otp:otp,
-        expiresAt:otpExpiry
-        })
+    return true;
+  }
 
-        await sendMail(email,otp)
+  async handleResetPassword(data: {
+    email: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<boolean> {
+    const instructor = await this._instructorAuthRepository.findByEmail(
+      data.email
+    );
+
+    if (!instructor) {
+      throw new Error("User not found");
+    }
+
+    if (data.newPassword !== data.confirmPassword) {
+      throw new Error("Password didn't match");
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    instructor.password = hashedPassword;
+    await instructor.save();
+
+    return true;
+  }
+
+  async handleResendOtp(email: string): Promise<void> {
+    const instructor = await this._otpRepository.findOtpbyEmail(email);
+
+    if (!instructor) {
+      throw new Error("NO user found");
+    }
+
+    const otp = generateOtp();
+
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
+
+    await sendMail(email, otp);
+  }
+
+  async getProfileService(email: string): Promise<IInstructor | null> {
+    const instructor = await this._instructorAuthRepository.findForProfile(email);
+    if (!instructor) {
+      throw new Error("Inbstructor not exist");
+    }
+
+    return instructor;
+  }
+
+  async updateProfileService(
+      email: string,
+      {
+        name,
+        phone,
+        title,
+        yearsOfExperience,
+        education,
+        profilePicture,
+      }: { name?: string; phone?: string; profilePicture?: Express.Multer.File ;title?:string;yearsOfExperience?:number,education?:string}
+    ): Promise<IInstructor | null> {
+      const updateFields: any = { name, phone, title, yearsOfExperience, education };
+  
+      if (profilePicture?.path) {
+        const result = await cloudinary.uploader.upload(profilePicture.path, {
+          folder: "profilePicture",
+          use_filename: true,
+          unique_filename: true,
+        });
+  
+        updateFields.profilePicture = (result as any).secure_url;
+      }
+  
+      const instructor = await this._instructorAuthRepository.updateInstructorByEmail(
+        email,
+        updateFields
+      );
+  
+      if (!instructor) throw new Error("Instructor not found");
+  
+      return instructor;
+    }
+
+    async getCoursesByInstructor(instructorId: string): Promise<ICourse[] | null> {
+        return await this._courseRepository.findCoursesByInstructor(instructorId)
     }
 }

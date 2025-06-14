@@ -15,7 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminRepository = void 0;
 const userModel_1 = __importDefault(require("../../models/implementations/userModel"));
 const instructorModel_1 = __importDefault(require("../../models/implementations/instructorModel"));
-class AdminRepository {
+const adminModel_1 = __importDefault(require("../../models/implementations/adminModel"));
+const base_repository_1 = require("../base.repository");
+class AdminRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(adminModel_1.default);
+    }
     getAllUsers() {
         return __awaiter(this, void 0, void 0, function* () {
             const users = yield userModel_1.default.find({}).lean();
@@ -26,6 +31,31 @@ class AdminRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const instructors = yield instructorModel_1.default.find({}).lean();
             return instructors;
+        });
+    }
+    findAdminByEmail(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.model.findOne({ email });
+        });
+    }
+    updateUserBlockStatus(email, blocked) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield userModel_1.default.findOneAndUpdate({ email }, { isBlocked: blocked, updatedAt: new Date() }, { new: true });
+        });
+    }
+    updateTutorBlockStatus(email, blocked) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield instructorModel_1.default.findOneAndUpdate({ email }, { isBlocked: blocked }, { new: true });
+        });
+    }
+    getTotalUsers() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield userModel_1.default.countDocuments({});
+        });
+    }
+    getTotalTutors() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield instructorModel_1.default.countDocuments({});
         });
     }
 }

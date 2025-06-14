@@ -65,6 +65,13 @@ const instructorSchema = new mongoose_1.Schema({
         required: true,
         trim: true
     },
+    profilePicture: {
+        type: String
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false
+    },
     yearsOfExperience: {
         type: Number,
         required: true,

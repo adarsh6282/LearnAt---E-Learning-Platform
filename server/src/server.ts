@@ -18,6 +18,7 @@ app.use(passport.initialize())
 import userRoutes from "./routes/user.routes"
 import instructorRoutes from "./routes/instructor.routes"
 import adminRoutes from "./routes/admin.routes"
+import courseRoutes from "./routes/course.routes"
 
 Database()
 
@@ -46,6 +47,7 @@ app.use(cookieParser())
 app.use("/users",userRoutes)
 app.use("/instructors",instructorRoutes)
 app.use("/admin",adminRoutes)
+app.use("/instructors/courses", courseRoutes)
 
 server.listen(process.env.PORT,()=>{
     console.log(`server started`)

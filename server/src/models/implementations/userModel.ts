@@ -27,6 +27,13 @@ const userSchema:Schema<IUser>=new Schema({
         type:String,
         sparse:true,
     },
+    isBlocked:{
+        type:Boolean,
+        default:false
+    },
+    profilePicture:{
+        type:String
+    },
     role:{
         type:String,
         enum:["user","admin","instructor"],

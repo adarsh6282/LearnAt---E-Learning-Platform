@@ -1,134 +1,301 @@
-import { IAuthService } from "../interfaces/auth.services"
-import { IAuthRepository } from "../../repository/interfaces/auth.interface"
-import { IUser } from "../../models/interfaces/auth.interface"
-import generateOtp,{otpExpiry} from "../../utils/otpGenerator"
-import { sendMail } from "../../utils/sendMail"
-import bcrypt from "bcrypt"
-import { IOtpRepository } from "../../repository/interfaces/otp.interface"
+import { IAuthService } from "../interfaces/auth.services";
+import { IAuthRepository } from "../../repository/interfaces/auth.interface";
+import { IUser } from "../../models/interfaces/auth.interface";
+import generateOtp, { otpExpiry } from "../../utils/otpGenerator";
+import { sendMail } from "../../utils/sendMail";
+import bcrypt from "bcrypt";
+import { IOtpRepository } from "../../repository/interfaces/otp.interface";
+import { IAdminRepository } from "../../repository/interfaces/admin.interface";
+import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
+import { generateToken } from "../../utils/generateToken";
+import cloudinary from "../../config/cloudinary.config";
+import { ICourse } from "../../models/interfaces/course.interface";
+import { ICourseRepository } from "../../repository/interfaces/course.interface";
+import { IOrder } from "../../models/interfaces/order.interface";
+import razorpay from "../../config/razorpay.config";
+import { IOrderRepository } from "../../repository/interfaces/order.interace";
+import crypto from "crypto";
 
+export class AuthService implements IAuthService {
+  constructor(
+    private _userRepository: IAuthRepository,
+    private _otpRepository: IOtpRepository,
+    private _adminRepository: IAdminRepository,
+    private _instructorRepository: IInstructorAuthRepository,
+    private _courseRepository: ICourseRepository,
+    private _orderRepsitory: IOrderRepository
+  ) {}
 
-export class AuthService implements IAuthService{
+  async registerUser(email: string): Promise<void> {
+    const existingAdmin = await this._adminRepository.findAdminByEmail(email);
+    if (existingAdmin) {
+      throw new Error(
+        "This email is used by admin. Please register with new one"
+      );
+    }
+    const existingInstructor = await this._instructorRepository.findByEmail(
+      email
+    );
+    if (existingInstructor) {
+      throw new Error(
+        "This email is used by instrcutor. Please register with new one"
+      );
+    }
+    const existingUser = await this._userRepository.findByEmail(email);
 
-    constructor(private userRepository:IAuthRepository,private otpRepository:IOtpRepository){
+    if (existingUser) throw new Error("User already exists");
+
+    const otp = generateOtp();
+
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
+
+    await sendMail(email, otp);
+  }
+
+  async verifyOtp(
+    data: IUser & { otp: string }
+  ): Promise<{ user: IUser; token: string }> {
+    const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
+
+    if (!otpRecord) throw new Error("OTP not found");
+
+    if (otpRecord.otp !== data.otp) throw new Error("Invalid OTP");
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const user = await this._userRepository.createUser({
+      ...data,
+      password: hashedPassword,
+    });
+
+    await this._otpRepository.deleteOtpbyEmail(data.email);
+
+    const token = generateToken(user._id, user.email);
+
+    return { user, token };
+  }
+
+  async loginUser(
+    email: string,
+    password: string
+  ): Promise<{ user: IUser; token: string }> {
+    const user = await this._userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error("user doesn't exist");
     }
 
-    async registerUser(email: string): Promise<void> {
-        const existingUser=await this.userRepository.findByEmail(email)
-        
-        if(existingUser) throw new Error("User already exists")
-
-        const otp=generateOtp()
-
-        await this.otpRepository.saveOTP({
-            email:email,
-            otp:otp,
-            expiresAt:otpExpiry
-        })
-
-        await sendMail(email,otp)
+    if (user.isBlocked) {
+      throw new Error("User is blocked");
     }
 
-    async verifyOtp(data:IUser&{otp:string}): Promise<IUser> {
+    const isMatch = await bcrypt.compare(password, user.password);
 
-        const otpRecord = await this.otpRepository.findOtpbyEmail(data.email)
-
-        if(!otpRecord) throw new Error("OTP not found")
-
-        if(otpRecord.otp!==data.otp) throw new Error("Invalid OTP")
-
-        const hashedPassword=await bcrypt.hash(data.password,10)
-
-        const user=await this.userRepository.createUser({
-            ...data,
-            password:hashedPassword
-        })
-
-        await this.otpRepository.deleteOtpbyEmail(data.email)
-
-        return user
+    if (!isMatch) {
+      throw new Error("Invalid password");
     }
 
-   async loginUser(email: string, password: string): Promise<{ user: IUser }> {
-       const user=await this.userRepository.findByEmail(email)
-       if(!user){
-        throw new Error("user doesn't exist")
-       }
+    const token = generateToken(user._id, user.email);
 
-       const isMatch=await bcrypt.compare(password,user.password)
+    return { user, token };
+  }
 
-       if(!isMatch){
-        throw new Error("Invalid password")
-       }
+  async handleForgotPassword(email: string): Promise<void> {
+    const user = await this._userRepository.findByEmail(email);
 
-       return {user}
-   }
+    if (!user) {
+      throw new Error("No user found");
+    }
 
-   async handleForgotPassword(email: string): Promise<void> {
-       const user= await this.userRepository.findByEmail(email)
+    const otp = generateOtp();
 
-       if(!user){
-        throw new Error("No user found")
-       }
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
 
-       const otp=generateOtp()
+    await sendMail(email, otp);
+  }
 
-       await this.otpRepository.saveOTP({
-            email:email,
-            otp:otp,
-            expiresAt:otpExpiry
-        })
+  async verifyForgotOtp(data: {
+    email: string;
+    otp: string;
+  }): Promise<boolean> {
+    const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
 
-       await sendMail(email,otp)
-   }
+    if (!otpRecord) {
+      throw new Error("Couldn't find otp in email");
+    }
 
-   async verifyForgotOtp(data: {email:string,otp:string}): Promise<boolean> {
-       const otpRecord =await this.otpRepository.findOtpbyEmail(data.email)
+    if (otpRecord.otp !== data.otp) {
+      throw new Error("otp doesn't match");
+    }
 
-       if(!otpRecord){
-        throw new Error("Couldn't find otp in email")
-       }
+    return true;
+  }
 
-       if(otpRecord.otp!==data.otp){
-        throw new Error("otp doesn't match")
-       }
+  async handleResetPassword(data: {
+    email: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<boolean> {
+    const user = await this._userRepository.findByEmail(data.email);
 
-       return true
-   }
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-   async handleResetPassword(data: { email: string; newPassword: string; confirmPassword: string }): Promise<boolean> {
-       const user=await this.userRepository.findByEmail(data.email)
+    if (data.newPassword !== data.confirmPassword) {
+      throw new Error("Password didn't match");
+    }
 
-       if(!user){
-        throw new Error("User not found")
-       }
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
 
-       if(data.newPassword!==data.confirmPassword){
-        throw new Error("Password didn't match")
-       }
+    user.password = hashedPassword;
+    await user.save();
 
-       const hashedPassword=await bcrypt.hash(data.newPassword,10)
+    return true;
+  }
 
-       user.password=hashedPassword
-       await user.save()
+  async handleResendOtp(email: string): Promise<void> {
+    const user = await this._otpRepository.findOtpbyEmail(email);
 
-       return true
-   }
+    if (!user) {
+      throw new Error("NO user found");
+    }
 
-   async handleResendOtp(email: string): Promise<void> {
-       const user=await this.otpRepository.findOtpbyEmail(email)
+    const otp = generateOtp();
 
-       if(!user){
-        throw new Error("NO user found")
-       }
+    await this._otpRepository.saveOTP({
+      email: email,
+      otp: otp,
+      expiresAt: otpExpiry,
+    });
 
-       const otp=generateOtp()
+    await sendMail(email, otp);
+  }
 
-       await this.otpRepository.saveOTP({
-        email:email,
-        otp:otp,
-        expiresAt:otpExpiry
-       })
+  async getProfileByEmail(email: string): Promise<IUser | null> {
+    const user = await this._userRepository.findForProfile(email);
+    if (!user) {
+      throw new Error("User not exist");
+    }
 
-       await sendMail(email,otp)
-   }
+    return user;
+  }
+
+  async updateProfileService(
+    email: string,
+    {
+      name,
+      phone,
+      profilePicture,
+    }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
+  ): Promise<IUser | null> {
+    const updateFields: any = { name, phone };
+
+    if (profilePicture?.path) {
+      const result = await cloudinary.uploader.upload(profilePicture.path, {
+        folder: "profilePicture",
+        use_filename: true,
+        unique_filename: true,
+      });
+
+      updateFields.profilePicture = (result as any).secure_url;
+    }
+
+    const user = await this._userRepository.updateUserByEmail(
+      email,
+      updateFields
+    );
+
+    if (!user) throw new Error("User not found");
+
+    return user;
+  }
+
+  async getCoursesService(): Promise<ICourse[]> {
+    return await this._courseRepository.findAll();
+  }
+
+  async findCourseByIdService(
+    courseId: string,
+    userId: string
+  ): Promise<{ course: ICourse; isEnrolled: boolean }> {
+    const course = await this._courseRepository.findCourseById(courseId);
+
+    if (!course) {
+      throw new Error("course not found");
+    }
+
+    const isEnrolled = await this._orderRepsitory.isUserEnrolled(
+      courseId,
+      userId
+    );
+    return {
+      course: course.toObject(),
+      isEnrolled,
+    };
+  }
+
+  async createOrder(courseId: string, userId: string): Promise<IOrder | null> {
+    const course = await this._courseRepository.findCourseById(courseId);
+    if (!course) {
+      throw new Error("Course dont't exist");
+    }
+
+    const options = {
+      amount: course.price * 100,
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    };
+
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    const amount = course.price;
+
+    const order = await this._orderRepsitory.createOrderRecord({
+      userId,
+      courseId,
+      amount: amount,
+      currency: "INR",
+      razorpayOrderId: razorpayOrder.id,
+      status: "created",
+    });
+
+    return order;
+  }
+
+  async verifyPayment({
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  }: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }): Promise<{ success: Boolean }> {
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET!)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      throw new Error("Invalid signature");
+    }
+
+    const order = await this._orderRepsitory.getOrderByRazorpayId(
+      razorpay_order_id
+    );
+    if (!order) throw new Error("Order not found");
+
+    await this._orderRepsitory.markOrderAsPaid(order._id!);
+
+    return { success: true };
+  }
 }

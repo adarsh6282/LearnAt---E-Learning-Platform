@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMail = void 0;
+exports.sendRejectionMail = exports.sendMail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -39,3 +39,22 @@ const sendMail = (email, otp) => __awaiter(void 0, void 0, void 0, function* () 
     yield transporter.sendMail(mailOptions);
 });
 exports.sendMail = sendMail;
+const sendRejectionMail = (email, reason) => __awaiter(void 0, void 0, void 0, function* () {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Tutor Application Rejected`,
+        html: `
+      <p>We regret to inform you that your tutor application has been rejected.</p>
+      <p><strong>Reason:</strong></p>
+      <div style="text-align: center; margin: 20px 0;">
+        <div style="display: inline-block; background-color: #fef2f2; border: 1px dashed #f87171; border-radius: 6px; padding: 15px 30px;">
+          <span style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #b91c1c;">${reason}</span>
+        </div>
+      </div>
+      <p style="text-align: center;">If you believe this is a mistake or want more details, please contact support.</p>
+    `
+    };
+    yield transporter.sendMail(mailOptions);
+});
+exports.sendRejectionMail = sendRejectionMail;

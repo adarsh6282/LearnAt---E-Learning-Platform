@@ -14,28 +14,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstructorAuth = void 0;
 const instructorModel_1 = __importDefault(require("../../models/implementations/instructorModel"));
-class InstructorAuth {
+const base_repository_1 = require("../base.repository");
+class InstructorAuth extends base_repository_1.BaseRepository {
+    constructor() {
+        super(instructorModel_1.default);
+    }
     createInstructor(userData) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield instructorModel_1.default.create(userData);
+            const instructor = yield this.model.create(userData);
             return instructor;
         });
     }
     findByEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield instructorModel_1.default.findOne({ email });
+            const instructor = yield this.model.findOne({ email });
             return instructor;
         });
     }
-    updateTutor(email, isVerified) {
+    updateTutor(email, isVerified, accountStatus) {
         return __awaiter(this, void 0, void 0, function* () {
-            const tutor = yield instructorModel_1.default.findOneAndUpdate({ email }, { isVerified: true }, { new: true });
+            const tutor = yield this.model.findOneAndUpdate({ email }, { isVerified: true, accountStatus }, { new: true });
             return tutor;
         });
     }
     deleteTutor(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield instructorModel_1.default.findOneAndDelete({ email });
+            return yield this.model.findOneAndDelete({ email });
+        });
+    }
+    findForProfile(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructor = yield this.model.findOne({ email }).select("-password");
+            return instructor;
+        });
+    }
+    updateInstructorByEmail(email, updateFields) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updatedInstructor = yield this.model.findOneAndUpdate({ email }, { $set: updateFields }, { new: true });
+            return updatedInstructor;
         });
     }
 }

@@ -7,5 +7,8 @@ export interface IInstructorController{
     forgotPassword(req:Request,res:Response):Promise<void>,
     verifyForgotOtp(req:Request,res:Response):Promise<void>,
     resetPassword(req:Request,res:Response):Promise<void>,
-    resentOtp(req:Request,res:Response):Promise<void>
+    resentOtp(req:Request,res:Response):Promise<void>,
+    getProfile(req:Request,res:Response):Promise<void>,
+    updateProfile(req:Request,res:Response):Promise<void>,
+    getCourses(req:Request,res:Response):Promise<void>
 }

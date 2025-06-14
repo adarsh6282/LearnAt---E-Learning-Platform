@@ -14,17 +14,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthRepository = void 0;
 const userModel_1 = __importDefault(require("../../models/implementations/userModel"));
-class AuthRepository {
+const base_repository_1 = require("../base.repository");
+class AuthRepository extends base_repository_1.BaseRepository {
+    constructor() {
+        super(userModel_1.default);
+    }
     createUser(userData) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield userModel_1.default.create(userData);
+            const user = yield this.model.create(userData);
             return user;
         });
     }
     findByEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield userModel_1.default.findOne({ email });
+            const user = yield this.model.findOne({ email });
             return user;
+        });
+    }
+    findForProfile(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.model.findOne({ email }).select("-password");
+            return user;
+        });
+    }
+    updateUserByEmail(email, updateFields) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updatedUser = yield this.model.findOneAndUpdate({ email }, { $set: updateFields }, { new: true });
+            return updatedUser;
         });
     }
 }

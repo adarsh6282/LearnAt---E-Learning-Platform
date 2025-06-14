@@ -49,69 +49,90 @@ exports.AuthService = void 0;
 const otpGenerator_1 = __importStar(require("../../utils/otpGenerator"));
 const sendMail_1 = require("../../utils/sendMail");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const generateToken_1 = require("../../utils/generateToken");
+const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
+const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
+const crypto_1 = __importDefault(require("crypto"));
 class AuthService {
-    constructor(userRepository, otpRepository) {
-        this.userRepository = userRepository;
-        this.otpRepository = otpRepository;
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory) {
+        this._userRepository = _userRepository;
+        this._otpRepository = _otpRepository;
+        this._adminRepository = _adminRepository;
+        this._instructorRepository = _instructorRepository;
+        this._courseRepository = _courseRepository;
+        this._orderRepsitory = _orderRepsitory;
     }
     registerUser(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const existingUser = yield this.userRepository.findByEmail(email);
+            const existingAdmin = yield this._adminRepository.findAdminByEmail(email);
+            if (existingAdmin) {
+                throw new Error("This email is used by admin. Please register with new one");
+            }
+            const existingInstructor = yield this._instructorRepository.findByEmail(email);
+            if (existingInstructor) {
+                throw new Error("This email is used by instrcutor. Please register with new one");
+            }
+            const existingUser = yield this._userRepository.findByEmail(email);
             if (existingUser)
                 throw new Error("User already exists");
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
         });
     }
     verifyOtp(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this.otpRepository.findOtpbyEmail(data.email);
+            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
             if (!otpRecord)
                 throw new Error("OTP not found");
             if (otpRecord.otp !== data.otp)
                 throw new Error("Invalid OTP");
             const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
-            const user = yield this.userRepository.createUser(Object.assign(Object.assign({}, data), { password: hashedPassword }));
-            yield this.otpRepository.deleteOtpbyEmail(data.email);
-            return user;
+            const user = yield this._userRepository.createUser(Object.assign(Object.assign({}, data), { password: hashedPassword }));
+            yield this._otpRepository.deleteOtpbyEmail(data.email);
+            const token = (0, generateToken_1.generateToken)(user._id, user.email);
+            return { user, token };
         });
     }
     loginUser(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findByEmail(email);
+            const user = yield this._userRepository.findByEmail(email);
             if (!user) {
                 throw new Error("user doesn't exist");
+            }
+            if (user.isBlocked) {
+                throw new Error("User is blocked");
             }
             const isMatch = yield bcrypt_1.default.compare(password, user.password);
             if (!isMatch) {
                 throw new Error("Invalid password");
             }
-            return { user };
+            const token = (0, generateToken_1.generateToken)(user._id, user.email);
+            return { user, token };
         });
     }
     handleForgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findByEmail(email);
+            const user = yield this._userRepository.findByEmail(email);
             if (!user) {
                 throw new Error("No user found");
             }
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
         });
     }
     verifyForgotOtp(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this.otpRepository.findOtpbyEmail(data.email);
+            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
             if (!otpRecord) {
                 throw new Error("Couldn't find otp in email");
             }
@@ -123,7 +144,7 @@ class AuthService {
     }
     handleResetPassword(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.userRepository.findByEmail(data.email);
+            const user = yield this._userRepository.findByEmail(data.email);
             if (!user) {
                 throw new Error("User not found");
             }
@@ -138,17 +159,102 @@ class AuthService {
     }
     handleResendOtp(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.otpRepository.findOtpbyEmail(email);
+            const user = yield this._otpRepository.findOtpbyEmail(email);
             if (!user) {
                 throw new Error("NO user found");
             }
             const otp = (0, otpGenerator_1.default)();
-            yield this.otpRepository.saveOTP({
+            yield this._otpRepository.saveOTP({
                 email: email,
                 otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry
+                expiresAt: otpGenerator_1.otpExpiry,
             });
             yield (0, sendMail_1.sendMail)(email, otp);
+        });
+    }
+    getProfileByEmail(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this._userRepository.findForProfile(email);
+            if (!user) {
+                throw new Error("User not exist");
+            }
+            return user;
+        });
+    }
+    updateProfileService(email_1, _a) {
+        return __awaiter(this, arguments, void 0, function* (email, { name, phone, profilePicture, }) {
+            const updateFields = { name, phone };
+            if (profilePicture === null || profilePicture === void 0 ? void 0 : profilePicture.path) {
+                const result = yield cloudinary_config_1.default.uploader.upload(profilePicture.path, {
+                    folder: "profilePicture",
+                    use_filename: true,
+                    unique_filename: true,
+                });
+                updateFields.profilePicture = result.secure_url;
+            }
+            const user = yield this._userRepository.updateUserByEmail(email, updateFields);
+            if (!user)
+                throw new Error("User not found");
+            return user;
+        });
+    }
+    getCoursesService() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._courseRepository.findAll();
+        });
+    }
+    findCourseByIdService(courseId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = yield this._courseRepository.findCourseById(courseId);
+            if (!course) {
+                throw new Error("course not found");
+            }
+            const isEnrolled = yield this._orderRepsitory.isUserEnrolled(courseId, userId);
+            return {
+                course: course.toObject(),
+                isEnrolled,
+            };
+        });
+    }
+    createOrder(courseId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = yield this._courseRepository.findCourseById(courseId);
+            if (!course) {
+                throw new Error("Course dont't exist");
+            }
+            const options = {
+                amount: course.price * 100,
+                currency: "INR",
+                receipt: `receipt_${Date.now()}`,
+            };
+            const razorpayOrder = yield razorpay_config_1.default.orders.create(options);
+            const amount = course.price;
+            const order = yield this._orderRepsitory.createOrderRecord({
+                userId,
+                courseId,
+                amount: amount,
+                currency: "INR",
+                razorpayOrderId: razorpayOrder.id,
+                status: "created",
+            });
+            return order;
+        });
+    }
+    verifyPayment(_a) {
+        return __awaiter(this, arguments, void 0, function* ({ razorpay_order_id, razorpay_payment_id, razorpay_signature, }) {
+            const body = razorpay_order_id + "|" + razorpay_payment_id;
+            const expectedSignature = crypto_1.default
+                .createHmac("sha256", process.env.RAZORPAY_SECRET)
+                .update(body)
+                .digest("hex");
+            if (expectedSignature !== razorpay_signature) {
+                throw new Error("Invalid signature");
+            }
+            const order = yield this._orderRepsitory.getOrderByRazorpayId(razorpay_order_id);
+            if (!order)
+                throw new Error("Order not found");
+            yield this._orderRepsitory.markOrderAsPaid(order._id);
+            return { success: true };
         });
     }
 }

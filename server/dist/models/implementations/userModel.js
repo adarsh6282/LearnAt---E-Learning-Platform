@@ -59,6 +59,13 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         sparse: true,
     },
+    isBlocked: {
+        type: Boolean,
+        default: false
+    },
+    profilePicture: {
+        type: String
+    },
     role: {
         type: String,
         enum: ["user", "admin", "instructor"],

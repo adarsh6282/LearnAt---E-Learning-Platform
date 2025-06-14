@@ -19,6 +19,7 @@ app.use(passport_config_1.default.initialize());
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const instructor_routes_1 = __importDefault(require("./routes/instructor.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const course_routes_1 = __importDefault(require("./routes/course.routes"));
 (0, db_config_1.default)();
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
@@ -41,6 +42,7 @@ app.use((0, cookie_parser_1.default)());
 app.use("/users", user_routes_1.default);
 app.use("/instructors", instructor_routes_1.default);
 app.use("/admin", admin_routes_1.default);
+app.use("/instructors/courses", course_routes_1.default);
 server.listen(process.env.PORT, () => {
     console.log(`server started`);
 });
