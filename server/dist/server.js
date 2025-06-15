@@ -20,6 +20,7 @@ const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const instructor_routes_1 = __importDefault(require("./routes/instructor.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const course_routes_1 = __importDefault(require("./routes/course.routes"));
+const review_routes_1 = __importDefault(require("./routes/review.routes"));
 (0, db_config_1.default)();
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
@@ -40,6 +41,7 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
 app.use("/users", user_routes_1.default);
+app.use("/users/reviews", review_routes_1.default);
 app.use("/instructors", instructor_routes_1.default);
 app.use("/admin", admin_routes_1.default);
 app.use("/instructors/courses", course_routes_1.default);

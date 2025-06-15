@@ -19,6 +19,7 @@ import userRoutes from "./routes/user.routes"
 import instructorRoutes from "./routes/instructor.routes"
 import adminRoutes from "./routes/admin.routes"
 import courseRoutes from "./routes/course.routes"
+import reviewRoutes from "./routes/review.routes"
 
 Database()
 
@@ -45,6 +46,7 @@ app.use(cookieParser())
 
 
 app.use("/users",userRoutes)
+app.use("/users/reviews",reviewRoutes)
 app.use("/instructors",instructorRoutes)
 app.use("/admin",adminRoutes)
 app.use("/instructors/courses", courseRoutes)
