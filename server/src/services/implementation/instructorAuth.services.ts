@@ -7,10 +7,16 @@ import { IOtpRepository } from "../../repository/interfaces/otp.interface";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { sendMail } from "../../utils/sendMail";
-import { generateToken } from "../../utils/generateToken";
+import { generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
+import { IReview } from "../../models/interfaces/review.interface";
+import { IReviewRepository } from "../../repository/interfaces/review.interface";
+import { IOrder } from "../../models/interfaces/order.interface";
+import { IOrderRepository } from "../../repository/interfaces/order.interace";
+import { IWallet } from "../../models/interfaces/wallet.interface";
+import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 
 export class InstructorAuthSerivce implements IInstructorAuthService {
   constructor(
@@ -18,7 +24,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     private _otpRepository: IOtpRepository,
     private _adminRepository: IAdminRepository,
     private _userRepository: IAuthRepository,
-    private _courseRepository:ICourseRepository
+    private _courseRepository: ICourseRepository,
+    private _reviewRepository:IReviewRepository,
+    private _orderRepository:IOrderRepository,
+    private _walletRepository:IWalletRepository
   ) {}
 
   async registerInstructor(email: string): Promise<void> {
@@ -66,13 +75,32 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     const instructor = await this._instructorAuthRepository.createInstructor({
       ...data,
       password: hashedPassword,
+      resume: data.resume,
     });
 
     await this._otpRepository.deleteOtpbyEmail(data.email);
 
-    const token = generateToken(instructor._id, instructor.email);
+    const token = generateToken(instructor._id, instructor.email, "instructor");
 
     return { instructor, token };
+  }
+
+  async reApplyS(email: string, resume: string): Promise<IInstructor | null> {
+    const instructor = await this._instructorAuthRepository.findByEmail(email);
+
+    if (!instructor) throw new Error("Instructor not found");
+
+    const updatedData: Partial<IInstructor> = {
+      resume: resume,
+      isVerified: false,
+      isRejected: false,
+      accountStatus: "pending",
+    };
+
+    return await this._instructorAuthRepository.updateInstructor(
+      instructor.email,
+      updatedData
+    );
   }
 
   async loginInstructor(
@@ -95,7 +123,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       throw new Error("Passowrd doesn't match");
     }
 
-    const token = generateToken(instructor._id, instructor.email);
+    const token = generateToken(instructor._id, instructor.email, "instructor");
 
     return { instructor, token };
   }
@@ -181,7 +209,9 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async getProfileService(email: string): Promise<IInstructor | null> {
-    const instructor = await this._instructorAuthRepository.findForProfile(email);
+    const instructor = await this._instructorAuthRepository.findForProfile(
+      email
+    );
     if (!instructor) {
       throw new Error("Inbstructor not exist");
     }
@@ -190,39 +220,82 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async updateProfileService(
-      email: string,
-      {
-        name,
-        phone,
-        title,
-        yearsOfExperience,
-        education,
-        profilePicture,
-      }: { name?: string; phone?: string; profilePicture?: Express.Multer.File ;title?:string;yearsOfExperience?:number,education?:string}
-    ): Promise<IInstructor | null> {
-      const updateFields: any = { name, phone, title, yearsOfExperience, education };
-  
-      if (profilePicture?.path) {
-        const result = await cloudinary.uploader.upload(profilePicture.path, {
-          folder: "profilePicture",
-          use_filename: true,
-          unique_filename: true,
-        });
-  
-        updateFields.profilePicture = (result as any).secure_url;
-      }
-  
-      const instructor = await this._instructorAuthRepository.updateInstructorByEmail(
+    email: string,
+    {
+      name,
+      phone,
+      title,
+      yearsOfExperience,
+      education,
+      profilePicture,
+    }: {
+      name?: string;
+      phone?: string;
+      profilePicture?: Express.Multer.File;
+      title?: string;
+      yearsOfExperience?: number;
+      education?: string;
+    }
+  ): Promise<IInstructor | null> {
+    const updateFields: any = {
+      name,
+      phone,
+      title,
+      yearsOfExperience,
+      education,
+    };
+
+    if (profilePicture?.path) {
+      const result = await cloudinary.uploader.upload(profilePicture.path, {
+        folder: "profilePicture",
+        use_filename: true,
+        unique_filename: true,
+      });
+
+      updateFields.profilePicture = (result as any).secure_url;
+    }
+
+    const instructor =
+      await this._instructorAuthRepository.updateInstructorByEmail(
         email,
         updateFields
       );
-  
-      if (!instructor) throw new Error("Instructor not found");
-  
-      return instructor;
+
+    if (!instructor) throw new Error("Instructor not found");
+
+    return instructor;
+  }
+
+  async getCoursesByInstructor(
+    instructorId: string
+  ): Promise<ICourse[] | null> {
+    return await this._courseRepository.findCoursesByInstructor(instructorId);
+  }
+
+  async getCourseById(courseId: string): Promise<ICourse | null> {
+    const course = await this._courseRepository.findCourseById(courseId);
+    if (!course) {
+      throw new Error("No Course Found");
+    }
+    return course;
+  }
+
+  async getReviewsByInstructor(instructorId: string): Promise<IReview[] | null> {
+    return this._reviewRepository.getReviewsByInstructor(instructorId)
+  }
+
+  async getEnrollments(instructorId: string): Promise<IOrder[] | null> {
+    const enrollments=await this._orderRepository.getEnrollmentsByInstructor(instructorId)
+    return enrollments
+  }
+
+  async getWallet(instructorId: string): Promise<IWallet | null> {
+    const wallet=await this._walletRepository.findWalletOfInstructor(instructorId)
+
+    if(!wallet){
+      throw new Error("No wallet found for the instructor")
     }
 
-    async getCoursesByInstructor(instructorId: string): Promise<ICourse[] | null> {
-        return await this._courseRepository.findCoursesByInstructor(instructorId)
-    }
+    return wallet
+  }
 }

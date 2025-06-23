@@ -43,6 +43,9 @@ const instructorSchema:Schema<IInstructor>=new Schema({
         type:Number,
         required:true,
     },
+    resume:{
+        type:String,
+    },
     role:{
         type:String,
         enum:["user","instructor","admin"],
@@ -55,8 +58,11 @@ const instructorSchema:Schema<IInstructor>=new Schema({
     },
     accountStatus:{
         type:String,
-        enum:["pending","blocked","active"],
+        enum:["pending","blocked","active","rejected"],
         default:"pending"
+    },
+    isRejected:{
+        type:Boolean,
     },
     isVerified:{
         type:Boolean,

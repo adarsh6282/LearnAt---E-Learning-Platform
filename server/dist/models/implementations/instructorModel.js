@@ -76,6 +76,9 @@ const instructorSchema = new mongoose_1.Schema({
         type: Number,
         required: true,
     },
+    resume: {
+        type: String,
+    },
     role: {
         type: String,
         enum: ["user", "instructor", "admin"],
@@ -88,8 +91,11 @@ const instructorSchema = new mongoose_1.Schema({
     },
     accountStatus: {
         type: String,
-        enum: ["pending", "blocked", "active"],
+        enum: ["pending", "blocked", "active", "rejected"],
         default: "pending"
+    },
+    isRejected: {
+        type: Boolean,
     },
     isVerified: {
         type: Boolean,

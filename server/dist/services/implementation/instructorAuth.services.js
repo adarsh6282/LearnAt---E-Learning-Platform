@@ -49,15 +49,18 @@ exports.InstructorAuthSerivce = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const otpGenerator_1 = __importStar(require("../../utils/otpGenerator"));
 const sendMail_1 = require("../../utils/sendMail");
-const generateToken_1 = require("../../utils/generateToken");
+const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 class InstructorAuthSerivce {
-    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository) {
+    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
         this._userRepository = _userRepository;
         this._courseRepository = _courseRepository;
+        this._reviewRepository = _reviewRepository;
+        this._orderRepository = _orderRepository;
+        this._walletRepository = _walletRepository;
     }
     registerInstructor(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -91,10 +94,24 @@ class InstructorAuthSerivce {
                 throw new Error("Invalid OTP");
             }
             const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
-            const instructor = yield this._instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword }));
+            const instructor = yield this._instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword, resume: data.resume }));
             yield this._otpRepository.deleteOtpbyEmail(data.email);
-            const token = (0, generateToken_1.generateToken)(instructor._id, instructor.email);
+            const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
             return { instructor, token };
+        });
+    }
+    reApplyS(email, resume) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructor = yield this._instructorAuthRepository.findByEmail(email);
+            if (!instructor)
+                throw new Error("Instructor not found");
+            const updatedData = {
+                resume: resume,
+                isVerified: false,
+                isRejected: false,
+                accountStatus: "pending",
+            };
+            return yield this._instructorAuthRepository.updateInstructor(instructor.email, updatedData);
         });
     }
     loginInstructor(email, password) {
@@ -110,7 +127,7 @@ class InstructorAuthSerivce {
             if (!isMatch) {
                 throw new Error("Passowrd doesn't match");
             }
-            const token = (0, generateToken_1.generateToken)(instructor._id, instructor.email);
+            const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
             return { instructor, token };
         });
     }
@@ -183,7 +200,13 @@ class InstructorAuthSerivce {
     }
     updateProfileService(email_1, _a) {
         return __awaiter(this, arguments, void 0, function* (email, { name, phone, title, yearsOfExperience, education, profilePicture, }) {
-            const updateFields = { name, phone, title, yearsOfExperience, education };
+            const updateFields = {
+                name,
+                phone,
+                title,
+                yearsOfExperience,
+                education,
+            };
             if (profilePicture === null || profilePicture === void 0 ? void 0 : profilePicture.path) {
                 const result = yield cloudinary_config_1.default.uploader.upload(profilePicture.path, {
                     folder: "profilePicture",
@@ -201,6 +224,35 @@ class InstructorAuthSerivce {
     getCoursesByInstructor(instructorId) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this._courseRepository.findCoursesByInstructor(instructorId);
+        });
+    }
+    getCourseById(courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = yield this._courseRepository.findCourseById(courseId);
+            if (!course) {
+                throw new Error("No Course Found");
+            }
+            return course;
+        });
+    }
+    getReviewsByInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._reviewRepository.getReviewsByInstructor(instructorId);
+        });
+    }
+    getEnrollments(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId);
+            return enrollments;
+        });
+    }
+    getWallet(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const wallet = yield this._walletRepository.findWalletOfInstructor(instructorId);
+            if (!wallet) {
+                throw new Error("No wallet found for the instructor");
+            }
+            return wallet;
         });
     }
 }

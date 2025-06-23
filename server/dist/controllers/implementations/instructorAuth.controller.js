@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstructorAuthController = void 0;
 const statusCodes_1 = require("../../constants/statusCodes");
+const fs_1 = __importDefault(require("fs"));
+const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 class InstructorAuthController {
     constructor(_instructorAuthService) {
         this._instructorAuthService = _instructorAuthService;
@@ -18,15 +23,70 @@ class InstructorAuthController {
     signup(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                const { name, username, email, phone, education, title, yearsOfExperience, password, confirmPassword, } = req.body;
+                const resumeFile = req.file;
+                if (!resumeFile) {
+                    throw new Error("Resume file is missing");
+                }
+                const cloudResult = yield cloudinary_config_1.default.uploader.upload(resumeFile.path, {
+                    folder: "resumes",
+                    resource_type: "auto",
+                    format: "jpg",
+                });
+                const resume = cloudResult.secure_url;
+                fs_1.default.unlinkSync(resumeFile.path);
+                const updatedPayload = {
+                    name,
+                    username,
+                    email,
+                    phone,
+                    education,
+                    title,
+                    yearsOfExperience,
+                    password,
+                    confirmPassword,
+                    resume,
+                };
+                yield this._instructorAuthService.registerInstructor(email);
+                res.status(statusCodes_1.httpStatus.OK).json({
+                    message: "Form received, resume uploaded, OTP sent",
+                    data: updatedPayload,
+                });
+            }
+            catch (err) {
+                console.error(err);
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    reApply(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const resumeFile = req.file;
+                if (!resumeFile) {
+                    return;
+                }
                 const { email } = req.body;
-                const instructor = yield this._instructorAuthService.registerInstructor(email);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP sent Successfully" });
+                console.log(email);
+                const cloudResult = yield cloudinary_config_1.default.uploader.upload(resumeFile.path, {
+                    folder: "resumes",
+                    resource_type: "auto",
+                });
+                const resumeUrl = cloudResult.secure_url;
+                console.log(resumeUrl);
+                const updatedInstructor = yield this._instructorAuthService.reApplyS(email, resumeUrl);
+                res.status(statusCodes_1.httpStatus.OK).json({
+                    message: "Reapplied successfully",
+                    instructor: updatedInstructor,
+                });
             }
             catch (err) {
                 console.log(err);
                 res
                     .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
+                    .json({ message: "Reapply failed", error: err.message });
             }
         });
     }
@@ -49,9 +109,7 @@ class InstructorAuthController {
             try {
                 const instructorData = req.body;
                 const { instructor, token } = yield this._instructorAuthService.verifyOtp(instructorData);
-                res
-                    .status(statusCodes_1.httpStatus.CREATED)
-                    .json({
+                res.status(statusCodes_1.httpStatus.CREATED).json({
                     instructor,
                     token,
                     message: "Instructor Registered Successfully, Waiting for approval",
@@ -174,12 +232,90 @@ class InstructorAuthController {
             var _a;
             const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
             if (!instructorId) {
-                res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "Instructor not found" });
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
                 return;
             }
             try {
                 const courses = yield this._instructorAuthService.getCoursesByInstructor(instructorId);
                 res.status(statusCodes_1.httpStatus.OK).json(courses);
+            }
+            catch (err) {
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    getCoursesById(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { courseId } = req.params;
+                const course = yield this._instructorAuthService.getCourseById(courseId);
+                res.status(statusCodes_1.httpStatus.OK).json(course);
+            }
+            catch (err) {
+                console.log(err);
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    getInstructorReviews(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
+                if (!instructorId) {
+                    res
+                        .status(statusCodes_1.httpStatus.NOT_FOUND)
+                        .json({ message: "Instructor not found" });
+                    return;
+                }
+                const review = yield this._instructorAuthService.getReviewsByInstructor(instructorId);
+                res.status(statusCodes_1.httpStatus.OK).json(review);
+            }
+            catch (err) {
+                console.log(err);
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    getEnrollments(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
+                if (!instructorId) {
+                    res
+                        .status(statusCodes_1.httpStatus.NOT_FOUND)
+                        .json({ message: "Instructor not found" });
+                    return;
+                }
+                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId);
+                res.status(statusCodes_1.httpStatus.OK).json(enrollments);
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    getWallet(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
+                if (!instructorId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "Instructor not found" });
+                    return;
+                }
+                const wallet = yield this._instructorAuthService.getWallet(instructorId);
+                res.status(statusCodes_1.httpStatus.OK).json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: wallet === null || wallet === void 0 ? void 0 : wallet.transactions });
             }
             catch (err) {
                 res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });

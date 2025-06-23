@@ -39,6 +39,30 @@ class CourseController {
             }
         });
     }
+    updateCourse(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d;
+            try {
+                const { courseId } = req.params;
+                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
+                const videoFiles = ((_b = req.files) === null || _b === void 0 ? void 0 : _b.videos) || [];
+                const thumbnailFile = (_d = (_c = req.files) === null || _c === void 0 ? void 0 : _c.thumbnail) === null || _d === void 0 ? void 0 : _d[0];
+                const existingLectures = JSON.parse(req.body.existingLectures || "[]");
+                const newLectures = JSON.parse(req.body.newLectures || "[]");
+                const updateData = Object.assign(Object.assign({}, req.body), { instructorId,
+                    existingLectures,
+                    newLectures, videos: videoFiles, thumbnail: thumbnailFile });
+                const updatedCourse = yield this._courseService.updateCourse(courseId, updateData);
+                res.status(statusCodes_1.httpStatus.OK).json(updatedCourse);
+            }
+            catch (error) {
+                console.error("Course update error:", error);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({
+                    message: error.message || "Failed to update course",
+                });
+            }
+        });
+    }
 }
 exports.CourseController = CourseController;
 exports.default = CourseController;

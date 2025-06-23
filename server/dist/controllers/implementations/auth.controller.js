@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Authcontroller = void 0;
 const statusCodes_1 = require("../../constants/statusCodes");
-const generateToken_1 = require("../../utils/generateToken");
+const jwt_1 = require("../../utils/jwt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class Authcontroller {
     constructor(_authService) {
@@ -75,7 +75,7 @@ class Authcontroller {
                 return;
             }
             const { id, email } = req.user;
-            const token = (0, generateToken_1.generateToken)(id, email);
+            const token = (0, jwt_1.generateToken)(id, email, "user");
             const redirectUrl = process.env.GOOGLE_VERIFY_URL;
             res.redirect(`${redirectUrl}?token=${token}`);
         });
@@ -249,6 +249,51 @@ class Authcontroller {
             catch (err) {
                 console.log(err);
                 res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ error: err.message });
+            }
+        });
+    }
+    markLectureWatched(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const { courseId } = req.params;
+                const { lectureId } = req.body;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "User not found" });
+                    return;
+                }
+                const progress = yield this._authService.updateLectureProgress(userId, courseId, lectureId);
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ watchedLectures: progress === null || progress === void 0 ? void 0 : progress.watchedLectures });
+            }
+            catch (err) {
+                res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: err.message });
+            }
+        });
+    }
+    getCourseProgress(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const { courseId } = req.params;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "User not found" });
+                    return;
+                }
+                const watchedLectures = yield this._authService.getUserCourseProgress(userId, courseId);
+                res.status(statusCodes_1.httpStatus.OK).json({
+                    success: true,
+                    watchedLectures,
+                });
+            }
+            catch (err) {
+                res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({
+                    success: false,
+                    message: err.message,
+                });
             }
         });
     }

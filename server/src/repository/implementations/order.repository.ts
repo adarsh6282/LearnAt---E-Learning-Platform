@@ -7,6 +7,7 @@ export class OrderRepository implements IOrderRepository {
   async createOrderRecord(orderData: IOrder): Promise<IOrder | null> {
     const newOrder = await Order.create(orderData);
     const plainOrder = newOrder.toObject();
+
     return {
       _id: plainOrder._id.toString(),
       courseId: plainOrder.courseId.toString(),
@@ -36,5 +37,31 @@ export class OrderRepository implements IOrderRepository {
     });
 
     return !!order;
+  }
+
+  async getEnrollmentsByInstructor(
+    instructorId: string
+  ): Promise<IOrder[] | null> {
+    const orders = await Order.find({ status: "paid" })
+      .populate({
+        path: "courseId",
+        match: { instructor: instructorId },
+        select: "title",
+      })
+      .populate("userId", "name email");
+
+    const filteredOrders = orders.filter((order) => order.courseId !== null);
+
+    return filteredOrders.map((order) => ({
+      _id: order._id.toString(),
+      course: {
+        title: (order.courseId as any).title,
+      },
+      user: {
+        name: (order.userId as any).name,
+        email: (order.userId as any).email,
+      },
+      createdAt: order.createdAt.toISOString(),
+    })) as unknown as IOrder[];
   }
 }

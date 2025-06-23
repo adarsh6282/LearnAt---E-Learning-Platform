@@ -15,5 +15,10 @@ export interface IAdminController{
     restoreCategory(req:Request,res:Response):Promise<void>,
     getCourses(req:Request,res:Response):Promise<void>,
     softDeleteCourse(req:Request,res:Response):Promise<void>,
-    recoverCourse(req:Request,res:Response):Promise<void>
+    recoverCourse(req:Request,res:Response):Promise<void>,
+    getAllReviews(req:Request,res:Response):Promise<void>,
+    hideReview(req:Request,res:Response):Promise<void>,
+    unhideReview(req:Request,res:Response):Promise<void>,
+    deleteReview(req:Request,res:Response):Promise<void>,
+    getWallet(req:Request,res:Response):Promise<void>
 }

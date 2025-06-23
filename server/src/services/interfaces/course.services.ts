@@ -19,6 +19,7 @@ export interface CreateCourseInput {
 
 export interface ICourseService {
     createCourse(courseData: CreateCourseInput): Promise<ICourse>;
+    updateCourse(courseId:string,updateData:string):Promise<ICourse>
     // getCourseById(courseId: string): Promise<ICourse | null>;
     // getInstructorCourses(instructorId: string): Promise<ICourse[]>;
 } 

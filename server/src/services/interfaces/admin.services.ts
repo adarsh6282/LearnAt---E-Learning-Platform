@@ -3,6 +3,8 @@ import { IUser } from "../../models/interfaces/auth.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
+import { IReview } from "../../models/interfaces/review.interface";
+import { IWallet } from "../../models/interfaces/wallet.interface";
 import { AdminLoginResponse } from "../../types/admin.types";
 import { DashboardData } from "../../types/admin.types";
 
@@ -22,4 +24,9 @@ export interface IAdminService{
     getCoursesService(skip:number,limit:number):Promise<ICourse[]>
     softDeleteCourseS(courseId:string):Promise<ICourse|null>
     recoverCourseS(courseId:string):Promise<ICourse|null>
+    getAllReviews():Promise<IReview[]|null>,
+    hideReview(id:string):Promise<IReview|null>
+    unhideReview(id:string):Promise<IReview|null>
+    deleteReview(id:string):Promise<IReview|null>,
+    getWallet():Promise<IWallet|null>
 }

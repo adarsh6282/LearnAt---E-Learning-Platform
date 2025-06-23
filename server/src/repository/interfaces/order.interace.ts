@@ -6,4 +6,5 @@ export interface IOrderRepository{
     markOrderAsPaid(orderId:string):Promise<IOrder|null>
     getOrderByRazorpayId(razorpayOrderId:string):Promise<IOrder|null>
     isUserEnrolled(courseId: string, userId: string): Promise<boolean>
+    getEnrollmentsByInstructor(instructorId:string):Promise<IOrder[]|null>
 }

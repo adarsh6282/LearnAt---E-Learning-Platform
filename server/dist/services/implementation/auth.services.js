@@ -49,18 +49,20 @@ exports.AuthService = void 0;
 const otpGenerator_1 = __importStar(require("../../utils/otpGenerator"));
 const sendMail_1 = require("../../utils/sendMail");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const generateToken_1 = require("../../utils/generateToken");
+const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
 const crypto_1 = __importDefault(require("crypto"));
 class AuthService {
-    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory) {
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository) {
         this._userRepository = _userRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
         this._instructorRepository = _instructorRepository;
         this._courseRepository = _courseRepository;
         this._orderRepsitory = _orderRepsitory;
+        this._progressRepository = _progressRepository;
+        this._walletRepository = _walletRepository;
     }
     registerUser(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -94,7 +96,7 @@ class AuthService {
             const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
             const user = yield this._userRepository.createUser(Object.assign(Object.assign({}, data), { password: hashedPassword }));
             yield this._otpRepository.deleteOtpbyEmail(data.email);
-            const token = (0, generateToken_1.generateToken)(user._id, user.email);
+            const token = (0, jwt_1.generateToken)(user._id, user.email, "user");
             return { user, token };
         });
     }
@@ -111,7 +113,7 @@ class AuthService {
             if (!isMatch) {
                 throw new Error("Invalid password");
             }
-            const token = (0, generateToken_1.generateToken)(user._id, user.email);
+            const token = (0, jwt_1.generateToken)(user._id, user.email, "user");
             return { user, token };
         });
     }
@@ -242,6 +244,7 @@ class AuthService {
     }
     verifyPayment(_a) {
         return __awaiter(this, arguments, void 0, function* ({ razorpay_order_id, razorpay_payment_id, razorpay_signature, }) {
+            var _b;
             const body = razorpay_order_id + "|" + razorpay_payment_id;
             const expectedSignature = crypto_1.default
                 .createHmac("sha256", process.env.RAZORPAY_SECRET)
@@ -254,7 +257,44 @@ class AuthService {
             if (!order)
                 throw new Error("Order not found");
             yield this._orderRepsitory.markOrderAsPaid(order._id);
+            const course = yield this._courseRepository.findCourseById((_b = order.courseId) === null || _b === void 0 ? void 0 : _b.toString());
+            if (!course || !course.instructor)
+                throw new Error("Course or instructor not found");
+            const instructorAmount = order.amount * 0.8;
+            instructorAmount.toFixed(2);
+            const adminCommission = order.amount * 0.2;
+            adminCommission.toFixed(2);
+            const courseId = typeof order.courseId === "string"
+                ? order.courseId
+                : order.courseId.toString();
+            yield this._walletRepository.creditWallet({
+                ownerType: "instructors",
+                ownerId: course.instructor._id.toString(),
+                courseId: courseId,
+                amount: instructorAmount,
+                description: `Credited for the course named ${course.title}`,
+            });
+            yield this._walletRepository.creditWallet({
+                ownerType: "admin",
+                courseId: courseId,
+                amount: adminCommission,
+                description: `Admin Commission for the course named ${course.title}`,
+            });
             return { success: true };
+        });
+    }
+    updateLectureProgress(userId, courseId, lectureId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const existing = yield this._progressRepository.findProgress(userId, courseId);
+            if (!existing)
+                return this._progressRepository.createProgress(userId, courseId, lectureId);
+            return this._progressRepository.addWatchedLecture(userId, courseId, lectureId);
+        });
+    }
+    getUserCourseProgress(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const progress = yield this._progressRepository.findProgress(userId, courseId);
+            return (progress === null || progress === void 0 ? void 0 : progress.watchedLectures) || [];
         });
     }
 }

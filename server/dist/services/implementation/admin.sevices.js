@@ -10,15 +10,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = void 0;
-const generateToken_1 = require("../../utils/generateToken");
+const jwt_1 = require("../../utils/jwt");
 const sendMail_1 = require("../../utils/sendMail");
 class AdminService {
-    constructor(_adminRepository, _instructorRepository, _userRepository, _categoryRepository, _courseRepository) {
+    constructor(_adminRepository, _instructorRepository, _userRepository, _categoryRepository, _courseRepository, _reviewRepository, _walletRepository) {
         this._adminRepository = _adminRepository;
         this._instructorRepository = _instructorRepository;
         this._userRepository = _userRepository;
         this._categoryRepository = _categoryRepository;
         this._courseRepository = _courseRepository;
+        this._reviewRepository = _reviewRepository;
+        this._walletRepository = _walletRepository;
     }
     login(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -29,7 +31,7 @@ class AdminService {
             if (admin.password !== password) {
                 throw new Error("Password doesn't match");
             }
-            const token = (0, generateToken_1.generateToken)(admin._id.toString(), admin.email);
+            const token = (0, jwt_1.generateToken)(admin._id.toString(), admin.email, "admin");
             return { token, email: admin.email };
         });
     }
@@ -67,7 +69,7 @@ class AdminService {
     }
     verifyTutor(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._instructorRepository.updateTutor(email, true, "active");
+            return yield this._instructorRepository.updateTutor(email, true, false, "active");
         });
     }
     rejectTutor(email, reason) {
@@ -76,8 +78,11 @@ class AdminService {
             if (!instructor) {
                 throw new Error("Tutor not found");
             }
+            instructor.isVerified = false;
+            instructor.isRejected = true;
+            instructor.accountStatus = "rejected";
             yield (0, sendMail_1.sendRejectionMail)(instructor.email, reason);
-            return yield this._instructorRepository.deleteTutor(instructor.email);
+            return yield instructor.save();
         });
     }
     getDashboardData() {
@@ -136,6 +141,44 @@ class AdminService {
     recoverCourseS(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this._courseRepository.updateCourseStatus(courseId, true);
+        });
+    }
+    getAllReviews() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._reviewRepository.getAllReviews();
+        });
+    }
+    hideReview(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const review = yield this._reviewRepository.findReviewAndHide(id);
+            if (!review) {
+                throw new Error("Review not found");
+            }
+            return review;
+        });
+    }
+    unhideReview(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const review = yield this._reviewRepository.findReviewAndUnhide(id);
+            if (!review) {
+                throw new Error("Review not found");
+            }
+            return review;
+        });
+    }
+    deleteReview(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const review = yield this._reviewRepository.deleteReview(id);
+            if (!review) {
+                throw new Error("Review not found");
+            }
+            return review;
+        });
+    }
+    getWallet() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const wallet = yield this._walletRepository.findWalletOfAdmin();
+            return wallet;
         });
     }
 }

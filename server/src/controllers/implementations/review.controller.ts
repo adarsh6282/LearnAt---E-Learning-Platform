@@ -29,13 +29,15 @@ export class ReviewController implements IReviewController{
     }
 
     async getCourseReviews(req: Request, res: Response):Promise<void> {
-    const courseId = req.params.courseId;
+    const {courseId} = req.params
+    console.log(courseId)
 
     try {
       const reviews = await this._reviewService.getReviewsByCourse(courseId);
-      res.status(200).json({reviews} );
+      res.status(httpStatus.OK).json({reviews});
     } catch (err) {
-      res.status(500).json({ success: false, message: "Something went wrong" });
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: "Something went wrong" });
     }
   }
 }

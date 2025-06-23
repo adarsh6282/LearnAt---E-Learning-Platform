@@ -27,7 +27,6 @@ class CourseService {
                     resource_type: type,
                     folder: type === "image" ? "courses/thumbnails" : "courses/lectures",
                     public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
-                    format: type === "image" ? "jpg" : "mp4",
                 }, (error, result) => {
                     if (error) {
                         console.error(`Cloudinary ${type} upload error:`, error);
@@ -70,6 +69,50 @@ class CourseService {
             }
             catch (error) {
                 console.error("Course creation error:", error);
+                throw error;
+            }
+        });
+    }
+    updateCourse(courseId, courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                let thumbnailUrl;
+                if (courseData.thumbnail) {
+                    thumbnailUrl = yield this.uploadToCloudinary(courseData.thumbnail, "image");
+                }
+                let newVideoUrls = [];
+                if (courseData.videos && courseData.videos.length > 0) {
+                    const uploadPromises = courseData.videos.map((file) => this.uploadToCloudinary(file, "video"));
+                    newVideoUrls = yield Promise.all(uploadPromises);
+                }
+                const newLectures = courseData.newLectures.map((lecture, index) => ({
+                    title: lecture.title,
+                    description: lecture.description,
+                    videoUrl: newVideoUrls[index],
+                    duration: lecture.duration,
+                    order: lecture.order,
+                }));
+                const allLectures = [...courseData.existingLectures, ...newLectures];
+                const updatedData = {
+                    title: courseData.title,
+                    description: courseData.description,
+                    category: courseData.category,
+                    price: courseData.price,
+                    isActive: (_a = courseData.isActive) !== null && _a !== void 0 ? _a : true,
+                    lectures: allLectures,
+                };
+                if (thumbnailUrl) {
+                    updatedData.thumbnail = thumbnailUrl;
+                }
+                const updatedCourse = yield this._courseRepository.updateCourseById(courseId, updatedData);
+                if (!updatedCourse) {
+                    throw new Error("Course not found");
+                }
+                return updatedCourse;
+            }
+            catch (error) {
+                console.error("Error updating course:", error);
                 throw error;
             }
         });

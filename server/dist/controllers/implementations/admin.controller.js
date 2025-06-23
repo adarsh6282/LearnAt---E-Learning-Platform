@@ -137,7 +137,7 @@ class AdminController {
                 }
                 res
                     .status(statusCodes_1.httpStatus.OK)
-                    .json({ message: "Tutor rejected and deleted successfully" });
+                    .json({ message: "Tutor rejected successfully" });
             }
             catch (err) {
                 res
@@ -225,7 +225,7 @@ class AdminController {
             try {
                 const { id } = req.params;
                 const updated = yield this._adminService.softDeleteCourseS(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ courses: updated });
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Course disabled successfully" });
             }
             catch (error) {
                 res
@@ -239,12 +239,74 @@ class AdminController {
             try {
                 const { id } = req.params;
                 const updated = yield this._adminService.recoverCourseS(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ courses: updated });
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Course enabled successfully" });
             }
             catch (error) {
                 res
                     .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
                     .json({ success: false, message: "Soft delete failed", error });
+            }
+        });
+    }
+    getAllReviews(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const reviews = yield this._adminService.getAllReviews();
+                res.status(statusCodes_1.httpStatus.OK).json(reviews);
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    hideReview(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            try {
+                const review = yield this._adminService.hideReview(id);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Review hidden successfully" });
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    unhideReview(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            try {
+                const review = yield this._adminService.unhideReview(id);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Review retrieved successfully" });
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    deleteReview(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { id } = req.params;
+            try {
+                const review = this._adminService.deleteReview(id);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Review Deleted Successfully" });
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    getWallet(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const wallet = yield this._adminService.getWallet();
+                res.status(statusCodes_1.httpStatus.OK).json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: wallet === null || wallet === void 0 ? void 0 : wallet.transactions });
+            }
+            catch (err) {
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
             }
         });
     }

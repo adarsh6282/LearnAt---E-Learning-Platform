@@ -54,5 +54,28 @@ class OrderRepository {
             return !!order;
         });
     }
+    getEnrollmentsByInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const orders = yield orderModel_1.default.find({ status: "paid" })
+                .populate({
+                path: "courseId",
+                match: { instructor: instructorId },
+                select: "title",
+            })
+                .populate("userId", "name email");
+            const filteredOrders = orders.filter((order) => order.courseId !== null);
+            return filteredOrders.map((order) => ({
+                _id: order._id.toString(),
+                course: {
+                    title: order.courseId.title,
+                },
+                user: {
+                    name: order.userId.name,
+                    email: order.userId.email,
+                },
+                createdAt: order.createdAt.toISOString(),
+            }));
+        });
+    }
 }
 exports.OrderRepository = OrderRepository;

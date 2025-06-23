@@ -1,17 +1,19 @@
-import React, { useState,useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../services/apiService';
-import { successToast } from './Toast';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../services/apiService";
+import { successToast } from "./Toast";
+import type { VerifyOtpResponse } from "../types/user.types";
+import type { VerifyInstructor } from "../types/instructor.types";
 
 interface OtpPageProps {
-  role: "users" | "instructors",
+  role: "users" | "instructors";
 }
 
-const OtpPage: React.FC<OtpPageProps> = ({role}) => {
-  const [otp, setOtp] = useState('');
-  const [timer,setTimer]=useState(60)
-  const [canResend,setCanResend]=useState(false)
-  const [error, setError] = useState('');
+const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
+  const [otp, setOtp] = useState("");
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -21,7 +23,7 @@ const OtpPage: React.FC<OtpPageProps> = ({role}) => {
       return;
     }
     const interval = setInterval(() => {
-      setTimer(prev => prev - 1);
+      setTimer((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -30,45 +32,58 @@ const OtpPage: React.FC<OtpPageProps> = ({role}) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const stored = localStorage.getItem("signUpData")
-      const userData = stored ? JSON.parse(stored) : null
+      const stored = localStorage.getItem("signUpData");
+      const userData = stored ? JSON.parse(stored) : null;
 
-      const response = await axiosInstance.post(`/${role}/verify-otp`, {
+      const response = await axiosInstance.post<
+        VerifyOtpResponse | VerifyInstructor
+      >(`/${role}/verify-otp`, {
         ...userData,
-        otp
+        otp,
       });
 
       if (response && response.status === 201) {
-        localStorage.removeItem("signUpData")
-        successToast((response.data as { message: string }).message)
-        navigate("/")
+        const token = response.data.token;
+        const email =
+          role === "users"
+            ? (response.data as VerifyOtpResponse).user.email
+            : (response.data as VerifyInstructor).instructor.email;
+
+        if (token) {
+          localStorage.setItem(`${role}Token`, token);
+          localStorage.setItem(`${role}Email`, email);
+        }
+        localStorage.removeItem("signUpData");
+        successToast(response.data.message);
+        navigate("/");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'OTP verification failed');
+      setError(err.response?.data?.message || "OTP verification failed");
     } finally {
       setLoading(false);
     }
   };
 
-
   const handleResend = async () => {
-    setError('');
+    setError("");
     setCanResend(false);
     setTimer(60);
 
     try {
-      const stored = localStorage.getItem("signUpData")
-      const userData=stored?JSON.parse(stored):null
+      const stored = localStorage.getItem("signUpData");
+      const userData = stored ? JSON.parse(stored) : null;
 
-      if(!userData.email) {
+      if (!userData.email) {
         setError("Email not found for resending OTP");
         return;
       }
 
-      await axiosInstance.post(`/${role}/resend-otp`, { email: userData.email });
+      await axiosInstance.post(`/${role}/resend-otp`, {
+        email: userData.email,
+      });
       successToast("OTP resent successfully!");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to resend OTP");
@@ -107,7 +122,7 @@ const OtpPage: React.FC<OtpPageProps> = ({role}) => {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
           >
-            {loading ? 'Verifying...' : 'Verify OTP'}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
         <div className="mt-4 text-center text-gray-600">
@@ -119,7 +134,9 @@ const OtpPage: React.FC<OtpPageProps> = ({role}) => {
               Resend OTP
             </button>
           ) : (
-            <p>Resend OTP in {timer} second{timer !== 1 ? 's' : ''}</p>
+            <p>
+              Resend OTP in {timer} second{timer !== 1 ? "s" : ""}
+            </p>
           )}
         </div>
       </div>

@@ -6,6 +6,7 @@ export interface IReview {
   user: Types.ObjectId;
   rating: number;
   text: string;
+  isHidden:boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

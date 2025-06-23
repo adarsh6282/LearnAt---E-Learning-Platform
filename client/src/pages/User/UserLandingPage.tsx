@@ -1,18 +1,15 @@
 import image from "../../assets/e-learning-interactions-illustration-concept.png"
 import { FaChalkboardTeacher, FaChartLine, FaCertificate } from "react-icons/fa"
 import Navbar from "../../components/Navbar";
-// import {useParams} from "react-router-dom"
 
 const LandingPage = () => {
-  const params = new URLSearchParams(window.location.search);
-  console.log(params)
+  
   return (
     <div className="font-sans bg-gray-900 text-gray-100 min-h-screen">
 
-      <Navbar/>
+      <Navbar />
 
   <section className="min-h-screen bg-gray-900 flex flex-col md:flex-row items-center justify-between px-8 py-20 font-serif">
-  {/* Left Text Content */}
   <div className="max-w-xl">
     <h1 className="text-4xl md:text-5xl font-extrabold text-blue-400 leading-tight tracking-wide">
       Empower Your Future <br />
@@ -35,13 +32,11 @@ const LandingPage = () => {
     </div>
   </div>
 
-  {/* Right Image */}
     <div className="mt-1 md:mt-0 md:w-1/2">
         <img src={image} alt="Online Learning" className="w-[90%] h-[90%]" />
     </div>
     </section>
 
-      {/* Features */}
       <section id="features" className="py-20 px-8 bg-gray-800">
   <h3 className="text-3xl font-bold text-center text-blue-400 mb-12">
     What We Offer
@@ -79,7 +74,6 @@ const LandingPage = () => {
   </div>
 </section>
 
-      {/* Call to Action */}
       <section
         className="py-20 px-8 bg-gray-900 text-white text-center"
         id="contact">
@@ -90,7 +84,6 @@ const LandingPage = () => {
         </button>
       </section>
 
-      {/* Footer */}
       <footer className="bg-gray-800 py-3 px-4 text-center text-sm text-gray-400">
         © {new Date().getFullYear()} Learn At. All rights reserved.
       </footer>

@@ -39,13 +39,15 @@ class ReviewController {
     }
     getCourseReviews(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const courseId = req.params.courseId;
+            const { courseId } = req.params;
+            console.log(courseId);
             try {
                 const reviews = yield this._reviewService.getReviewsByCourse(courseId);
-                res.status(200).json({ reviews });
+                res.status(statusCodes_1.httpStatus.OK).json({ reviews });
             }
             catch (err) {
-                res.status(500).json({ success: false, message: "Something went wrong" });
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Something went wrong" });
             }
         });
     }

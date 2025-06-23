@@ -31,9 +31,9 @@ class InstructorAuth extends base_repository_1.BaseRepository {
             return instructor;
         });
     }
-    updateTutor(email, isVerified, accountStatus) {
+    updateTutor(email, isVerified, isRejected, accountStatus) {
         return __awaiter(this, void 0, void 0, function* () {
-            const tutor = yield this.model.findOneAndUpdate({ email }, { isVerified: true, accountStatus }, { new: true });
+            const tutor = yield this.model.findOneAndUpdate({ email }, { isVerified, accountStatus, isRejected }, { new: true });
             return tutor;
         });
     }
@@ -52,6 +52,11 @@ class InstructorAuth extends base_repository_1.BaseRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const updatedInstructor = yield this.model.findOneAndUpdate({ email }, { $set: updateFields }, { new: true });
             return updatedInstructor;
+        });
+    }
+    updateInstructor(email, updatedData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield instructorModel_1.default.findOneAndUpdate({ email }, { $set: updatedData }, { new: true });
         });
     }
 }

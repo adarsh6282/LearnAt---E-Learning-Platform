@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { IOtpRepository } from "../../repository/interfaces/otp.interface";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
-import { generateToken } from "../../utils/generateToken";
+import { generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
@@ -15,6 +15,10 @@ import { IOrder } from "../../models/interfaces/order.interface";
 import razorpay from "../../config/razorpay.config";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
 import crypto from "crypto";
+import { Types } from "mongoose";
+import { IProgress } from "../../models/interfaces/progress.interface";
+import { IProgressRepository } from "../../repository/interfaces/progress.interface";
+import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -23,7 +27,9 @@ export class AuthService implements IAuthService {
     private _adminRepository: IAdminRepository,
     private _instructorRepository: IInstructorAuthRepository,
     private _courseRepository: ICourseRepository,
-    private _orderRepsitory: IOrderRepository
+    private _orderRepsitory: IOrderRepository,
+    private _progressRepository: IProgressRepository,
+    private _walletRepository: IWalletRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -74,7 +80,7 @@ export class AuthService implements IAuthService {
 
     await this._otpRepository.deleteOtpbyEmail(data.email);
 
-    const token = generateToken(user._id, user.email);
+    const token = generateToken(user._id, user.email, "user");
 
     return { user, token };
   }
@@ -98,7 +104,7 @@ export class AuthService implements IAuthService {
       throw new Error("Invalid password");
     }
 
-    const token = generateToken(user._id, user.email);
+    const token = generateToken(user._id, user.email, "user");
 
     return { user, token };
   }
@@ -296,6 +302,71 @@ export class AuthService implements IAuthService {
 
     await this._orderRepsitory.markOrderAsPaid(order._id!);
 
+    const course = await this._courseRepository.findCourseById(
+      order.courseId!?.toString()
+    );
+    
+    if (!course || !course.instructor)
+      throw new Error("Course or instructor not found");
+
+    const instructorAmount = order.amount * 0.8
+    instructorAmount.toFixed(2)
+    const adminCommission = order.amount * 0.2;
+    adminCommission.toFixed(2)
+
+    const courseId =
+      typeof order.courseId === "string"
+        ? order.courseId
+        : (order.courseId as Types.ObjectId).toString();
+
+    await this._walletRepository.creditWallet({
+      ownerType: "instructors",
+      ownerId: course.instructor._id.toString(),
+      courseId: courseId,
+      amount: instructorAmount,
+      description: `Credited for the course named ${course.title}`,
+    });
+
+    await this._walletRepository.creditWallet({
+      ownerType: "admin",
+      courseId: courseId,
+      amount: adminCommission,
+      description: `Admin Commission for the course named ${course.title}`,
+    });
+
     return { success: true };
+  }
+
+  async updateLectureProgress(
+    userId: string,
+    courseId: string,
+    lectureId: string
+  ): Promise<IProgress | null> {
+    const existing = await this._progressRepository.findProgress(
+      userId,
+      courseId
+    );
+    if (!existing)
+      return this._progressRepository.createProgress(
+        userId,
+        courseId,
+        lectureId
+      );
+    return this._progressRepository.addWatchedLecture(
+      userId,
+      courseId,
+      lectureId
+    );
+  }
+
+  async getUserCourseProgress(
+    userId: string,
+    courseId: string
+  ): Promise<string[]> {
+    const progress = await this._progressRepository.findProgress(
+      userId,
+      courseId
+    );
+    return progress?.watchedLectures || [];
   }
 }

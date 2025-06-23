@@ -1,17 +1,17 @@
-import React, { useState,useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../services/apiService';
-import { successToast } from './Toast';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { successToast } from "./Toast";
+import { forgotVerifyOtpS, resendOtpS } from "../services/common.service";
 
 interface OtpPageProps {
-  role: "users" | "instructors",
+  role: "users" | "instructors";
 }
 
-const ForgotOtpPage: React.FC<OtpPageProps> = ({role}) => {
-  const [otp, setOtp] = useState('');
-  const [timer,setTimer]=useState(60)
-  const [canResend,setCanResend]=useState(false)
-  const [error, setError] = useState('');
+const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
+  const [otp, setOtp] = useState("");
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -21,7 +21,7 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({role}) => {
       return;
     }
     const interval = setInterval(() => {
-      setTimer(prev => prev - 1);
+      setTimer((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -30,44 +30,43 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({role}) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
+      const stored = localStorage.getItem("email");
+      const email = stored || null;
 
-      const stored = localStorage.getItem("email")
-      const email = stored || null
+      if(!email){
+        return
+      }
 
-      const response = await axiosInstance.post(`/${role}/reset-verify-otp`,{
-        email,
-        otp
-      });
+      const response = await forgotVerifyOtpS(role,email,otp)
 
       if (response && response.status === 200) {
-        successToast((response.data as { message: string }).message)
-        navigate(`/${role}/resetpassword`)
+        successToast((response.data as { message: string }).message);
+        navigate(`/${role}/resetpassword`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'OTP verification failed');
+      setError(err.response?.data?.message || "OTP verification failed");
     } finally {
       setLoading(false);
     }
   };
 
-
   const handleResend = async () => {
-    setError('');
+    setError("");
     setCanResend(false);
     setTimer(60);
 
     try {
-      const stored = localStorage.getItem("email")
-      const email=stored||null
+      const stored = localStorage.getItem("email");
+      const email = stored || null;
       if (!email) {
         setError("Email not found for resending OTP");
         return;
       }
 
-      await axiosInstance.post(`/${role}/resend-otp`, { email: email });
+      await resendOtpS(role,email)
       successToast("OTP resent successfully!");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to resend OTP");
@@ -106,7 +105,7 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({role}) => {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
           >
-            {loading ? 'Verifying...' : 'Verify OTP'}
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
         <div className="mt-4 text-center text-gray-600">
@@ -118,7 +117,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({role}) => {
               Resend OTP
             </button>
           ) : (
-            <p>Resend OTP in {timer} second{timer !== 1 ? 's' : ''}</p>
+            <p>
+              Resend OTP in {timer} second{timer !== 1 ? "s" : ""}
+            </p>
           )}
         </div>
       </div>

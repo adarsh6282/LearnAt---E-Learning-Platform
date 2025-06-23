@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IAuthController } from "../interfaces/auth.interfaces";
 import { IAuthService } from "../../services/interfaces/auth.services";
 import { httpStatus } from "../../constants/statusCodes";
-import { generateToken } from "../../utils/generateToken";
+import { generateToken } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
 
 export class Authcontroller implements IAuthController {
@@ -23,7 +23,10 @@ export class Authcontroller implements IAuthController {
   async signin(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      const { user, token } = await this._authService.loginUser(email, password);
+      const { user, token } = await this._authService.loginUser(
+        email,
+        password
+      );
       res
         .status(httpStatus.OK)
         .json({ user, token, message: "User Login Successfull" });
@@ -58,8 +61,8 @@ export class Authcontroller implements IAuthController {
 
     const { id, email } = req.user;
 
-    const token = generateToken(id, email);
-    const redirectUrl=process.env.GOOGLE_VERIFY_URL
+    const token = generateToken(id, email, "user");
+    const redirectUrl = process.env.GOOGLE_VERIFY_URL;
 
     res.redirect(`${redirectUrl}?token=${token}`);
   }
@@ -67,7 +70,8 @@ export class Authcontroller implements IAuthController {
   async verifyGoogle(req: Request, res: Response): Promise<void> {
     const { token } = req.body;
 
-    if (!token) res.status(httpStatus.BAD_REQUEST).json({ message: "Token missing" });
+    if (!token)
+      res.status(httpStatus.BAD_REQUEST).json({ message: "Token missing" });
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
@@ -180,16 +184,17 @@ export class Authcontroller implements IAuthController {
 
   async findCourseById(req: Request, res: Response): Promise<void> {
     const { courseId } = req.params;
-    const userId=req.user?.id
+    const userId = req.user?.id;
 
-    if(!userId){
-      return
+    if (!userId) {
+      return;
     }
 
     try {
-      const {course,isEnrolled} = await this._authService.findCourseByIdService(courseId,userId);
+      const { course, isEnrolled } =
+        await this._authService.findCourseByIdService(courseId, userId);
 
-      res.status(httpStatus.OK).json({course,isEnrolled});
+      res.status(httpStatus.OK).json({ course, isEnrolled });
     } catch (err: any) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
@@ -203,19 +208,68 @@ export class Authcontroller implements IAuthController {
       const userId = req.user?.id;
       const order = await this._authService.createOrder(courseId!, userId!);
       res.status(httpStatus.OK).json(order);
-    } catch (err:any) {
-      console.log(err)
+    } catch (err: any) {
+      console.log(err);
       res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: err.message });
     }
   }
 
   async verifyOrder(req: Request, res: Response): Promise<void> {
     try {
-    const result = await this._authService.verifyPayment(req.body);
-    res.status(httpStatus.OK).json(result);
-  } catch (err:any) {
-    console.log(err)
-    res.status(httpStatus.BAD_REQUEST).json({ error: err.message });
+      const result = await this._authService.verifyPayment(req.body);
+      res.status(httpStatus.OK).json(result);
+    } catch (err: any) {
+      console.log(err);
+      res.status(httpStatus.BAD_REQUEST).json({ error: err.message });
+    }
   }
+
+  async markLectureWatched(req: Request, res: Response): Promise<void> {
+    try {
+      const { courseId } = req.params;
+      const { lectureId } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+        return;
+      }
+
+      const progress = await this._authService.updateLectureProgress(
+        userId,
+        courseId,
+        lectureId
+      );
+
+      res
+        .status(httpStatus.OK)
+        .json({ watchedLectures: progress?.watchedLectures });
+    } catch (err: any) {
+      res.status(httpStatus.BAD_REQUEST).json({message:err.message})
+    }
+  }
+
+  async getCourseProgress(req: Request, res: Response): Promise<void> {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+        return;
+      }
+
+      const watchedLectures = await this._authService.getUserCourseProgress(userId, courseId);
+
+      res.status(httpStatus.OK).json({
+        success: true,
+        watchedLectures,
+      });
+    } catch (err: any) {
+      res.status(httpStatus.BAD_REQUEST).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
 }

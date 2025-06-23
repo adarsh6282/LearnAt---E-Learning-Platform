@@ -25,6 +25,10 @@ const reviewSchema:Schema<IReview> = new Schema(
       required: true,
       trim: true,
     },
+    isHidden:{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

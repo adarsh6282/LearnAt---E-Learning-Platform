@@ -27,24 +27,41 @@ class CourseRepository extends base_repository_1.BaseRepository {
     }
     findAll() {
         return __awaiter(this, void 0, void 0, function* () {
-            const courses = yield this.model.find({}).populate("instructor", "name email");
+            const courses = yield this.model
+                .find({})
+                .populate("instructor", "name email").populate({
+                path: "category",
+                match: { isDeleted: false },
+                select: "name",
+            });
             return courses;
         });
     }
     findCourseById(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const course = yield this.model.findById(courseId).populate("instructor", "name");
+            const course = yield this.model
+                .findById(courseId)
+                .populate("instructor", "name");
             return course;
         });
     }
     findCoursesByInstructor(instructorId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.model.find({ instructor: instructorId }).sort({ createdAt: -1 });
+            return yield this.model
+                .find({ instructor: instructorId })
+                .sort({ createdAt: -1 });
         });
     }
     updateCourseStatus(courseId, isActive) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.model.findByIdAndUpdate(courseId, { isActive }, { new: true });
+        });
+    }
+    updateCourseById(courseId, updateData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield courseModel_1.default.findByIdAndUpdate(courseId, updateData, {
+                new: true,
+            });
         });
     }
 }

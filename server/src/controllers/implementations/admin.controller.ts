@@ -124,7 +124,7 @@ export class AdminController implements IAdminController {
       }
       res
         .status(httpStatus.OK)
-        .json({ message: "Tutor rejected and deleted successfully" });
+        .json({ message: "Tutor rejected successfully" });
     } catch (err: any) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
@@ -200,7 +200,7 @@ export class AdminController implements IAdminController {
     try {
       const {id} = req.params;
       const updated = await this._adminService.softDeleteCourseS(id);
-      res.status(httpStatus.OK).json({courses: updated });
+      res.status(httpStatus.OK).json({message:"Course disabled successfully" });
     } catch (error) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
@@ -212,11 +212,63 @@ export class AdminController implements IAdminController {
       try{
         const {id}=req.params
         const updated=await this._adminService.recoverCourseS(id)
-        res.status(httpStatus.OK).json({courses:updated})
+        res.status(httpStatus.OK).json({message:"Course enabled successfully"})
       } catch (error) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Soft delete failed", error });
+    }
+  }
+
+  async getAllReviews(req: Request, res: Response): Promise<void> {
+    try{
+      const reviews=await this._adminService.getAllReviews()
+      res.status(httpStatus.OK).json(reviews)
+    }catch(err:any){
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    }
+  }
+
+  async hideReview(req: Request, res: Response): Promise<void> {
+    const {id}=req.params
+    try{
+      const review=await this._adminService.hideReview(id)
+      res.status(httpStatus.OK).json({message:"Review hidden successfully"})
+    }catch(err:any){
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    }
+  }
+
+  async unhideReview(req: Request, res: Response): Promise<void> {
+    const {id}=req.params
+    try{
+      const review=await this._adminService.unhideReview(id)
+      res.status(httpStatus.OK).json({message:"Review retrieved successfully"})
+    }catch(err:any){
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    }
+  }
+
+  async deleteReview(req: Request, res: Response): Promise<void> {
+    const {id}=req.params
+    try{
+      const review=this._adminService.deleteReview(id)
+      res.status(httpStatus.OK).json({message:"Review Deleted Successfully"})
+    }catch(err:any){
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    }
+  }
+
+  async getWallet(req: Request, res: Response): Promise<void> {
+    try{
+    const wallet = await this._adminService.getWallet()
+    res.status(httpStatus.OK).json({balance:wallet?.balance,transactions:wallet?.transactions})
+    }catch(err:any){
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
     }
   }
 }

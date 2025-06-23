@@ -1,32 +1,39 @@
-import React, { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  GraduationCap, 
-  DollarSign, 
-  BookOpen, 
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  GraduationCap,
+  DollarSign,
+  BookOpen,
   FolderOpen,
-  ChevronDown,
   Settings,
   LogOut,
-  Bell
-} from 'lucide-react';
+  Edit2
+} from "lucide-react";
+import { ADMIN_ROUTES } from "../constants/routes.constants";
 
 const AdminNavbar = () => {
-  const location=useLocation()
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminToken");
+    navigate(ADMIN_ROUTES.LOGIN);
+  };
 
   const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Users', icon: Users },
-    { name: 'Tutors', icon: GraduationCap },
-    { name: 'Earnings', icon: DollarSign },
-    { name: 'Courses', icon: BookOpen },
-    { name: 'Category', icon: FolderOpen },
+    { name: "Dashboard", icon: LayoutDashboard },
+    { name: "Users", icon: Users },
+    { name: "Tutors", icon: GraduationCap },
+    { name: "Earnings", icon: DollarSign },
+    { name: "Courses", icon: BookOpen },
+    { name: "Category", icon: FolderOpen },
+    { name: "Reviews", icon: Edit2 }
   ];
 
   const getRoutePath = (itemName: string) => {
-    return `/admin/${itemName.toLowerCase()}`;
+    return `${ADMIN_ROUTES.BASE}/${itemName.toLowerCase()}`;
   };
 
   return (
@@ -46,15 +53,15 @@ const AdminNavbar = () => {
             <div className="space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive=location.pathname===getRoutePath(item.name)
+                const isActive = location.pathname === getRoutePath(item.name);
                 return (
                   <Link
                     key={item.name}
                     to={getRoutePath(item.name)}
                     className={`${
-                        isActive
-                        ? 'bg-purple-700 bg-opacity-70 text-white shadow-lg border-r-4 border-pink-400'
-                        : 'text-purple-100 hover:bg-purple-700 hover:bg-opacity-50 hover:text-white'
+                      isActive
+                        ? "bg-purple-700 bg-opacity-70 text-white shadow-lg border-r-4 border-pink-400"
+                        : "text-purple-100 hover:bg-purple-700 hover:bg-opacity-50 hover:text-white"
                     } w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group`}
                   >
                     <Icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
@@ -66,14 +73,6 @@ const AdminNavbar = () => {
           </nav>
 
           <div className="border-t border-purple-700/30 p-4">
-            <Link
-              to="/admin/notifications"
-              className="w-full flex items-center space-x-3 px-4 py-3 text-purple-100 hover:text-white hover:bg-purple-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2 relative"
-            >
-              <Bell className="w-5 h-5" />
-              <span>Notifications</span>
-              <span className="absolute right-3 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-            </Link>
 
             <Link
               to="/admin/settings"
@@ -98,7 +97,10 @@ const AdminNavbar = () => {
               </div>
             </Link>
 
-            <button className="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:text-red-200 hover:bg-red-900 hover:bg-opacity-50 rounded-lg transition-all duration-200">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-3 px-4 py-3 text-red-300 hover:text-red-200 hover:bg-red-900 hover:bg-opacity-50 rounded-lg transition-all duration-200"
+            >
               <LogOut className="w-5 h-5" />
               <span>Sign Out</span>
             </button>

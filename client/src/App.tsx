@@ -9,13 +9,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <>
-          {AdminRoutes()}
-          {UserRoutes()}
-          {InstructorRoutes()}
-      </>
+        {AdminRoutes}
+        {UserRoutes()}
+        {InstructorRoutes()}
       </Routes>
-        <ToastContainer/>
+      <ToastContainer />
     </BrowserRouter>
   )
 }

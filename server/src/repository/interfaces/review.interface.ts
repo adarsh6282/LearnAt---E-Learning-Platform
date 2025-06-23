@@ -13,4 +13,14 @@ export interface IReviewRepository {
   hasUserReviewed(courseId: string, userId: string): Promise<IReview | null>;
 
   getAverageRating(courseId: string): Promise<number>;
+
+  getReviewsByInstructor(instructorId:string):Promise<IReview[]|null>
+
+  getAllReviews():Promise<IReview[]|null>
+
+  findReviewAndHide(id:string):Promise<IReview|null>
+  
+  findReviewAndUnhide(id:string):Promise<IReview|null>
+
+  deleteReview(id:string):Promise<IReview|null>
 }

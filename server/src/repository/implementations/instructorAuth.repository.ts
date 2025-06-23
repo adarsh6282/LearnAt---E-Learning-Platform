@@ -3,9 +3,12 @@ import { IInstructorAuthRepository } from "../interfaces/instructorAuth.interfac
 import Instructor from "../../models/implementations/instructorModel";
 import { BaseRepository } from "../base.repository";
 
-export class InstructorAuth extends BaseRepository<IInstructor> implements IInstructorAuthRepository {
-  constructor(){
-    super(Instructor)
+export class InstructorAuth
+  extends BaseRepository<IInstructor>
+  implements IInstructorAuthRepository
+{
+  constructor() {
+    super(Instructor);
   }
   async createInstructor(userData: Partial<IInstructor>): Promise<IInstructor> {
     const instructor = await this.model.create(userData);
@@ -20,11 +23,12 @@ export class InstructorAuth extends BaseRepository<IInstructor> implements IInst
   async updateTutor(
     email: string,
     isVerified: boolean,
-    accountStatus:string
+    isRejected:boolean,
+    accountStatus: string
   ): Promise<IInstructor | null> {
     const tutor = await this.model.findOneAndUpdate(
       { email },
-      { isVerified: true ,accountStatus},
+      { isVerified, accountStatus,isRejected },
       { new: true }
     );
     return tutor;
@@ -40,21 +44,32 @@ export class InstructorAuth extends BaseRepository<IInstructor> implements IInst
   }
 
   async updateInstructorByEmail(
-      email: string,
-      updateFields: Partial<{
-        name: string;
-        phone: string;
-        profilePicture: string;
-        education:string;
-        yearsOfExperience:number;
-        title:string
-      }>
-    ): Promise<IInstructor | null> {
-      const updatedInstructor = await this.model.findOneAndUpdate(
-        { email },
-        { $set: updateFields },
-        { new: true }
-      );
-      return updatedInstructor;
-    }
+    email: string,
+    updateFields: Partial<{
+      name: string;
+      phone: string;
+      profilePicture: string;
+      education: string;
+      yearsOfExperience: number;
+      title: string;
+    }>
+  ): Promise<IInstructor | null> {
+    const updatedInstructor = await this.model.findOneAndUpdate(
+      { email },
+      { $set: updateFields },
+      { new: true }
+    );
+    return updatedInstructor;
+  }
+
+  async updateInstructor(
+    email: string,
+    updatedData: Partial<IInstructor>
+  ): Promise<IInstructor | null> {
+    return await Instructor.findOneAndUpdate(
+      { email },
+      { $set: updatedData },
+      { new: true }
+    );
+  }
 }

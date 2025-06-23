@@ -14,5 +14,7 @@ export interface IAuthController{
     getCourses(req:Request,res:Response):Promise<void>,
     findCourseById(req:Request,res:Response):Promise<void>,
     buyCourse(req:Request,res:Response):Promise<void>,
-    verifyOrder(req:Request,res:Response):Promise<void>
+    verifyOrder(req:Request,res:Response):Promise<void>,
+    markLectureWatched(req:Request,res:Response):Promise<void>,
+    getCourseProgress(req:Request,res:Response):Promise<void>
 }

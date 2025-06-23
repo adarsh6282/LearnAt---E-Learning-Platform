@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReviewRepository = void 0;
 const reviewModel_1 = __importDefault(require("../../models/implementations/reviewModel"));
 const mongoose_1 = require("mongoose");
+const courseModel_1 = __importDefault(require("../../models/implementations/courseModel"));
 class ReviewRepository {
     createReview(courseId, userId, rating, text) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -39,6 +40,50 @@ class ReviewRepository {
                 { $group: { _id: null, avg: { $avg: "$rating" } } },
             ]);
             return ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.avg) || 0;
+        });
+    }
+    getReviewsByInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find({ instructor: instructorId }, "_id");
+            const courseIds = courses.map((c) => c._id);
+            return reviewModel_1.default.find({
+                course: { $in: courseIds },
+                isHidden: false
+            }).populate("user", "name")
+                .populate("course", "title");
+        });
+    }
+    getAllReviews() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield reviewModel_1.default.find()
+                .populate({
+                path: "user",
+                select: "name"
+            })
+                .populate({
+                path: "course",
+                select: "title instructor",
+                populate: {
+                    path: "instructor",
+                    select: "name"
+                }
+            })
+                .sort({ createdAt: -1 });
+        });
+    }
+    findReviewAndHide(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return reviewModel_1.default.findByIdAndUpdate(id, { isHidden: true }, { new: true });
+        });
+    }
+    findReviewAndUnhide(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return reviewModel_1.default.findByIdAndUpdate(id, { isHidden: false }, { new: true });
+        });
+    }
+    deleteReview(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return reviewModel_1.default.findByIdAndDelete(id);
         });
     }
 }

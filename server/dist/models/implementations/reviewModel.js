@@ -27,5 +27,9 @@ const reviewSchema = new mongoose_1.Schema({
         required: true,
         trim: true,
     },
+    isHidden: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 exports.default = mongoose_2.default.model("Review", reviewSchema);

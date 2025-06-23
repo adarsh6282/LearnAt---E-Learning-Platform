@@ -1,6 +1,7 @@
 import { IUser } from "../../models/interfaces/auth.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
+import { IProgress } from "../../models/interfaces/progress.interface";
 
 export interface IAuthService {
   registerUser(email: string): Promise<void>;
@@ -40,4 +41,6 @@ export interface IAuthService {
     razorpay_payment_id: string;
     razorpay_signature: string;
   }): Promise<{success:Boolean}>;
+  updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<IProgress|null>
+  getUserCourseProgress(userId: string, courseId: string): Promise<string[]>
 }

@@ -6,5 +6,6 @@ export interface ICourseRepository {
     findAll():Promise<ICourse[]>
     findCourseById(courseId:string):Promise<ICourse|null>,
     findCoursesByInstructor(instructorId:string):Promise<ICourse[]>,
-    updateCourseStatus(courseId:string,isActive:boolean):Promise<ICourse|null>
+    updateCourseStatus(courseId:string,isActive:boolean):Promise<ICourse|null>,
+    updateCourseById(courseId:string,courseData:Partial<ICourse>):Promise<ICourse|null>
 } 
