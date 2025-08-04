@@ -12,6 +12,8 @@ import { OrderRepository } from "../repository/implementations/order.repository"
 import authRole from "../middlewares/authRole";
 import { ProgressRepository } from "../repository/implementations/progress.repository";
 import { WalletRepository } from "../repository/implementations/wallet.repository";
+import { ComplaintRepository } from "../repository/implementations/complaint.repository";
+import { NotificationRepository } from "../repository/implementations/notification.repository";
 
 const authRepository = new AuthRepository();
 const instructorRepository = new InstructorAuth();
@@ -19,8 +21,10 @@ const otpRepository = new OtpRepository();
 const adminRepository = new AdminRepository();
 const courseRepository = new CourseRepository();
 const orderRepository = new OrderRepository();
-const progressRepository = new ProgressRepository()
-const walletRepository=new WalletRepository()
+const progressRepository = new ProgressRepository();
+const walletRepository = new WalletRepository();
+const complaintRepository = new ComplaintRepository();
+const notificationRepository=new NotificationRepository()
 const authService = new AuthService(
   authRepository,
   otpRepository,
@@ -29,13 +33,16 @@ const authService = new AuthService(
   courseRepository,
   orderRepository,
   progressRepository,
-  walletRepository
+  walletRepository,
+  complaintRepository,
+  notificationRepository
 );
 const authController = new Authcontroller(authService);
 
 const router = Router();
 
 router.post("/register", authController.signup.bind(authController));
+router.post("/refresh-token", authController.refreshToken.bind(authController));
 router.post("/login", authController.signin.bind(authController));
 router.post("/verify-otp", authController.verifyOtp.bind(authController));
 router.post(
@@ -80,12 +87,17 @@ router.post(
   "/course-view/progress/:courseId",
   authRole(["user"]),
   authController.markLectureWatched.bind(authController)
-)
+);
 router.get(
   "/course-view/progress/:courseId",
   authRole(["user"]),
   authController.getCourseProgress.bind(authController)
-)
+);
+router.get(
+  "/courses/progress/:courseId",
+  authRole(["user"]),
+  authController.checkStatus.bind(authController)
+);
 router.get(
   "/auth/google",
   passport.authenticate("google", {
@@ -101,5 +113,19 @@ router.get(
   }),
   authController.googleAuth.bind(authController)
 );
+
+router.get(
+  "/instructors/purchased",
+  authRole(["user"]),
+  authController.getPurchasedInstructors.bind(authController)
+);
+router.post(
+  "/complaints",
+  authRole(["user"]),
+  authController.submitComplaint.bind(authController)
+);
+router.get("/notifications/:userId",authController.getNotifications.bind(authController))
+router.put("/notifications/read/:notificationId",authController.markAsRead.bind(authController))
+router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

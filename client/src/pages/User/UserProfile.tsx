@@ -3,6 +3,7 @@ import { UserContext } from "../../context/UserContext";
 import { Mail, User, Phone } from "lucide-react";
 import { errorToast } from "../../components/Toast";
 import { editProfileS } from "../../services/user.services";
+import ReportForm from "../../components/ReportForm";
 
 const UserProfile = () => {
   const context = useContext(UserContext);
@@ -46,9 +47,8 @@ const UserProfile = () => {
       if (selectedFile) {
         formPayload.append("profilePicture", selectedFile);
       }
-      console.log(selectedFile);
-      const token = localStorage.getItem("usersToken");
-      const res = await editProfileS(formPayload, token!);
+
+      const res = await editProfileS(formPayload);
 
       setUser(res.data);
 
@@ -83,6 +83,7 @@ const UserProfile = () => {
     <div className="max-w-2xl mx-auto p-6 bg-gray-900 rounded-lg shadow-lg">
       {/* Profile Header */}
       <div className="text-center mb-6">
+
         <div className="relative w-24 h-24 mx-auto mb-4 group">
           <img
             src={user?.profilePicture}
@@ -129,6 +130,7 @@ const UserProfile = () => {
         >
           {isEditing ? "Cancel" : "Edit Profile"}
         </button>
+          <ReportForm type="complaint" />
       </div>
 
       {/* Profile Fields */}

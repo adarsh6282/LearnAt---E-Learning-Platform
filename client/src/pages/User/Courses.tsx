@@ -12,7 +12,7 @@ const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
@@ -43,7 +43,6 @@ const Courses: React.FC = () => {
   }, [courses]);
 
   const filteredAndSortedCourses = useMemo(() => {
-
     let filtered = courses.filter((course) => {
       if (course.isActive === false) return false;
 
@@ -331,13 +330,13 @@ const Courses: React.FC = () => {
                 ))}
               </div>
             )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
           </div>
         </div>
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
       </div>
     </div>
   );

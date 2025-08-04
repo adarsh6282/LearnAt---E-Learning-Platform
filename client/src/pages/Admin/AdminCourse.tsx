@@ -12,14 +12,17 @@ import Pagination from "../../components/Pagination";
 const AdminCourse: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredCourses, setFilteredCourses] = useState<ICourse[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 4;
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
       const res = await getCoursesS();
       setCourses(res.data);
+      setFilteredCourses(res.data);
     } catch (err: any) {
       console.error("Failed to fetch courses:", err);
       errorToast(err.response?.data?.message);
@@ -30,8 +33,8 @@ const AdminCourse: React.FC = () => {
 
   const handleSoftDelete = async (id: string) => {
     try {
-      const response=await handleSoftDeleteS(id);
-      successToast(response.data.message)
+      const response = await handleSoftDeleteS(id);
+      successToast(response.data.message);
       fetchCourses();
     } catch (err) {
       console.error("Soft delete failed", err);
@@ -40,8 +43,8 @@ const AdminCourse: React.FC = () => {
 
   const handleRestore = async (id: string) => {
     try {
-      const response=await handleRestoreS(id);
-      successToast(response.data.message)
+      const response = await handleRestoreS(id);
+      successToast(response.data.message);
       fetchCourses();
     } catch (err) {
       console.error("Restore failed", err);
@@ -49,17 +52,29 @@ const AdminCourse: React.FC = () => {
   };
 
   useEffect(() => {
+    const filtered = courses.filter(
+      (course) =>
+        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.instructor?.name
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
+    setFilteredCourses(filtered);
+    setCurrentPage(1);
+  }, [searchQuery, courses]);
+
+  useEffect(() => {
     fetchCourses();
   }, []);
 
-  const totalPages = Math.ceil(courses.length / itemsPerPage);
-  const paginatedCourses = courses.slice(
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+  const paginatedCourses = filteredCourses.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+    <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -97,6 +112,16 @@ const AdminCourse: React.FC = () => {
             </div>
           </div>
         )}
+
+        <div className="mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search by course title or instructor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
         {/* Courses Table */}
         {!loading && courses.length > 0 && (

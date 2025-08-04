@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../services/apiService";
+import adminApi from "../services/adminApiService";
+import instructorApi from "../services/instructorApiService";
+import { useSearchParams } from "react-router-dom";
+import Pagination from "./Pagination";
 
 interface Transaction {
   id: string;
@@ -16,25 +19,39 @@ interface WalletProps {
 const Earnings: React.FC<WalletProps> = ({ role }) => {
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const token =
-    role === "admin"
-      ? localStorage.getItem("adminToken")
-      : localStorage.getItem("instructorsToken");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 2;
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     const fetchWallet = async () => {
-      const res = await axiosInstance.get<{
+      const selectedApi = role === "admin" ? adminApi : instructorApi;
+      const res = await selectedApi.get<{
         transactions: [];
         balance: number;
-      }>(`/${role}/wallet`, { headers: { Authorization: `Bearer ${token}` } });
-      setTransactions(res.data.transactions);
+        totalPages: number;
+      }>(`/${role}/wallet?page=${currentPage}&limit=${itemsPerPage}`);
+      setTransactions(res.data.transactions || []);
+      setTotalPages(res.data.totalPages);
       setBalance(res.data.balance);
     };
-    fetchWallet()
-  }, [role]);
+    fetchWallet();
+  }, [role, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   return (
-    <div className="p-6 bg-white md:p-10 max-w-4xl mx-auto h-full overflow-y-auto">
+    <div className="p-6 bg-white md:p-10 max-w-4xl mx-auto h-full overflow-y-hidden">
       <h1 className="text-3xl font-bold mb-6">Wallet</h1>
 
       {/* Wallet Card */}
@@ -64,7 +81,7 @@ const Earnings: React.FC<WalletProps> = ({ role }) => {
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-lg">₹{tx.amount}</span>
+                  <span className="font-semibold text-lg">₹{tx.amount.toFixed(2)}</span>
                   <span
                     className={`text-sm px-2 py-1 rounded-full ${
                       tx.type === "credit"
@@ -81,6 +98,11 @@ const Earnings: React.FC<WalletProps> = ({ role }) => {
                 </p>
               </div>
             ))}
+            <Pagination
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+              totalPages={totalPages}
+            />
           </div>
         ) : (
           <p className="text-gray-500 mt-6 text-center">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "../../services/apiService";
+import instructorApi from "../../services/instructorApiService";
 
 interface Review {
   _id: string;
@@ -16,14 +16,8 @@ const InstructorReview = () => {
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const token = localStorage.getItem("instructorsToken");
-
       try {
-        const res = await axiosInstance.get<Review[]>("/instructors/reviews", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await instructorApi.get<Review[]>("/instructors/reviews");
         setReviews(res.data);
       } catch (err) {
         console.error("Error fetching reviews:", err);
@@ -41,9 +35,7 @@ const InstructorReview = () => {
 
       {/* Filter */}
       <div className="mb-4 flex items-center space-x-4">
-        <label className="text-sm font-medium text-gray-700">
-          Filter
-        </label>
+        <label className="text-sm font-medium text-gray-700">Filter</label>
         <select
           value={ratingFilter ?? ""}
           onChange={(e) =>
@@ -66,24 +58,41 @@ const InstructorReview = () => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Course</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Rating</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Review</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Student</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Course
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">
+                  Rating
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Review
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Student
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Date
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {reviews
-                .filter((r) => (ratingFilter ? r.rating === ratingFilter : true))
+                .filter((r) =>
+                  ratingFilter ? r.rating === ratingFilter : true
+                )
                 .map((r) => (
-                  <tr key={r._id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={r._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {r.course.title}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center space-x-1">
-                        <span className="text-sm font-medium text-gray-900">{r.rating}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {r.rating}
+                        </span>
                         <span className="text-yellow-400 text-lg">★</span>
                       </div>
                     </td>

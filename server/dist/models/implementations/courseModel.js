@@ -82,7 +82,12 @@ const courseSchema = new mongoose_1.Schema({
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: 'Instructor',
         required: false
-    }
+    },
+    enrolledStudents: [{
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: 'User',
+            default: []
+        }]
 }, {
     timestamps: true
 });

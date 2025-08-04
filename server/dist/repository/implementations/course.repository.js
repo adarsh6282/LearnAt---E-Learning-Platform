@@ -29,7 +29,8 @@ class CourseRepository extends base_repository_1.BaseRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const courses = yield this.model
                 .find({})
-                .populate("instructor", "name email").populate({
+                .populate("instructor", "name email")
+                .populate({
                 path: "category",
                 match: { isDeleted: false },
                 select: "name",
@@ -45,11 +46,22 @@ class CourseRepository extends base_repository_1.BaseRepository {
             return course;
         });
     }
-    findCoursesByInstructor(instructorId) {
+    findCoursesByInstructor(instructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.model
-                .find({ instructor: instructorId })
-                .sort({ createdAt: -1 });
+            const skip = (page - 1) * limit;
+            const [courses, total] = yield Promise.all([
+                this.model.find({ instructor: instructorId }).skip(skip).limit(limit),
+                this.model.countDocuments({ instructor: instructorId }),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { courses, total, totalPages };
+        });
+    }
+    addEnrolledUser(courseId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield courseModel_1.default.findByIdAndUpdate(courseId, {
+                $addToSet: { enrolledStudents: userId },
+            });
         });
     }
     updateCourseStatus(courseId, isActive) {
@@ -62,6 +74,51 @@ class CourseRepository extends base_repository_1.BaseRepository {
             return yield courseModel_1.default.findByIdAndUpdate(courseId, updateData, {
                 new: true,
             });
+        });
+    }
+    getCourseStats() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find().select("title enrolledStudents");
+            return courses.map((course) => {
+                var _a;
+                return ({
+                    title: course.title,
+                    enrolledCount: ((_a = course.enrolledStudents) === null || _a === void 0 ? void 0 : _a.length) || 0,
+                });
+            });
+        });
+    }
+    getCourseStatsOfInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find({ instructor: instructorId }).select("title enrolledStudents");
+            return courses.map((course) => {
+                var _a;
+                return ({
+                    title: course.title,
+                    enrolledCount: ((_a = course.enrolledStudents) === null || _a === void 0 ? void 0 : _a.length) || 0,
+                });
+            });
+        });
+    }
+    findByPurchasedUser(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find({ enrolledStudents: userId }).select("instructor");
+            const instructorIds = [
+                ...new Set(courses.map((c) => c.instructor.toString())),
+            ];
+            return instructorIds;
+        });
+    }
+    getUsersByInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find({ instructor: instructorId }).select("enrolledStudents");
+            const userIds = new Set();
+            courses.forEach((course) => {
+                course.enrolledStudents.forEach((userId) => {
+                    userIds.add(userId.toString());
+                });
+            });
+            return Array.from(userIds);
         });
     }
 }

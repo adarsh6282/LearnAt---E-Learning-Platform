@@ -34,5 +34,19 @@ class ProgressRepository {
             return progressModel_1.default.findOneAndUpdate({ userId, courseId, watchedLectures: { $ne: lectureId } }, { $push: { watchedLectures: lectureId } }, { new: true });
         });
     }
+    markAsCompleted(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield progressModel_1.default.updateOne({ userId: userId, courseId: courseId }, { $set: { isCompleted: true } });
+        });
+    }
+    CheckStatus(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const progress = yield progressModel_1.default.findOne({ userId: userId, courseId: courseId });
+            if (!progress) {
+                return { isCompleted: false };
+            }
+            return { isCompleted: progress.isCompleted };
+        });
+    }
 }
 exports.ProgressRepository = ProgressRepository;

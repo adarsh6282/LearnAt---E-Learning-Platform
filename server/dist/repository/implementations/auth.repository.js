@@ -31,6 +31,12 @@ class AuthRepository extends base_repository_1.BaseRepository {
             return user;
         });
     }
+    findById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.model.findById(id);
+            return user;
+        });
+    }
     findForProfile(email) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.model.findOne({ email }).select("-password");
@@ -41,6 +47,11 @@ class AuthRepository extends base_repository_1.BaseRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const updatedUser = yield this.model.findOneAndUpdate({ email }, { $set: updateFields }, { new: true });
             return updatedUser;
+        });
+    }
+    findUsersByIds(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return userModel_1.default.find({ _id: { $in: ids } });
         });
     }
 }

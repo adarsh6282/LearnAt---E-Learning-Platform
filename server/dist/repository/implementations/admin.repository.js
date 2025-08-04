@@ -17,25 +17,46 @@ const userModel_1 = __importDefault(require("../../models/implementations/userMo
 const instructorModel_1 = __importDefault(require("../../models/implementations/instructorModel"));
 const adminModel_1 = __importDefault(require("../../models/implementations/adminModel"));
 const base_repository_1 = require("../base.repository");
+const courseModel_1 = __importDefault(require("../../models/implementations/courseModel"));
 class AdminRepository extends base_repository_1.BaseRepository {
     constructor() {
         super(adminModel_1.default);
     }
-    getAllUsers() {
+    getAllUsers(page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            const users = yield userModel_1.default.find({}).lean();
-            return users;
+            const skip = (page - 1) * limit;
+            const filter = search
+                ? {
+                    name: { $regex: search, $options: "i" },
+                }
+                : {};
+            const [users, total] = yield Promise.all([
+                userModel_1.default.find(filter).skip(skip).limit(limit).lean(),
+                userModel_1.default.countDocuments(filter),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { users, total, totalPages };
         });
     }
-    getAllTutors() {
+    getAllTutors(page, limit, filter) {
         return __awaiter(this, void 0, void 0, function* () {
-            const instructors = yield instructorModel_1.default.find({}).lean();
-            return instructors;
+            const skip = (page - 1) * limit;
+            const [tutors, total] = yield Promise.all([
+                instructorModel_1.default.find(filter).skip(skip).limit(limit).lean(),
+                instructorModel_1.default.countDocuments(filter),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { tutors, total, totalPages };
         });
     }
     findAdminByEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.model.findOne({ email });
+        });
+    }
+    findOneAdmin() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.model.findOne();
         });
     }
     updateUserBlockStatus(email, blocked) {
@@ -56,6 +77,11 @@ class AdminRepository extends base_repository_1.BaseRepository {
     getTotalTutors() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield instructorModel_1.default.countDocuments({});
+        });
+    }
+    getTotalCourses() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield courseModel_1.default.countDocuments({});
         });
     }
 }

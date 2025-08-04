@@ -1,0 +1,151 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { useParams } from "react-router-dom";
+import userApi from "../services/userApiService";
+import { FiArrowLeft } from "react-icons/fi";
+
+interface ChatPartner {
+  chatId: string;
+  partnerId: string;
+  partnerName: string;
+}
+
+interface Instructor {
+  _id: string;
+  name: string;
+}
+
+const ChatList = () => {
+  const [chats, setChats] = useState<ChatPartner[]>([]);
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [showInstructors, setShowInstructors] = useState(false);
+  const { chatId: activeChat } = useParams();
+  const { authUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authUser || !authUser._id) return;
+    console.log(authUser);
+
+    const fetchChats = async () => {
+      try {
+        const res = await userApi.get<ChatPartner[]>(
+          `/chats/list/${authUser?._id}?role=user`
+        );
+        const formattedChats = res.data
+          .filter((chat: any) => chat.instructor)
+          .map((chat: any) => ({
+            chatId: chat._id,
+            partnerId: chat.instructor._id,
+            partnerName: chat.instructor.name,
+          }));
+        setChats(formattedChats);
+      } catch (err) {
+        console.error("Error fetching user chats:", err);
+      }
+    };
+
+    fetchChats();
+  }, [authUser]);
+
+  const fetchInstructors = async () => {
+    try {
+      const res = await userApi.get<Instructor[]>("/users/instructors/purchased");
+      const filtered = res.data.filter(
+        (inst: any) => !chats.some((chat) => chat.partnerId === inst._id)
+      );
+      setInstructors(filtered);
+      console.log(filtered)
+      setShowInstructors(true);
+    } catch (err) {
+      console.error("Error fetching instructors:", err);
+    }
+  };
+
+  const handleStartChat = async (instructor: Instructor) => {
+    try {
+      const res = await userApi.post("/chats/initiate", {
+        userId: authUser?._id,
+        instructorId: instructor?._id,
+      });
+
+      navigate(`/users/chat/${res.data._id}`, {
+        state: {
+          partnerName: instructor.name,
+        },
+      });
+    } catch (err) {
+      console.error("Error starting chat:", err);
+    }
+  };
+
+  return (
+    <div className="w-full md:w-1/3 h-full overflow-y-auto p-4 bg-[#0f0f0f] text-gray-200 border-r border-[#1f1f1f] shadow-inner">
+      <h2 className="text-xl font-semibold mb-4 text-cyan-400 border-b border-gray-700 pb-2 tracking-wide">
+        Chats
+      </h2>
+
+      <button
+        onClick={() => navigate("/")}
+        className="mb-4 flex items-center text-cyan-400 hover:text-cyan-300 hover:cursor-pointer transition-colors"
+      >
+        <FiArrowLeft className="mr-2" />
+        <span className="font-medium">Back to Home</span>
+      </button>
+
+      {!showInstructors && (
+        <button
+          onClick={fetchInstructors}
+          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded shadow hover:shadow-cyan-500/30 transition-all mb-4 font-medium"
+        >
+          + Start Chat
+        </button>
+      )}
+
+      {showInstructors && instructors.length > 0 && (
+        <div className="mb-4">
+          {instructors.map((inst) => (
+            <div
+              key={inst._id}
+              className="flex justify-between items-center bg-[#1a1a1d] hover:bg-[#262629] p-3 rounded-xl mb-2 shadow-sm transition"
+            >
+              <span className="text-gray-300">{inst.name}</span>
+              <button
+                onClick={() => handleStartChat(inst)}
+                className="bg-green-600 hover:bg-green-500 text-white text-sm px-3 py-1 rounded shadow"
+              >
+                Chat
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {chats.map((chat) => (
+          <div
+            key={chat.chatId}
+            onClick={() => {
+              navigate(`/users/chat/${chat.chatId}`, {
+                state: {
+                  partnerName: chat.partnerName,
+                  targetUserId: chat.partnerId,
+                },
+              });
+            }}
+            className={`p-3 rounded-xl cursor-pointer font-medium transition-all shadow-sm ${
+              activeChat === chat.chatId
+                ? "bg-gradient-to-r from-cyan-700 to-cyan-500 text-white shadow-cyan-500/30"
+                : "bg-[#1a1a1d] hover:bg-[#262629] text-gray-300"
+            }`}
+          >
+            {chat.partnerName}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ChatList;

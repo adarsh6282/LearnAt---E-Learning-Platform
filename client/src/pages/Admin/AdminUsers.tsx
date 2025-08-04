@@ -4,19 +4,27 @@ import { errorToast } from "../../components/Toast";
 import type { User } from "../../types/user.types";
 import { getUsersS, toggleUserBlockS } from "../../services/admin.services";
 import Pagination from "../../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 const AdminUsers = () => {
   const [blockingUserId, setBlockingUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 1;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [filteredUser, setFilteredUser] = useState<User[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 5;
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await getUsersS();
-        setUsers(res.data);
+        const res = await getUsersS(currentPage, itemsPerPage, searchQuery);
+        setUsers(res.data.users);
+        setFilteredUser(res.data.users);
+        setTotalPages(res.data.totalPages);
       } catch (err: any) {
         console.log(err);
         const msg = err.response?.data?.message;
@@ -25,10 +33,18 @@ const AdminUsers = () => {
         setLoading(false);
       }
     };
-    setTimeout(() => {
-      fetchUsers();
-    }, 1500);
-  }, []);
+    fetchUsers();
+  }, [currentPage, itemsPerPage, searchQuery]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   const toggleBlock = async (email: string, isBlocked: boolean) => {
     setBlockingUserId(email);
@@ -55,19 +71,22 @@ const AdminUsers = () => {
     );
   }
 
-  const totalPages = Math.ceil(users.length / itemsPerPage);
-
-  const paginatedUsers = users.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Registered Users
         </h2>
+
+        <div className="mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search by course title or instructor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full">
@@ -88,7 +107,7 @@ const AdminUsers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginatedUsers.map((user) => (
+              {filteredUser.map((user) => (
                 <tr
                   key={user.email}
                   className="hover:bg-gray-50 transition-colors"
@@ -134,7 +153,7 @@ const AdminUsers = () => {
         </div>
         <Pagination
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           totalPages={totalPages}
         />
       </div>

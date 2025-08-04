@@ -8,7 +8,8 @@ export interface ICourse extends Document {
     isActive: boolean;
     lectures: ILecture[];
     instructor?: Types.ObjectId;
-    thumbnail:string
+    thumbnail:string,
+    enrolledStudents:Types.ObjectId[]
 }
 
 export interface ILecture {

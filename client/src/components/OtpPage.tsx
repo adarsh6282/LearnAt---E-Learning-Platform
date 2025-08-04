@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../services/apiService";
 import { successToast } from "./Toast";
 import type { VerifyOtpResponse } from "../types/user.types";
 import type { VerifyInstructor } from "../types/instructor.types";
+import userApi from "../services/userApiService";
+import instructorApi from "../services/instructorApiService";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -37,8 +38,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
     try {
       const stored = localStorage.getItem("signUpData");
       const userData = stored ? JSON.parse(stored) : null;
+      const selectedApi = role === "users" ? userApi : instructorApi;
 
-      const response = await axiosInstance.post<
+      const response = await selectedApi.post<
         VerifyOtpResponse | VerifyInstructor
       >(`/${role}/verify-otp`, {
         ...userData,
@@ -73,6 +75,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
     setTimer(60);
 
     try {
+      const selectedApi = role === "users" ? userApi : instructorApi;
       const stored = localStorage.getItem("signUpData");
       const userData = stored ? JSON.parse(stored) : null;
 
@@ -81,7 +84,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
         return;
       }
 
-      await axiosInstance.post(`/${role}/resend-otp`, {
+      await selectedApi.post(`/${role}/resend-otp`, {
         email: userData.email,
       });
       successToast("OTP resent successfully!");
@@ -92,44 +95,45 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 p-8">
+        <h2 className="text-3xl font-bold text-gray-100 text-center mb-4">
           Verify Your Account
         </h2>
 
-        <p className="text-sm text-gray-500 mb-4 text-center">
-          Enter the 6-digit OTP
+        <p className="text-gray-300 text-sm text-center mb-6">
+          Enter the 6-digit OTP sent to your email
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="text"
             maxLength={6}
             placeholder="Enter OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             required
           />
 
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <div className="text-red-400 text-sm text-center">{error}</div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+            className="w-full py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-gray-800 transition-all duration-200 disabled:opacity-50"
           >
             {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
-        <div className="mt-4 text-center text-gray-600">
+
+        <div className="mt-6 text-center text-gray-400 text-sm">
           {canResend ? (
             <button
               onClick={handleResend}
-              className="text-blue-600 underline hover:text-blue-800"
+              className="text-blue-400 hover:text-blue-300 underline transition-colors"
             >
               Resend OTP
             </button>

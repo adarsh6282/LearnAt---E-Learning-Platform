@@ -50,7 +50,12 @@ const courseSchema = new Schema<ICourse>({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Instructor',
         required: false
-    }
+    },
+    enrolledStudents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default:[]
+    }]
 }, {
     timestamps: true
 });

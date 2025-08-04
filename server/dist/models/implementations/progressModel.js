@@ -38,15 +38,21 @@ const courseProgressSchema = new mongoose_1.Schema({
     userId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
     },
     courseId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Course",
-        required: true
+        required: true,
     },
-    watchedLectures: [{
-            type: String
-        }],
+    watchedLectures: [
+        {
+            type: String,
+        },
+    ],
+    isCompleted: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("CourseProgress", courseProgressSchema);

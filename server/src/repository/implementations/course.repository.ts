@@ -18,11 +18,12 @@ export class CourseRepository
   async findAll(): Promise<ICourse[]> {
     const courses = await this.model
       .find({})
-      .populate("instructor", "name email").populate({
-      path: "category",
-      match: { isDeleted: false },
-      select: "name",
-    });
+      .populate("instructor", "name email")
+      .populate({
+        path: "category",
+        match: { isDeleted: false },
+        select: "name",
+      });
     return courses;
   }
 
@@ -34,10 +35,27 @@ export class CourseRepository
     return course;
   }
 
-  async findCoursesByInstructor(instructorId: string): Promise<ICourse[]> {
-    return await this.model
-      .find({ instructor: instructorId })
-      .sort({ createdAt: -1 });
+  async findCoursesByInstructor(
+    instructorId: string,
+    page: number,
+    limit: number
+  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const [courses, total] = await Promise.all([
+      this.model.find({ instructor: instructorId }).skip(skip).limit(limit),
+      this.model.countDocuments({ instructor: instructorId }),
+    ]);
+    const totalPages = Math.ceil(total / limit);
+    return { courses, total, totalPages };
+  }
+
+  async addEnrolledUser(
+    courseId: string,
+    userId: string
+  ): Promise<ICourse | null> {
+    return await Course.findByIdAndUpdate(courseId, {
+      $addToSet: { enrolledStudents: userId },
+    });
   }
 
   async updateCourseStatus(
@@ -54,9 +72,56 @@ export class CourseRepository
   async updateCourseById(
     courseId: string,
     updateData: Partial<ICourse>
-  ): Promise<ICourse|null> {
+  ): Promise<ICourse | null> {
     return await Course.findByIdAndUpdate(courseId, updateData, {
       new: true,
     });
+  }
+
+  async getCourseStats(): Promise<{ title: string; enrolledCount: number }[]> {
+    const courses = await Course.find().select("title enrolledStudents");
+    return courses.map((course) => ({
+      title: course.title,
+      enrolledCount: course.enrolledStudents?.length || 0,
+    }));
+  }
+
+  async getCourseStatsOfInstructor(
+    instructorId: string
+  ): Promise<{ title: string; enrolledCount: number }[]> {
+    const courses = await Course.find({ instructor: instructorId }).select(
+      "title enrolledStudents"
+    );
+    return courses.map((course) => ({
+      title: course.title,
+      enrolledCount: course.enrolledStudents?.length || 0,
+    }));
+  }
+
+  async findByPurchasedUser(userId: string): Promise<string[]> {
+    const courses = await Course.find({ enrolledStudents: userId }).select(
+      "instructor"
+    );
+
+    const instructorIds = [
+      ...new Set(courses.map((c: any) => c.instructor.toString())),
+    ];
+
+    return instructorIds;
+  }
+
+  async getUsersByInstructor(instructorId: string): Promise<string[]> {
+    const courses = await Course.find({ instructor: instructorId }).select(
+      "enrolledStudents"
+    );
+
+    const userIds = new Set<string>();
+    courses.forEach((course: any) => {
+      course.enrolledStudents.forEach((userId: any) => {
+        userIds.add(userId.toString());
+      });
+    });
+
+    return Array.from(userIds);
   }
 }

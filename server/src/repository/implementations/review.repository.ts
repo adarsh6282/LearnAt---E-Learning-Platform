@@ -36,21 +36,30 @@ export class ReviewRepository implements IReviewRepository  {
     .populate("course","title")
   }
 
-  async getAllReviews(): Promise<IReview[] | null> {
-    return await Review.find()
+  async getAllReviews(page:number,limit:number): Promise<{reviews:IReview[],total:number,totalPages:number}> {
+    const skip = (page - 1) * limit;
+
+  const [reviews, total] = await Promise.all([
+    Review.find()
       .populate({
         path: "user",
-        select: "name"
+        select: "name",
       })
       .populate({
         path: "course",
         select: "title instructor",
         populate: {
           path: "instructor",
-          select: "name"
-        }
+          select: "name",
+        },
       })
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Review.countDocuments(),
+  ]);
+  const totalPages = Math.ceil(total / limit)
+  return {reviews,total,totalPages}
   }
 
   async findReviewAndHide(id: string): Promise<IReview | null> {

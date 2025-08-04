@@ -4,27 +4,43 @@ import { ArrowLeft, Star, Users, Clock, BookOpen, User } from "lucide-react";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
 import { errorToast, successToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
-import { CreateOrderS, getReviewsS, getSpecificCourseS, postReviewS, verifyResS } from "../../services/user.services";
+import {
+  CreateOrderS,
+  getReviewsS,
+  getSpecificCourseS,
+  postReviewS,
+  verifyResS,
+} from "../../services/user.services";
 import type { Review } from "../../types/review.types";
 import { USER_ROUTES } from "../../constants/routes.constants";
-
+import userApi from "../../services/userApiService";
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseViewType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState({ rating: 0, text: "" });
+  const [isCompleted,setIsCompleted]=useState<boolean>()
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
     "overview" | "curriculum" | "instructor" | "reviews"
   >("overview");
 
+  console.log(isCompleted)
+
+  useEffect(()=>{
+    const fetchIsCourseCompleted=async()=>{
+      const res=await userApi.get<boolean>(`/users/courses/progress/${courseId}`)
+      setIsCompleted(res.data)
+    }
+    fetchIsCourseCompleted()
+  },[courseId])
+
   const handlePayment = async () => {
     if (!course?._id) return;
-    const token = localStorage.getItem("usersToken");
     const courseId = course._id;
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
@@ -33,7 +49,7 @@ const CourseDetail: React.FC = () => {
     }
 
     try {
-      const { data: order } = await CreateOrderS(courseId, token!);
+      const { data: order } = await CreateOrderS(courseId);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -43,20 +59,17 @@ const CourseDetail: React.FC = () => {
         description: course.description,
         order_id: order.razorpayOrderId,
         handler: async (response: any) => {
-          const verifyRes = await verifyResS(
-            {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-            token!
-          );
+          const verifyRes = await verifyResS({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
 
           if (verifyRes.data.success) {
-            successToast("✅ Payment Successful! You are enrolled.");
+            successToast("Payment Successful! You are enrolled.");
             setIsEnrolled(true);
           } else {
-            errorToast("❌ Payment verification failed.");
+            errorToast("Payment verification failed.");
           }
         },
       };
@@ -65,18 +78,18 @@ const CourseDetail: React.FC = () => {
       razor.open();
     } catch (err) {
       console.error("Error in payment", err);
-      alert("Something went wrong!");
+      errorToast("Course is purchased or payment in progress")
     }
   };
 
   const fetchReviews = async () => {
-    try{
-      if (!courseId) return 
-      const res = await getReviewsS(courseId)
+    try {
+      if (!courseId) return;
+      const res = await getReviewsS(courseId);
       const normalizedReviews: Review[] = res.data.reviews || [];
       setReviews(normalizedReviews);
-    }catch(err){
-      console.log(err)
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -84,14 +97,15 @@ const CourseDetail: React.FC = () => {
     if (!userReview.rating || !userReview.text)
       return errorToast("Please fill in the fields");
 
-    if (!courseId) return
+    if (!courseId) return;
 
     try {
-      await postReviewS(courseId,userReview);
+      const res=await postReviewS(courseId, userReview);
       successToast("Review Submitted");
       setUserReview({ rating: 0, text: "" });
-      fetchReviews()
+      fetchReviews();
     } catch (err) {
+      errorToast("Already reviewed the course")
       console.log(err);
     }
   };
@@ -102,10 +116,9 @@ const CourseDetail: React.FC = () => {
         console.warn("No courseId provided.");
         return;
       }
-      const token = localStorage.getItem("usersToken");
       try {
         setLoading(true);
-        const res = await getSpecificCourseS(courseId,token!);
+        const res = await getSpecificCourseS(courseId);
         setCourse(res.data.course);
         setIsEnrolled(res.data.isEnrolled);
         fetchReviews();
@@ -367,7 +380,7 @@ const CourseDetail: React.FC = () => {
                     </h3>
 
                     {/* Review Form - Only for enrolled users */}
-                    {isEnrolled && (
+                    {isCompleted && (
                       <div className="mb-8 p-4 bg-gray-700 rounded-lg">
                         <h4 className="text-white font-medium mb-4">
                           Write a Review
@@ -421,33 +434,35 @@ const CourseDetail: React.FC = () => {
                     {/* Reviews List */}
                     <div className="space-y-4">
                       {reviews.length > 0 ? (
-                        reviews.filter(review=>review.isHidden==false).map((review) => (
-                          <div
-                            key={review._id}
-                            className="border-t border-gray-600 pt-4"
-                          >
-                            <div className="flex items-center mb-2">
-                              <div className="flex space-x-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-4 w-4 ${
-                                      review.rating >= star
-                                        ? "text-yellow-400 fill-current"
-                                        : "text-gray-400"
-                                    }`}
-                                  />
-                                ))}
+                        reviews
+                          .filter((review) => review.isHidden == false)
+                          .map((review) => (
+                            <div
+                              key={review._id}
+                              className="border-t border-gray-600 pt-4"
+                            >
+                              <div className="flex items-center mb-2">
+                                <div className="flex space-x-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`h-4 w-4 ${
+                                        review.rating >= star
+                                          ? "text-yellow-400 fill-current"
+                                          : "text-gray-400"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="ml-2 text-sm text-gray-300">
+                                  By {review.user?.name || "Anonymous"}
+                                </span>
                               </div>
-                              <span className="ml-2 text-sm text-gray-300">
-                                By {review.user?.name || "Anonymous"}
-                              </span>
+                              <p className="text-white leading-relaxed">
+                                {review.text}
+                              </p>
                             </div>
-                            <p className="text-white leading-relaxed">
-                              {review.text}
-                            </p>
-                          </div>
-                        ))
+                          ))
                       ) : (
                         <div className="text-center py-8">
                           <Star className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -476,7 +491,7 @@ const CourseDetail: React.FC = () => {
               {isEnrolled ? (
                 <button
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-md font-medium cursor-pointer mb-4"
-                  onClick={()=>navigate(`/users/course-view/${courseId}`)}
+                  onClick={() => navigate(`/users/course-view/${courseId}`)}
                 >
                   Continue to Course
                 </button>

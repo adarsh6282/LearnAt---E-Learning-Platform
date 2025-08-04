@@ -1,0 +1,23 @@
+import React from "react";
+import { useCallContext } from "../context/CallContext";
+
+const CallModal: React.FC = () => {
+  const { incomingCall, callerId, acceptCall, rejectCall } = useCallContext();
+
+  if (!incomingCall) return null;
+
+  return (
+    <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+        <h2 className="text-xl font-bold">📞 Incoming Call</h2>
+        <p className="mt-2">From: {callerId}</p>
+        <div className="mt-4 flex justify-center gap-4">
+          <button onClick={acceptCall} className="bg-green-500 text-white px-4 py-2 rounded">Accept</button>
+          <button onClick={rejectCall} className="bg-red-500 text-white px-4 py-2 rounded">Reject</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CallModal;

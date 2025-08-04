@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "../../services/apiService";
+import instructorApi from "../../services/instructorApiService";
 
 interface Enrollment {
   _id: string;
   course: { title: string };
   user: { name: string; email: string };
+  isCompleted:boolean;
   createdAt: string;
 }
 
 const Enrollments = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 
+  console.log(enrollments)
+
   useEffect(() => {
-    const token = localStorage.getItem("instructorsToken");
-    axiosInstance
-      .get<Enrollment[]>("/instructors/enrollments", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setEnrollments(res.data))
-      .catch((err) => console.error(err));
+    const fetchEnrollments=async()=>{
+      await instructorApi
+        .get<Enrollment[]>("/instructors/enrollments")
+        .then((res) => setEnrollments(res.data))
+        .catch((err) => console.error(err));
+    }
+    fetchEnrollments()
   }, []);
 
   return (
@@ -27,21 +30,34 @@ const Enrollments = () => {
         Course Enrollments
       </h1>
 
-      {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Course</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Student</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Course
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Student
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Email
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {enrollments.map((enroll) => (
-                <tr key={enroll._id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={enroll._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {enroll.course.title}
                   </td>
@@ -53,6 +69,9 @@ const Enrollments = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(enroll.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className={`px-6 py-4 text-sm text-gray-700 ${enroll.isCompleted?"text-green-500":"text-red-500"}`}>
+                    {enroll.isCompleted?"Completed":"InComplete"}
                   </td>
                 </tr>
               ))}

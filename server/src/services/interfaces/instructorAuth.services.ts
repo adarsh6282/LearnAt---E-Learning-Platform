@@ -1,14 +1,22 @@
+import { IUser } from "../../models/interfaces/auth.interface";
+import { ICategory } from "../../models/interfaces/category.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
+import { INotification } from "../../models/interfaces/notification.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IReview } from "../../models/interfaces/review.interface";
 import { IWallet } from "../../models/interfaces/wallet.interface";
+import { IEnrollment } from "../../types/enrollment.types";
+interface Dashboard{
+  totalUsers:number,
+  totalCourses:number
+}
 
 export interface IInstructorAuthService{
     registerInstructor(email:string):Promise<void>
-    loginInstructor(email:string,password:string):Promise<{instructor:IInstructor,token:string}>
+    loginInstructor(email:string,password:string):Promise<{instructor:IInstructor,token:string,instructorRefreshToken:string}>
     reApplyS(email: string, resume: string):Promise<IInstructor|null>
-    verifyOtp(data:IInstructor&{otp:string}):Promise<{instructor:IInstructor,token:string}>,
+    verifyOtp(data:IInstructor&{otp:string}):Promise<{instructor:IInstructor,token:string,instructorRefreshToken:string}>,
     handleForgotPassword(email:string):Promise<void>,
     verifyForgotOtp(data:{email:string,otp:string}):Promise<boolean>,
     handleResetPassword(data:{email:string,newPassword:string,confirmPassword:string}):Promise<boolean>,
@@ -26,8 +34,15 @@ export interface IInstructorAuthService{
         profilePicture,
       }: { name?: string; phone?: string; profilePicture?: Express.Multer.File ;title?:string;yearsOfExperience?:number,education?:string}
     ): Promise<IInstructor | null>
-    getCoursesByInstructor(instructorId:string):Promise<ICourse[]|null>
+    getCoursesByInstructor(instructorId:string,page:number,limit:number):Promise<{courses:ICourse[],total:number,totalPages:number}>
+    getCategory():Promise<ICategory[]|null>
     getCourseById(courseId:string):Promise<ICourse|null>
-    getEnrollments(instructorId:string):Promise<IOrder[]|null>
+    getEnrollments(instructorId:string):Promise<IEnrollment[]|null>
     getWallet(instructorId:string):Promise<IWallet|null>
+    getCouresStats(instructorId:string):Promise<{title:string,enrolledCount:number}[]>
+    getIncomeStats(instructorId:string):Promise<{month:string,revenue:number}[]>
+    getNotifications(userId:string):Promise<INotification[]>
+    markAsRead(notificationId:string):Promise<INotification|null>
+    getPurchasedUsers(instructorId:string):Promise<IUser[]>
+    getDashboard(instructorId:string):Promise<Dashboard|null>
 }

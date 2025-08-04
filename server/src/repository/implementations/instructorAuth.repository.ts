@@ -1,7 +1,14 @@
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { IInstructorAuthRepository } from "../interfaces/instructorAuth.interface";
 import Instructor from "../../models/implementations/instructorModel";
+import Course from "../../models/implementations/courseModel";
 import { BaseRepository } from "../base.repository";
+import Order from "../../models/implementations/orderModel";
+
+interface Dashboard {
+  totalUsers: number;
+  totalCourses: number;
+}
 
 export class InstructorAuth
   extends BaseRepository<IInstructor>
@@ -20,15 +27,24 @@ export class InstructorAuth
     return instructor;
   }
 
+  async findById(id: string): Promise<IInstructor | null> {
+    const instructor = await this.model.findById(id);
+    return instructor;
+  }
+
+  async findInstructorsByIds(ids: string[]): Promise<IInstructor[]> {
+    return Instructor.find({ _id: { $in: ids } });
+  }
+
   async updateTutor(
     email: string,
     isVerified: boolean,
-    isRejected:boolean,
+    isRejected: boolean,
     accountStatus: string
   ): Promise<IInstructor | null> {
     const tutor = await this.model.findOneAndUpdate(
       { email },
-      { isVerified, accountStatus,isRejected },
+      { isVerified, accountStatus, isRejected },
       { new: true }
     );
     return tutor;
@@ -71,5 +87,24 @@ export class InstructorAuth
       { $set: updatedData },
       { new: true }
     );
+  }
+
+  async getDashboard(instructorId: string): Promise<Dashboard | null> {
+    const courses = await Course.find({ instructor: instructorId }).select(
+      "_id"
+    );
+    const courseIds = courses.map((course) => course._id);
+
+    const totalCourses = courseIds.length;
+
+    const enrolledUserIds = await Order.distinct("userId", {
+      courseId: { $in: courseIds },
+    });
+
+    const totalUsers = enrolledUserIds.length;
+    return {
+      totalCourses,
+      totalUsers,
+    };
   }
 }

@@ -53,22 +53,30 @@ class ReviewRepository {
                 .populate("course", "title");
         });
     }
-    getAllReviews() {
+    getAllReviews(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield reviewModel_1.default.find()
-                .populate({
-                path: "user",
-                select: "name"
-            })
-                .populate({
-                path: "course",
-                select: "title instructor",
-                populate: {
-                    path: "instructor",
-                    select: "name"
-                }
-            })
-                .sort({ createdAt: -1 });
+            const skip = (page - 1) * limit;
+            const [reviews, total] = yield Promise.all([
+                reviewModel_1.default.find()
+                    .populate({
+                    path: "user",
+                    select: "name",
+                })
+                    .populate({
+                    path: "course",
+                    select: "title instructor",
+                    populate: {
+                        path: "instructor",
+                        select: "name",
+                    },
+                })
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit),
+                reviewModel_1.default.countDocuments(),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { reviews, total, totalPages };
         });
     }
     findReviewAndHide(id) {

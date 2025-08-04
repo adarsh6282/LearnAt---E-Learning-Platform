@@ -1,46 +1,96 @@
 import { IAdminRepository } from "../interfaces/admin.interface";
-import User from "../../models/implementations/userModel"
-import Instructor from "../../models/implementations/instructorModel"
+import User from "../../models/implementations/userModel";
+import Instructor from "../../models/implementations/instructorModel";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { IAdmin } from "../../models/interfaces/admin.interface";
-import Admin from "../../models/implementations/adminModel"
+import Admin from "../../models/implementations/adminModel";
 import { BaseRepository } from "../base.repository";
+import Course from "../../models/implementations/courseModel";
+import { FilterQuery } from "mongoose";
 
+export class AdminRepository
+  extends BaseRepository<IAdmin>
+  implements IAdminRepository
+{
+  constructor() {
+    super(Admin);
+  }
+  async getAllUsers(page: number, limit: number, search: string): Promise<{ users: IUser[]; total: number; totalPages: number }> {
+  const skip = (page - 1) * limit;
 
-export class AdminRepository extends BaseRepository<IAdmin> implements IAdminRepository{
-    constructor(){
-        super(Admin)
-    }
-    async getAllUsers(): Promise<IUser[]> {
-        const users = await User.find({}).lean()
-        return users as IUser[]
-    }
+  const filter = search
+    ? {
+        name: { $regex: search, $options: "i" },
+      }
+    : {};
 
-    async getAllTutors(): Promise<IInstructor[]> {
-        const instructors = await Instructor.find({}).lean()
-        return instructors as IInstructor[]
-    }
+  const [users, total] = await Promise.all([
+    User.find(filter).skip(skip).limit(limit).lean(),
+    User.countDocuments(filter),
+  ]);
 
-    async findAdminByEmail(email: string): Promise<IAdmin|null> {
-        return await this.model.findOne({email})
-    }
+  const totalPages = Math.ceil(total / limit);
 
-    async updateUserBlockStatus(email: string, blocked: boolean): Promise<IUser | null> {
-        return await User.findOneAndUpdate({email},{isBlocked:blocked,updatedAt:new Date()},{new:true})
-    }
+  return { users, total, totalPages };
+}
 
-    async updateTutorBlockStatus(email: string, blocked: boolean): Promise<IInstructor | null> {
-        return await Instructor.findOneAndUpdate({email},{isBlocked:blocked},{new:true})
-    }
+  async getAllTutors(
+    page: number,
+    limit: number,
+    filter: any
+  ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
 
-    async getTotalUsers(): Promise<number> {
-        return await User.countDocuments({})
-    }
+    const [tutors, total] = await Promise.all([
+      Instructor.find(filter).skip(skip).limit(limit).lean(),
+      Instructor.countDocuments(filter),
+    ]);
 
-    async getTotalTutors(): Promise<number> {
-        return await Instructor.countDocuments({})
-    }
+    const totalPages=Math.ceil(total/limit)
 
-    
+    return { tutors, total, totalPages };
+  }
+
+  async findAdminByEmail(email: string): Promise<IAdmin | null> {
+    return await this.model.findOne({ email });
+  }
+
+  async findOneAdmin(): Promise<IAdmin | null> {
+    return await this.model.findOne()
+  }
+
+  async updateUserBlockStatus(
+    email: string,
+    blocked: boolean
+  ): Promise<IUser | null> {
+    return await User.findOneAndUpdate(
+      { email },
+      { isBlocked: blocked, updatedAt: new Date() },
+      { new: true }
+    );
+  }
+
+  async updateTutorBlockStatus(
+    email: string,
+    blocked: boolean
+  ): Promise<IInstructor | null> {
+    return await Instructor.findOneAndUpdate(
+      { email },
+      { isBlocked: blocked },
+      { new: true }
+    );
+  }
+
+  async getTotalUsers(): Promise<number> {
+    return await User.countDocuments({});
+  }
+
+  async getTotalTutors(): Promise<number> {
+    return await Instructor.countDocuments({});
+  }
+
+  async getTotalCourses(): Promise<number> {
+    return await Course.countDocuments({})
+  }
 }

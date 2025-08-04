@@ -17,15 +17,15 @@ import { editProfileS } from "../../services/instructor.services";
 const InstructorProfile: React.FC = () => {
   const context = useContext(InstructorContext);
 
-if (!context) {
-  return <div>Loading Instructor...</div>;
-}
+  if (!context) {
+    return <div>Loading Instructor...</div>;
+  }
 
-const { instructor, setInstructor } = context;
+  const { instructor, setInstructor } = context;
 
-if (!instructor) {
-  return <div>Loading Instructor...</div>;
-}
+  if (!instructor) {
+    return <div>Loading Instructor...</div>;
+  }
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,15 +47,15 @@ if (!instructor) {
   };
 
   const isFormValid = () => {
-  return (
-    formData.name.trim() !== "" &&
-    formData.phone !=="" &&
-    /^\d{10}$/.test(formData.phone) &&
-    formData.title.trim() !== "" &&
-    formData.education.trim() !== "" &&
-    formData.yearsOfExperience > 0
-  );
-};
+    return (
+      formData.name.trim() !== "" &&
+      formData.phone !== "" &&
+      /^\d{10}$/.test(formData.phone) &&
+      formData.title.trim() !== "" &&
+      formData.education.trim() !== "" &&
+      formData.yearsOfExperience > 0
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -90,13 +90,16 @@ if (!instructor) {
       formPayload.append("name", formData.name);
       formPayload.append("phone", formData.phone);
       formPayload.append("title", formData.title);
-      formPayload.append("yearsOfExperience", String(formData.yearsOfExperience));
+      formPayload.append(
+        "yearsOfExperience",
+        String(formData.yearsOfExperience)
+      );
       formPayload.append("education", formData.education);
       if (selectedFile) {
         formPayload.append("profilePicture", selectedFile);
       }
 
-      const res = await editProfileS(formPayload)
+      const res = await editProfileS(formPayload);
 
       setInstructor(res.data);
       setIsEditing(false);
@@ -142,8 +145,12 @@ if (!instructor) {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold px-5 text-gray-900">{instructor.name}</h1>
-            <p className="text-lg text-gray-600 mb-2 px-5">{instructor.title}</p>
+            <h1 className="text-3xl font-bold px-5 text-gray-900">
+              {instructor.name}
+            </h1>
+            <p className="text-lg text-gray-600 mb-2 px-5">
+              {instructor.title}
+            </p>
             <div className="flex items-center space-x-3">
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1 ${getStatusColor(
@@ -169,7 +176,13 @@ if (!instructor) {
           className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Edit3 className="w-4 h-4" />
-          <span>{isEditing ? (isLoading ? "Saving..." : "Save Changes") : "Edit Profile"}</span>
+          <span>
+            {isEditing
+              ? isLoading
+                ? "Saving..."
+                : "Save Changes"
+              : "Edit Profile"}
+          </span>
         </button>
       </div>
 
@@ -183,7 +196,9 @@ if (!instructor) {
             <div className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -198,7 +213,9 @@ if (!instructor) {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 <p className="text-gray-900 flex items-center">
                   <Mail className="w-4 h-4 mr-2 text-gray-500" />
                   {instructor.email}
@@ -207,13 +224,17 @@ if (!instructor) {
 
               {/* Username */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
                 <p className="text-gray-900">@{instructor.username}</p>
               </div>
 
               {/* Phone */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
                 {isEditing ? (
                   <input
                     type="tel"
@@ -241,7 +262,9 @@ if (!instructor) {
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Job Title
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
@@ -256,14 +279,19 @@ if (!instructor) {
 
               {/* Experience */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Years of Experience
+                </label>
                 {isEditing ? (
                   <input
                     type="number"
                     min="0"
                     value={formData.yearsOfExperience}
                     onChange={(e) =>
-                      handleInputChange("yearsOfExperience", parseInt(e.target.value) || 0)
+                      handleInputChange(
+                        "yearsOfExperience",
+                        parseInt(e.target.value) || 0
+                      )
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -277,11 +305,15 @@ if (!instructor) {
 
               {/* Education */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Education
+                </label>
                 {isEditing ? (
                   <textarea
                     value={formData.education}
-                    onChange={(e) => handleInputChange("education", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("education", e.target.value)
+                    }
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />

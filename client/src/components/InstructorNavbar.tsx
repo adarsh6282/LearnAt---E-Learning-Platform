@@ -6,28 +6,40 @@ import {
   DollarSign,
   Settings,
   LogOut,
-  Bell,
   ListCheck,
-  BookmarkCheck
+  BookmarkCheck,
 } from "lucide-react";
+import { BiChat } from "react-icons/bi";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { InstructorContext } from "../context/InstructorContext";
 import { INSTRUCTOR_ROUTES } from "../constants/routes.constants";
+import instructorApi from "../services/instructorApiService";
+import { NotificationContext } from "../context/NotificationContext";
 
 const InstructorNavbar = () => {
   const location = useLocation();
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const context = useContext(InstructorContext);
+  const {unreadCount}=useContext(NotificationContext)
   if (!context) {
     return <div>Loading...</div>;
   }
 
   const { instructor } = context;
 
-  const handleLogout = () => {
-    localStorage.removeItem("instructorsToken")
-    localStorage.removeItem("instructorsEmail")
-    navigate(INSTRUCTOR_ROUTES.LOGIN)
+  const handleLogout = async () => {
+    try {
+      await instructorApi.post(
+        "/instructors/logout",
+        {},
+        { withCredentials: true }
+      );
+      localStorage.removeItem("instructorsToken");
+      localStorage.removeItem("instructorsEmail");
+      navigate(INSTRUCTOR_ROUTES.LOGIN);
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const getRoutePath = (itemName: string) => {
@@ -39,8 +51,9 @@ const InstructorNavbar = () => {
     { name: "Create-Course", icon: Plus },
     { name: "Courses", icon: BookOpen },
     { name: "Earnings", icon: DollarSign },
-    { name: "Reviews", icon: ListCheck},
-    { name: "Enrollments", icon: BookmarkCheck},
+    { name: "Reviews", icon: ListCheck },
+    { name: "Enrollments", icon: BookmarkCheck },
+    { name: "Chat", icon: BiChat },
   ];
 
   return (
@@ -82,24 +95,21 @@ const InstructorNavbar = () => {
           </nav>
 
           <div className="border-t border-blue-700/30 p-4">
-            <button
-              onClick={() => console.log("Notifications clicked")}
-              className="w-full flex items-center space-x-3 px-4 py-3 text-blue-100 hover:text-white hover:bg-blue-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2 relative"
+            <Link
+              to="/instructors/notifications"
+              className="w-full flex items-center justify-between px-4 py-3 text-blue-100 hover:text-white hover:bg-blue-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2"
             >
-              <Bell className="w-5 h-5" />
-              <span>Notifications</span>
-              <span className="absolute right-3 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                2
-              </span>
-            </button>
+              <div className="flex items-center space-x-3">
+                <Settings className="w-5 h-5" />
+                <span>Notifications</span>
+              </div>
 
-            <button
-              onClick={() => console.log("Settings clicked")}
-              className="w-full flex items-center space-x-3 px-4 py-3 text-blue-100 hover:text-white hover:bg-blue-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2"
-            >
-              <Settings className="w-5 h-5" />
-              <span>Settings</span>
-            </button>
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center justify-center text-xs font-semibold text-white bg-red-500 rounded-full h-5 w-5">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
 
             <button
               onClick={() => navigate(INSTRUCTOR_ROUTES.PROFILE)}

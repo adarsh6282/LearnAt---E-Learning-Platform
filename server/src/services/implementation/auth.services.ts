@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import { IOtpRepository } from "../../repository/interfaces/otp.interface";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
-import { generateToken } from "../../utils/jwt";
+import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
@@ -19,6 +19,11 @@ import { Types } from "mongoose";
 import { IProgress } from "../../models/interfaces/progress.interface";
 import { IProgressRepository } from "../../repository/interfaces/progress.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
+import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
+import { IComplaint } from "../../models/interfaces/complaint.interface";
+import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
+import { INotification } from "../../models/interfaces/notification.interface";
+import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -29,7 +34,9 @@ export class AuthService implements IAuthService {
     private _courseRepository: ICourseRepository,
     private _orderRepsitory: IOrderRepository,
     private _progressRepository: IProgressRepository,
-    private _walletRepository: IWalletRepository
+    private _walletRepository: IWalletRepository,
+    private _complaintRepository: IComplaintRepository,
+    private _notificationRepository:INotificationRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -64,7 +71,7 @@ export class AuthService implements IAuthService {
 
   async verifyOtp(
     data: IUser & { otp: string }
-  ): Promise<{ user: IUser; token: string }> {
+  ): Promise<{ user: IUser; token: string; userRefreshToken: string }> {
     const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
 
     if (!otpRecord) throw new Error("OTP not found");
@@ -81,14 +88,15 @@ export class AuthService implements IAuthService {
     await this._otpRepository.deleteOtpbyEmail(data.email);
 
     const token = generateToken(user._id, user.email, "user");
+    const userRefreshToken = generateRefreshToken(user._id, user.email, "user");
 
-    return { user, token };
+    return { user, token, userRefreshToken };
   }
 
   async loginUser(
     email: string,
     password: string
-  ): Promise<{ user: IUser; token: string }> {
+  ): Promise<{ user: IUser; token: string; userRefreshToken: string }> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) {
       throw new Error("user doesn't exist");
@@ -105,8 +113,9 @@ export class AuthService implements IAuthService {
     }
 
     const token = generateToken(user._id, user.email, "user");
+    const userRefreshToken = generateRefreshToken(user._id, user.email, "user");
 
-    return { user, token };
+    return { user, token, userRefreshToken };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -254,6 +263,16 @@ export class AuthService implements IAuthService {
       throw new Error("Course dont't exist");
     }
 
+    const existing = await this._orderRepsitory.findExistingOrder({
+      userId,
+      courseId,
+      status: { $in: ["created", "paid"] },
+    });
+
+    if (existing) {
+      throw new Error("Course is purchased or payment in progress");
+    }
+
     const options = {
       amount: course.price * 100,
       currency: "INR",
@@ -302,17 +321,24 @@ export class AuthService implements IAuthService {
 
     await this._orderRepsitory.markOrderAsPaid(order._id!);
 
+    const user = await this._userRepository.findById(order.userId);
+
+    await this._courseRepository.addEnrolledUser(
+      order.courseId.toString(),
+      order.userId.toString()
+    );
+
     const course = await this._courseRepository.findCourseById(
       order.courseId!?.toString()
     );
-    
+
     if (!course || !course.instructor)
       throw new Error("Course or instructor not found");
 
-    const instructorAmount = order.amount * 0.8
-    instructorAmount.toFixed(2)
+    const instructorAmount = order.amount * 0.8;
+    instructorAmount.toFixed(2);
     const adminCommission = order.amount * 0.2;
-    adminCommission.toFixed(2)
+    adminCommission.toFixed(2);
 
     const courseId =
       typeof order.courseId === "string"
@@ -324,15 +350,30 @@ export class AuthService implements IAuthService {
       ownerId: course.instructor._id.toString(),
       courseId: courseId,
       amount: instructorAmount,
-      description: `Credited for the course named ${course.title}`,
+      description: `Credited for the course named ${course.title} by ${user?.name}`,
     });
 
     await this._walletRepository.creditWallet({
       ownerType: "admin",
       courseId: courseId,
       amount: adminCommission,
-      description: `Admin Commission for the course named ${course.title}`,
+      description: `Admin Commission for the course named ${course.title} by ${user?.name}`,
     });
+
+    await this._notificationRepository.createNotification({
+      receiverId:course.instructor.id.toString(),
+      receiverModel:"Instructor",
+      message:`Your course "${course.title}" was purchased by ${user?.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`
+    })
+
+    const admin=await this._adminRepository.findOneAdmin()
+    if(admin){
+      await this._notificationRepository.createNotification({
+        receiverId:admin.id,
+        receiverModel:"Admin",
+        message:`The course "${course.title}" was purchased by ${user?.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`
+      })
+    }
 
     return { success: true };
   }
@@ -342,21 +383,34 @@ export class AuthService implements IAuthService {
     courseId: string,
     lectureId: string
   ): Promise<IProgress | null> {
-    const existing = await this._progressRepository.findProgress(
+    let progress = await this._progressRepository.findProgress(
       userId,
       courseId
     );
-    if (!existing)
-      return this._progressRepository.createProgress(
+    if (!progress)
+      progress = await this._progressRepository.createProgress(
         userId,
         courseId,
         lectureId
       );
-    return this._progressRepository.addWatchedLecture(
-      userId,
-      courseId,
-      lectureId
-    );
+    else {
+      progress = await this._progressRepository.addWatchedLecture(
+        userId,
+        courseId,
+        lectureId
+      );
+    }
+    const course = await this._courseRepository.findCourseById(courseId);
+    const totalLectures = course?.lectures.length;
+
+    if (
+      totalLectures &&
+      progress?.watchedLectures.length === totalLectures &&
+      !progress?.isCompleted
+    ) {
+      await this._progressRepository.markAsCompleted(userId, courseId);
+    }
+    return progress;
   }
 
   async getUserCourseProgress(
@@ -368,5 +422,41 @@ export class AuthService implements IAuthService {
       courseId
     );
     return progress?.watchedLectures || [];
+  }
+
+  async fetchPurchasedInstructors(
+    userId: string
+  ): Promise<IInstructor[] | null> {
+    const instructorIds = await this._courseRepository.findByPurchasedUser(
+      userId
+    );
+
+    if (!instructorIds.length) return [];
+
+    return this._instructorRepository.findInstructorsByIds(instructorIds);
+  }
+
+  async getNotifications(userId: string): Promise<INotification[]> {
+    return await this._notificationRepository.getAllNotifications(userId);
+  }
+
+  async markAsRead(notificationId: string): Promise<INotification|null> {
+    const notification=await this._notificationRepository.updateNotification(notificationId)
+    return notification
+  }
+
+  async checkStatus(userId: string, courseId: string): Promise<boolean> {
+    const { isCompleted } = await this._progressRepository.CheckStatus(
+      userId,
+      courseId
+    );
+    if (!isCompleted) {
+      throw new Error("Course is not fully completed");
+    }
+    return isCompleted;
+  }
+
+  async submitComplaint(data: Partial<IComplaint>): Promise<IComplaint | null> {
+    return await this._complaintRepository.createComplaint(data);
   }
 }

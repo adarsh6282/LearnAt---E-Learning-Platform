@@ -8,18 +8,28 @@ import {
   FolderOpen,
   Settings,
   LogOut,
-  Edit2
+  Edit2,
 } from "lucide-react";
+import { MdReport } from "react-icons/md";
 import { ADMIN_ROUTES } from "../constants/routes.constants";
+import adminApi from "../services/adminApiService";
+import { useContext } from "react";
+import { NotificationContext } from "../context/NotificationContext";
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
+  const{unreadCount}=useContext(NotificationContext)
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminEmail");
-    localStorage.removeItem("adminToken");
-    navigate(ADMIN_ROUTES.LOGIN);
+  const handleLogout = async () => {
+    try {
+      await adminApi.post("/admin/logout", {}, { withCredentials: true });
+      localStorage.removeItem("adminEmail");
+      localStorage.removeItem("adminToken");
+      navigate(ADMIN_ROUTES.LOGIN);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const navItems = [
@@ -29,7 +39,8 @@ const AdminNavbar = () => {
     { name: "Earnings", icon: DollarSign },
     { name: "Courses", icon: BookOpen },
     { name: "Category", icon: FolderOpen },
-    { name: "Reviews", icon: Edit2 }
+    { name: "Reviews", icon: Edit2 },
+    { name: "Complaints", icon: MdReport },
   ];
 
   const getRoutePath = (itemName: string) => {
@@ -73,28 +84,19 @@ const AdminNavbar = () => {
           </nav>
 
           <div className="border-t border-purple-700/30 p-4">
-
             <Link
-              to="/admin/settings"
+              to="/admin/notifications"
               className="w-full flex items-center space-x-3 px-4 py-3 text-purple-100 hover:text-white hover:bg-purple-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2"
             >
-              <Settings className="w-5 h-5" />
-              <span>Settings</span>
-            </Link>
-
-            <Link
-              to="/admin/profile"
-              className="bg-purple-800 bg-opacity-50 hover:bg-opacity-70 rounded-lg p-3 mb-3 block transition-all duration-200"
-            >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">JD</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-white font-medium text-sm">John Doe</p>
-                  <p className="text-purple-200 text-xs">Administrator</p>
-                </div>
+                <Settings className="w-5 h-5" />
+                <span>Notifications</span>
               </div>
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center justify-center text-xs font-semibold text-white bg-red-500 rounded-full h-5 w-5">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
 
             <button

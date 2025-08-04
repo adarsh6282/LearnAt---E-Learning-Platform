@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { ICourse } from "../../types/course.types";
 import { getInstructorCoursesS } from "../../services/instructor.services";
 import Pagination from "../../components/Pagination";
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 6;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 3;
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem("instructorsToken");
@@ -18,9 +21,10 @@ const Courses: React.FC = () => {
     const fetchInstructorCourses = async () => {
       try {
         setLoading(true);
-        const res = await getInstructorCoursesS(token);
+        const res = await getInstructorCoursesS(currentPage, itemsPerPage);
 
-        setCourses(res.data);
+        setCourses(res.data.courses);
+        setTotalPages(res.data.totalPages);
       } catch (err: any) {
         setError("Failed to load courses");
         console.error(err);
@@ -30,15 +34,20 @@ const Courses: React.FC = () => {
     };
 
     fetchInstructorCourses();
-  }, []);
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <p className="text-red-500">{error}</p>;
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentCourses = courses.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(courses.length / itemsPerPage);
 
   return (
     <div className="p-6">
@@ -49,7 +58,7 @@ const Courses: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentCourses.map((course) => (
+            {courses.map((course) => (
               <Link
                 to={`/instructors/courses/${course._id}`}
                 key={course._id}
@@ -79,7 +88,7 @@ const Courses: React.FC = () => {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
+              onPageChange={handlePageChange}
             />
           )}
         </>

@@ -7,7 +7,7 @@ import { IOtpRepository } from "../../repository/interfaces/otp.interface";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { sendMail } from "../../utils/sendMail";
-import { generateToken } from "../../utils/jwt";
+import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
@@ -17,6 +17,17 @@ import { IOrder } from "../../models/interfaces/order.interface";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
 import { IWallet } from "../../models/interfaces/wallet.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
+import { ICategoryRepository } from "../../repository/interfaces/category.interface";
+import { ICategory } from "../../models/interfaces/category.interface";
+import { IEnrollment } from "../../types/enrollment.types";
+import { IUser } from "../../models/interfaces/auth.interface";
+import { INotificationRepository } from "../../repository/interfaces/notification.interface";
+import { INotification } from "../../models/interfaces/notification.interface";
+
+interface Dashboard {
+  totalUsers: number;
+  totalCourses: number;
+}
 
 export class InstructorAuthSerivce implements IInstructorAuthService {
   constructor(
@@ -25,9 +36,11 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     private _adminRepository: IAdminRepository,
     private _userRepository: IAuthRepository,
     private _courseRepository: ICourseRepository,
-    private _reviewRepository:IReviewRepository,
-    private _orderRepository:IOrderRepository,
-    private _walletRepository:IWalletRepository
+    private _reviewRepository: IReviewRepository,
+    private _orderRepository: IOrderRepository,
+    private _walletRepository: IWalletRepository,
+    private _categoryRepository: ICategoryRepository,
+    private _notificationRepository: INotificationRepository
   ) {}
 
   async registerInstructor(email: string): Promise<void> {
@@ -59,9 +72,11 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     await sendMail(email, otp);
   }
 
-  async verifyOtp(
-    data: IInstructor & { otp: string }
-  ): Promise<{ instructor: IInstructor; token: string }> {
+  async verifyOtp(data: IInstructor & { otp: string }): Promise<{
+    instructor: IInstructor;
+    token: string;
+    instructorRefreshToken: string;
+  }> {
     const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
 
     if (!otpRecord) throw new Error("OTP not found");
@@ -81,8 +96,13 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     await this._otpRepository.deleteOtpbyEmail(data.email);
 
     const token = generateToken(instructor._id, instructor.email, "instructor");
+    const instructorRefreshToken = generateRefreshToken(
+      instructor._id,
+      instructor.email,
+      "instructor"
+    );
 
-    return { instructor, token };
+    return { instructor, token, instructorRefreshToken };
   }
 
   async reApplyS(email: string, resume: string): Promise<IInstructor | null> {
@@ -106,7 +126,11 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   async loginInstructor(
     email: string,
     password: string
-  ): Promise<{ instructor: IInstructor; token: string }> {
+  ): Promise<{
+    instructor: IInstructor;
+    token: string;
+    instructorRefreshToken: string;
+  }> {
     const instructor = await this._instructorAuthRepository.findByEmail(email);
 
     if (!instructor) {
@@ -124,8 +148,13 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const token = generateToken(instructor._id, instructor.email, "instructor");
+    const instructorRefreshToken = generateRefreshToken(
+      instructor._id,
+      instructor.email,
+      "instructor"
+    );
 
-    return { instructor, token };
+    return { instructor, token, instructorRefreshToken };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -267,9 +296,15 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async getCoursesByInstructor(
-    instructorId: string
-  ): Promise<ICourse[] | null> {
-    return await this._courseRepository.findCoursesByInstructor(instructorId);
+    instructorId: string,
+    page: number,
+    limit: number
+  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
+    return await this._courseRepository.findCoursesByInstructor(
+      instructorId,
+      page,
+      limit
+    );
   }
 
   async getCourseById(courseId: string): Promise<ICourse | null> {
@@ -280,22 +315,75 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return course;
   }
 
-  async getReviewsByInstructor(instructorId: string): Promise<IReview[] | null> {
-    return this._reviewRepository.getReviewsByInstructor(instructorId)
+  async getCategory(): Promise<ICategory[] | null> {
+    const categories = await this._categoryRepository.getCatgeories();
+    if (!categories) {
+      throw new Error("No categories found");
+    }
+    return categories;
   }
 
-  async getEnrollments(instructorId: string): Promise<IOrder[] | null> {
-    const enrollments=await this._orderRepository.getEnrollmentsByInstructor(instructorId)
-    return enrollments
+  async getReviewsByInstructor(
+    instructorId: string
+  ): Promise<IReview[] | null> {
+    return this._reviewRepository.getReviewsByInstructor(instructorId);
+  }
+
+  async getEnrollments(instructorId: string): Promise<IEnrollment[] | null> {
+    const enrollments = await this._orderRepository.getEnrollmentsByInstructor(
+      instructorId
+    );
+    return enrollments;
   }
 
   async getWallet(instructorId: string): Promise<IWallet | null> {
-    const wallet=await this._walletRepository.findWalletOfInstructor(instructorId)
+    const wallet = await this._walletRepository.findWalletOfInstructor(
+      instructorId
+    );
 
-    if(!wallet){
-      throw new Error("No wallet found for the instructor")
+    if (!wallet) {
+      throw new Error("No wallet found for the instructor");
     }
 
-    return wallet
+    return wallet;
+  }
+
+  async getCouresStats(
+    instructorId: string
+  ): Promise<{ title: string; enrolledCount: number }[]> {
+    return await this._courseRepository.getCourseStatsOfInstructor(
+      instructorId
+    );
+  }
+
+  async getDashboard(instructorId: string): Promise<Dashboard | null> {
+    return await this._instructorAuthRepository.getDashboard(instructorId);
+  }
+
+  async getIncomeStats(
+    instructorId: string
+  ): Promise<{ month: string; revenue: number }[]> {
+    return await this._walletRepository.getIncome(instructorId);
+  }
+
+  async getNotifications(userId: string): Promise<INotification[]> {
+    return await this._notificationRepository.getAllNotifications(userId);
+  }
+
+  async markAsRead(notificationId: string): Promise<INotification | null> {
+    const notification = await this._notificationRepository.updateNotification(
+      notificationId
+    );
+    return notification;
+  }
+
+  async getPurchasedUsers(instructorId: string): Promise<IUser[]> {
+    const userIds = await this._courseRepository.getUsersByInstructor(
+      instructorId
+    );
+
+    if (!userIds.length) return [];
+
+    return this._userRepository.findUsersByIds(userIds);
   }
 }

@@ -1,4 +1,4 @@
-import { IWallet } from "../../models/interfaces/wallet.interface";
+import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
 import { Types } from "mongoose";
 
 export interface IWalletRepository {
@@ -18,5 +18,8 @@ export interface IWalletRepository {
 
   findWalletOfInstructor(InstructorId: string): Promise<IWallet | null>;
 
-  findWalletOfAdmin(): Promise<IWallet | null>;
+  findWalletOfAdmin(page:number,limit:number): Promise<{ wallet: Partial<IWallet>; total: number; totalPages: number,transactions:ITransaction[] }>;
+
+  getIncomeStats():Promise<{month:string,revenue:number}[]>
+  getIncome(instructorId:string):Promise<{month:string,revenue:number}[]>
 }

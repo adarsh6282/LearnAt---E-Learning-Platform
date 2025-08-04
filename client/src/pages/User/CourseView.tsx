@@ -3,24 +3,20 @@ import { useParams } from "react-router-dom";
 import { getSpecificCourseS } from "../../services/user.services";
 import type { CourseViewType, Lecture } from "../../types/user.types";
 import { BookOpen } from "lucide-react";
-import axiosInstance from "../../services/apiService";
+import userApi from "../../services/userApiService";
+import ReportForm from "../../components/ReportForm";
 
 const CoursePage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseViewType | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lecture | null>(null);
   const [watchedLectures, setWatchedLectures] = useState<string[]>([]);
-  const totalLectures = course?.lectures?.length || 1;
-  const progressPercent = Math.floor(
-    (watchedLectures.length / totalLectures) * 100
-  );
 
-  const token = localStorage.getItem("usersToken");
   if (!courseId) return;
 
   useEffect(() => {
     const fetchCourse = async () => {
-      const res = await getSpecificCourseS(courseId, token!);
+      const res = await getSpecificCourseS(courseId);
       const courseData = res.data.course;
       setCourse(courseData);
 
@@ -28,8 +24,10 @@ const CoursePage = () => {
         setSelectedLesson(courseData.lectures[0]);
       }
 
-      const progressRes=await axiosInstance.get<{watchedLectures:string[]}>(`/users/course-view/progress/${courseId}`,{headers:{Authorization:`Bearer ${token}`}})
-      setWatchedLectures(progressRes.data.watchedLectures)
+      const progressRes = await userApi.get<{ watchedLectures: string[] }>(
+        `/users/course-view/progress/${courseId}`
+      );
+      setWatchedLectures(progressRes.data.watchedLectures);
     };
 
     fetchCourse();
@@ -55,11 +53,9 @@ const CoursePage = () => {
       !watchedLectures.includes(selectedLesson._id)
     ) {
       try {
-        await axiosInstance.post(
-          `/users/course-view/progress/${courseId}`,
-          { lectureId: selectedLesson._id },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await userApi.post(`/users/course-view/progress/${courseId}`, {
+          lectureId: selectedLesson._id,
+        });
         setWatchedLectures((prev) => [...prev, selectedLesson._id]);
       } catch (err: any) {
         console.log(err);
@@ -89,6 +85,11 @@ const CoursePage = () => {
             </li>
           ))}
         </ul>
+        <ReportForm
+          type="report"
+          subject={`Issue with Course: ${course.title}`}
+          targetId={course._id}
+        />
       </aside>
 
       {/* Video Player & Details */}
@@ -98,24 +99,39 @@ const CoursePage = () => {
             {selectedLesson?.title}
           </h3>
 
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-300 mb-1">
-              <span>Course Progress</span>
-              <span>{progressPercent}% Complete</span>
+          {course && (
+            <div className="mb-6">
+              <div className="flex justify-between text-sm text-gray-300 mb-1">
+                <span>Course Progress</span>
+                <span>
+                  {Math.floor(
+                    (watchedLectures.length / (course.lectures?.length || 1)) *
+                      100
+                  )}
+                  % Complete
+                </span>
+              </div>
+              <div className="w-full bg-gray-700 h-3 rounded-md overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{
+                    width: `${Math.floor(
+                      (watchedLectures.length /
+                        (course.lectures?.length || 1)) *
+                        100
+                    )}%`,
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-gray-700 h-3 rounded-md overflow-hidden">
-              <div
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
+          )}
 
           <div className="w-full aspect-video bg-black rounded-lg overflow-hidden mb-6 border border-gray-700">
             {selectedLesson?.videoUrl ? (
               <video
                 src={selectedLesson.videoUrl}
                 controls
+                controlsList="nodownload"
                 className="w-full h-full"
                 onTimeUpdate={handleTimeUpdate}
               />

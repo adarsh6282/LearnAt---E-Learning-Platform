@@ -1,31 +1,45 @@
-// AdminRoutes.jsx
-import { Route } from "react-router-dom"
-import AdminLogin from "../pages/Admin/AdminLogin"
-import AdminNavbar from "../components/AdminNavbar"
-import AdminDashboard from "../pages/Admin/AdminDashboard"
-import AdminUsers from "../pages/Admin/AdminUsers"
-import AdminTutors from "../pages/Admin/AdminTutors"
-import AdminTutorRequests from "../pages/Admin/AdminTutorRequests"
-import AdminPrivateRoute from "./AdminPrivateRoutes"
-import AdminCategory from "../pages/Admin/AdminCategory"
-import AdminCourse from "../pages/Admin/AdminCourse"
-import AdminReviews from "../pages/Admin/AdminReviews"
-import Earnings from "../components/Earnings"
+import { Route } from "react-router-dom";
+import AdminLogin from "../pages/Admin/AdminLogin";
+import AdminNavbar from "../components/AdminNavbar";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminUsers from "../pages/Admin/AdminUsers";
+import AdminTutors from "../pages/Admin/AdminTutors";
+import AdminTutorRequests from "../pages/Admin/AdminTutorRequests";
+import AdminPrivateRoute from "./AdminPrivateRoutes";
+import AdminCategory from "../pages/Admin/AdminCategory";
+import AdminCourse from "../pages/Admin/AdminCourse";
+import AdminReviews from "../pages/Admin/AdminReviews";
+import Earnings from "../components/Earnings";
+import ComplaintPage from "../components/ComplaintPage";
+import AdminCourseView from "../pages/Admin/AdminCourseView";
+import TutorDetail from "../pages/Admin/AdminTutorVIew";
+import { NotificationProvider } from "../context/NotificationContext";
+import AdminNotification from "../pages/Admin/AdminNotification";
 
 const AdminRoutes = [
   <Route key="admin-login" path="/admin/login" element={<AdminLogin />} />,
   <Route key="admin-private" path="/admin" element={<AdminPrivateRoute />}>
-    <Route element={<AdminNavbar />}>
+    <Route
+      element={
+        <NotificationProvider>
+          <AdminNavbar />
+        </NotificationProvider>
+      }
+    >
       <Route path="dashboard" element={<AdminDashboard />} />
       <Route path="users" element={<AdminUsers />} />
       <Route path="tutors" element={<AdminTutors />} />
       <Route path="tutor-requests" element={<AdminTutorRequests />} />
-      <Route path="category" element={<AdminCategory/>}/>
-      <Route path="courses" element={<AdminCourse/>}/>
-      <Route path="reviews" element={<AdminReviews/>}/>
-      <Route path="earnings" element={<Earnings role="admin"/>}/>
+      <Route path="tutor-view/:tutorId" element={<TutorDetail />} />
+      <Route path="category" element={<AdminCategory />} />
+      <Route path="courses" element={<AdminCourse />} />
+      <Route path="reviews" element={<AdminReviews />} />
+      <Route path="complaints" element={<ComplaintPage />} />
+      <Route path="earnings" element={<Earnings role="admin" />} />
+      <Route path="courses/:courseId" element={<AdminCourseView />} />
+      <Route path="/admin/notifications" element={<AdminNotification/>}/>
     </Route>
-  </Route>
-]
+  </Route>,
+];
 
-export default AdminRoutes
+export default AdminRoutes;

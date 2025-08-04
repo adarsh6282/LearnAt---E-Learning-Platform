@@ -1,10 +1,10 @@
-import axiosInstance from "./apiService";
 import type { ICourse } from "../types/course.types";
 import type {
   IInstructorProfile,
   VerifyInstructor,
 } from "../types/instructor.types";
 import type { CourseData } from "../types/course.types";
+import instructorApi from "./instructorApiService";
 
 interface InstructorRegisterResponse {
   message: string;
@@ -22,40 +22,30 @@ interface InstructorRegisterResponse {
   };
 }
 
-export const getInstructorCoursesS = async (token: string) => {
-  return await axiosInstance.get<ICourse[]>("/instructors/courses", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const getInstructorCoursesS = async (page:number,limit:number) => {
+  return await instructorApi.get<{courses:ICourse[],total:number,totalPages:number}>(`/instructors/courses?page=${page}&limit=${limit}`);
 };
 
 export const getProfileS = async () => {
-  return await axiosInstance.get<IInstructorProfile>("/instructors/profile", {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("instructorsToken")}`,
-    },
-  });
+  return await instructorApi.get<IInstructorProfile>("/instructors/profile");
 };
 
 export const editProfileS = async (formPayload: FormData) => {
-  return await axiosInstance.put<IInstructorProfile>(
+  return await instructorApi.put<IInstructorProfile>(
     "/instructors/profile",
     formPayload,
     {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("instructorsToken")}`,
         "Content-Type": "multipart/form-data",
       },
     }
   );
 };
 
-export const createCourseS = async (formData: FormData, token: string) => {
-  return await axiosInstance.post("/instructors/courses", formData, {
+export const createCourseS = async (formData: FormData) => {
+  return await instructorApi.post("/instructors/courses", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
-      Authorization: `Bearer ${token}`,
     },
   });
 };
@@ -63,22 +53,20 @@ export const createCourseS = async (formData: FormData, token: string) => {
 export const editCourseS = async (
   courseId: string,
   formData: FormData,
-  token: string
 ) => {
-  return await axiosInstance.put(
+  return await instructorApi.put(
     `/instructors/courses/editcourse/${courseId}`,
     formData,
     {
       headers: {
         "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
       },
     }
   );
 };
 
 export const instructorLoginS = async (email: string, password: string) => {
-  return await axiosInstance.post<VerifyInstructor>("/instructors/login", {
+  return await instructorApi.post<VerifyInstructor>("/instructors/login", {
     email,
     password,
   });
@@ -109,7 +97,7 @@ export const instructorRegisterS = async (formPayload: {
   data.append("confirmPassword", formPayload.confirmPassword);
   data.append("resume", formPayload.resume);
 
-  return await axiosInstance.post<InstructorRegisterResponse>(
+  return await instructorApi.post<InstructorRegisterResponse>(
     "/instructors/register",
     data,
     {
@@ -120,17 +108,14 @@ export const instructorRegisterS = async (formPayload: {
   );
 };
 
-export const getCourseById = async (courseId: string, token: string) => {
-  return await axiosInstance.get<CourseData>(
-    `/instructors/courses/${courseId}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+export const getCourseById = async (courseId: string) => {
+  return await instructorApi.get<CourseData>(
+    `/instructors/courses/${courseId}`);
 };
 
 export const reapplyS = async (formData: FormData) => {
-  return await axiosInstance.put("/instructors/reapply", formData, {
+  return await instructorApi.put("/instructors/reapply", formData, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("instructorsToken")}`,
       "Content-Type": "multipart/form-data",
     },
   });

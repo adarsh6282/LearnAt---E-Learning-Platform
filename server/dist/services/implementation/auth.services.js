@@ -54,7 +54,7 @@ const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.con
 const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
 const crypto_1 = __importDefault(require("crypto"));
 class AuthService {
-    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository) {
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository) {
         this._userRepository = _userRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -63,6 +63,8 @@ class AuthService {
         this._orderRepsitory = _orderRepsitory;
         this._progressRepository = _progressRepository;
         this._walletRepository = _walletRepository;
+        this._complaintRepository = _complaintRepository;
+        this._notificationRepository = _notificationRepository;
     }
     registerUser(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -97,7 +99,8 @@ class AuthService {
             const user = yield this._userRepository.createUser(Object.assign(Object.assign({}, data), { password: hashedPassword }));
             yield this._otpRepository.deleteOtpbyEmail(data.email);
             const token = (0, jwt_1.generateToken)(user._id, user.email, "user");
-            return { user, token };
+            const userRefreshToken = (0, jwt_1.generateRefreshToken)(user._id, user.email, "user");
+            return { user, token, userRefreshToken };
         });
     }
     loginUser(email, password) {
@@ -114,7 +117,8 @@ class AuthService {
                 throw new Error("Invalid password");
             }
             const token = (0, jwt_1.generateToken)(user._id, user.email, "user");
-            return { user, token };
+            const userRefreshToken = (0, jwt_1.generateRefreshToken)(user._id, user.email, "user");
+            return { user, token, userRefreshToken };
         });
     }
     handleForgotPassword(email) {
@@ -224,6 +228,14 @@ class AuthService {
             if (!course) {
                 throw new Error("Course dont't exist");
             }
+            const existing = yield this._orderRepsitory.findExistingOrder({
+                userId,
+                courseId,
+                status: { $in: ["created", "paid"] },
+            });
+            if (existing) {
+                throw new Error("Course is purchased or payment in progress");
+            }
             const options = {
                 amount: course.price * 100,
                 currency: "INR",
@@ -257,6 +269,8 @@ class AuthService {
             if (!order)
                 throw new Error("Order not found");
             yield this._orderRepsitory.markOrderAsPaid(order._id);
+            const user = yield this._userRepository.findById(order.userId);
+            yield this._courseRepository.addEnrolledUser(order.courseId.toString(), order.userId.toString());
             const course = yield this._courseRepository.findCourseById((_b = order.courseId) === null || _b === void 0 ? void 0 : _b.toString());
             if (!course || !course.instructor)
                 throw new Error("Course or instructor not found");
@@ -272,29 +286,85 @@ class AuthService {
                 ownerId: course.instructor._id.toString(),
                 courseId: courseId,
                 amount: instructorAmount,
-                description: `Credited for the course named ${course.title}`,
+                description: `Credited for the course named ${course.title} by ${user === null || user === void 0 ? void 0 : user.name}`,
             });
             yield this._walletRepository.creditWallet({
                 ownerType: "admin",
                 courseId: courseId,
                 amount: adminCommission,
-                description: `Admin Commission for the course named ${course.title}`,
+                description: `Admin Commission for the course named ${course.title} by ${user === null || user === void 0 ? void 0 : user.name}`,
             });
+            yield this._notificationRepository.createNotification({
+                receiverId: course.instructor.id.toString(),
+                receiverModel: "Instructor",
+                message: `Your course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`
+            });
+            const admin = yield this._adminRepository.findOneAdmin();
+            if (admin) {
+                yield this._notificationRepository.createNotification({
+                    receiverId: admin.id,
+                    receiverModel: "Admin",
+                    message: `The course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`
+                });
+            }
             return { success: true };
         });
     }
     updateLectureProgress(userId, courseId, lectureId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const existing = yield this._progressRepository.findProgress(userId, courseId);
-            if (!existing)
-                return this._progressRepository.createProgress(userId, courseId, lectureId);
-            return this._progressRepository.addWatchedLecture(userId, courseId, lectureId);
+            let progress = yield this._progressRepository.findProgress(userId, courseId);
+            if (!progress)
+                progress = yield this._progressRepository.createProgress(userId, courseId, lectureId);
+            else {
+                progress = yield this._progressRepository.addWatchedLecture(userId, courseId, lectureId);
+            }
+            const course = yield this._courseRepository.findCourseById(courseId);
+            const totalLectures = course === null || course === void 0 ? void 0 : course.lectures.length;
+            if (totalLectures &&
+                (progress === null || progress === void 0 ? void 0 : progress.watchedLectures.length) === totalLectures &&
+                !(progress === null || progress === void 0 ? void 0 : progress.isCompleted)) {
+                yield this._progressRepository.markAsCompleted(userId, courseId);
+            }
+            return progress;
         });
     }
     getUserCourseProgress(userId, courseId) {
         return __awaiter(this, void 0, void 0, function* () {
             const progress = yield this._progressRepository.findProgress(userId, courseId);
             return (progress === null || progress === void 0 ? void 0 : progress.watchedLectures) || [];
+        });
+    }
+    fetchPurchasedInstructors(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructorIds = yield this._courseRepository.findByPurchasedUser(userId);
+            if (!instructorIds.length)
+                return [];
+            return this._instructorRepository.findInstructorsByIds(instructorIds);
+        });
+    }
+    getNotifications(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._notificationRepository.getAllNotifications(userId);
+        });
+    }
+    markAsRead(notificationId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const notification = yield this._notificationRepository.updateNotification(notificationId);
+            return notification;
+        });
+    }
+    checkStatus(userId, courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { isCompleted } = yield this._progressRepository.CheckStatus(userId, courseId);
+            if (!isCompleted) {
+                throw new Error("Course is not fully completed");
+            }
+            return isCompleted;
+        });
+    }
+    submitComplaint(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._complaintRepository.createComplaint(data);
         });
     }
 }

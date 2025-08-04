@@ -17,6 +17,11 @@ export class AuthRepository extends BaseRepository<IUser> implements IAuthReposi
     return user;
   }
 
+  async findById(id: string): Promise<IUser | null> {
+    const user=await this.model.findById(id)
+    return user
+  }
+
   async findForProfile(email: string): Promise<IUser | null> {
     const user = await this.model.findOne({ email }).select("-password");
     return user;
@@ -36,5 +41,9 @@ export class AuthRepository extends BaseRepository<IUser> implements IAuthReposi
       { new: true }
     );
     return updatedUser;
+  }
+
+  async findUsersByIds(ids: string[]): Promise<IUser[]> {
+    return User.find({ _id: { $in: ids } });
   }
 }

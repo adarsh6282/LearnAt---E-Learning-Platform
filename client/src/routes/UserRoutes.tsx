@@ -13,24 +13,39 @@ import Courses from "../pages/User/Courses";
 import { UserProvider } from "../context/UserContext";
 import { Outlet } from "react-router-dom";
 import ProtectedRoute from "../pages/User/ProtectedRoute";
-import {USER_ROUTES} from "../constants/routes.constants"
+import { USER_ROUTES } from "../constants/routes.constants";
 import CourseView from "../pages/User/CourseView";
 import PurchaseHistory from "../pages/User/PurchaseHistory";
+import ChatWindow from "../components/ChatWindow";
+import ChatPage from "../components/ChatPage";
+import VideoCall from "../components/VideoCall";
+import { CallProvider } from "../context/CallContext";
+import CallModal from "../components/CallModal";
+import UserNotification from "../pages/User/UserNotification";
+import { NotificationProvider } from "../context/NotificationContext";
 
 const UserRoutes = () => {
   return (
     <>
+      <Route path={USER_ROUTES.ROOT} element={<LandingPage />} />
       <Route element={<UserProviderWrapper />}>
         <Route path={USER_ROUTES.REGISTER} element={<UserRegister />} />
-        <Route path="/users/course-view/:courseId" element={<CourseView/>}/>
-        <Route path="/users/purchasehistory" element={<PurchaseHistory/>}/>
-        <Route path={ USER_ROUTES.LOGIN} element={<UserLogin />} />
-        <Route path={USER_ROUTES.ROOT} element={<LandingPage />} />
-        <Route path={USER_ROUTES.VERIFY_OTP} element={<OtpPage role="users" />} />
+        <Route path="/users/course-view/:courseId" element={<CourseView />} />
+        <Route path="/users/notifications" element={<UserNotification />} />
+        <Route path="/users/purchasehistory" element={<PurchaseHistory />} />
+        <Route path={USER_ROUTES.LOGIN} element={<UserLogin />} />
+        <Route
+          path={USER_ROUTES.VERIFY_OTP}
+          element={<OtpPage role="users" />}
+        />
         <Route
           path={USER_ROUTES.FORGOT_OTP}
           element={<ForgotOtpPage role="users" />}
         />
+        <Route path="/users/chat" element={<ChatPage />}>
+          <Route path=":chatId" element={<ChatWindow />} />
+        </Route>
+        <Route path="/users/video/:chatId" element={<VideoCall />} />
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}
@@ -72,7 +87,12 @@ const UserRoutes = () => {
 const UserProviderWrapper = () => {
   return (
     <UserProvider>
-      <Outlet />
+      <NotificationProvider>
+        <CallProvider>
+          <Outlet />
+          <CallModal />
+        </CallProvider>
+      </NotificationProvider>
     </UserProvider>
   );
 };

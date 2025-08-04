@@ -14,7 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstructorAuth = void 0;
 const instructorModel_1 = __importDefault(require("../../models/implementations/instructorModel"));
+const courseModel_1 = __importDefault(require("../../models/implementations/courseModel"));
 const base_repository_1 = require("../base.repository");
+const orderModel_1 = __importDefault(require("../../models/implementations/orderModel"));
 class InstructorAuth extends base_repository_1.BaseRepository {
     constructor() {
         super(instructorModel_1.default);
@@ -29,6 +31,17 @@ class InstructorAuth extends base_repository_1.BaseRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const instructor = yield this.model.findOne({ email });
             return instructor;
+        });
+    }
+    findById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructor = yield this.model.findById(id);
+            return instructor;
+        });
+    }
+    findInstructorsByIds(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return instructorModel_1.default.find({ _id: { $in: ids } });
         });
     }
     updateTutor(email, isVerified, isRejected, accountStatus) {
@@ -57,6 +70,21 @@ class InstructorAuth extends base_repository_1.BaseRepository {
     updateInstructor(email, updatedData) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield instructorModel_1.default.findOneAndUpdate({ email }, { $set: updatedData }, { new: true });
+        });
+    }
+    getDashboard(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courses = yield courseModel_1.default.find({ instructor: instructorId }).select("_id");
+            const courseIds = courses.map((course) => course._id);
+            const totalCourses = courseIds.length;
+            const enrolledUserIds = yield orderModel_1.default.distinct("userId", {
+                courseId: { $in: courseIds },
+            });
+            const totalUsers = enrolledUserIds.length;
+            return {
+                totalCourses,
+                totalUsers,
+            };
         });
     }
 }

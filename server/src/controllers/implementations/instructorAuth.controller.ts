@@ -5,6 +5,9 @@ import { httpStatus } from "../../constants/statusCodes";
 import fs from "fs";
 import path from "path";
 import cloudinary from "../../config/cloudinary.config";
+import jwt from "jsonwebtoken";
+import { generateToken } from "../../utils/jwt";
+import User from "../../models/implementations/userModel";
 
 export class InstructorAuthController implements IInstructorController {
   constructor(private _instructorAuthService: IInstructorAuthService) {}
@@ -81,7 +84,6 @@ export class InstructorAuthController implements IInstructorController {
       });
 
       const resumeUrl = cloudResult.secure_url;
-      console.log(resumeUrl);
 
       const updatedInstructor = await this._instructorAuthService.reApplyS(
         email,
@@ -103,8 +105,17 @@ export class InstructorAuthController implements IInstructorController {
   async signin(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      const { instructor, token } =
+      const { instructor, token, instructorRefreshToken } =
         await this._instructorAuthService.loginInstructor(email, password);
+
+      res.cookie("instructorRefreshToken", instructorRefreshToken, {
+        path: "/api/instructors",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       res.status(httpStatus.OK).json({ instructor, token });
     } catch (err: any) {
       res
@@ -116,9 +127,17 @@ export class InstructorAuthController implements IInstructorController {
   async verifyOtp(req: Request, res: Response): Promise<void> {
     try {
       const instructorData = req.body;
-      const { instructor, token } = await this._instructorAuthService.verifyOtp(
-        instructorData
-      );
+      const { instructor, token, instructorRefreshToken } =
+        await this._instructorAuthService.verifyOtp(instructorData);
+
+      res.cookie("instructorRefreshToken", instructorRefreshToken, {
+        path: "/api/instructors",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       res.status(httpStatus.CREATED).json({
         instructor,
         token,
@@ -242,10 +261,31 @@ export class InstructorAuthController implements IInstructorController {
     }
 
     try {
-      const courses = await this._instructorAuthService.getCoursesByInstructor(
-        instructorId
-      );
-      res.status(httpStatus.OK).json(courses);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 6;
+      const { courses, total, totalPages } =
+        await this._instructorAuthService.getCoursesByInstructor(
+          instructorId,
+          page,
+          limit
+        );
+      res.status(httpStatus.OK).json({
+        courses,
+        total,
+        currentPage: page,
+        totalPages,
+      });
+    } catch (err: any) {
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
+    }
+  }
+
+  async getCategory(req: Request, res: Response): Promise<void> {
+    try {
+      const category = await this._instructorAuthService.getCategory();
+      res.status(httpStatus.OK).json(category);
     } catch (err: any) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
@@ -302,12 +342,115 @@ export class InstructorAuthController implements IInstructorController {
       );
       res.status(httpStatus.OK).json(enrollments);
     } catch (err: any) {
-      console.log(err)
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+      console.log(err);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
     }
   }
 
   async getWallet(req: Request, res: Response): Promise<void> {
+    try {
+      const instructorId = req.instructor?.id;
+
+      if (!instructorId) {
+        res
+          .status(httpStatus.NOT_FOUND)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+
+      const wallet = await this._instructorAuthService.getWallet(instructorId);
+      res
+        .status(httpStatus.OK)
+        .json({ balance: wallet?.balance, transactions: wallet?.transactions });
+    } catch (err: any) {
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
+    }
+  }
+
+  async refreshToken(req: Request, res: Response): Promise<void> {
+    console.log("Instructor refresh hit");
+    console.log("Cookie token:", req.cookies.instructorRefreshToken);
+    const token = req.cookies.instructorRefreshToken;
+
+    if (!token) {
+      res.status(httpStatus.UNAUTHORIZED).json({ message: "No Refresh Token" });
+      return;
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as {
+        _id: string;
+        email: string;
+        role: "user" | "instructor" | "admin";
+      };
+
+      console.log("Decoded token:", decoded);
+      if (decoded.role !== "instructor") {
+        res.status(httpStatus.FORBIDDEN).json({ message: "Invalid role" });
+        return;
+      }
+
+      const instructorsToken = generateToken(
+        decoded._id,
+        decoded.email,
+        decoded.role
+      );
+      res.status(httpStatus.OK).json({ token: instructorsToken });
+    } catch (err: any) {
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
+    }
+  }
+
+  async logOut(req: Request, res: Response): Promise<void> {
+    res.clearCookie("instructorRefreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/instructors",
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+  }
+
+  async getPurchasedStudents(req: Request, res: Response): Promise<void> {
+    try{
+      const instructorId=req.instructor?.id
+    if(!instructorId){
+      res.status(httpStatus.NOT_FOUND).json({message:"NO Instructors found"})
+      return
+    }
+
+    const users=await this._instructorAuthService.getPurchasedUsers(instructorId)
+    res.status(httpStatus.OK).json(users)
+    }catch(err){
+      console.log(err)
+    }
+  }
+
+  async getCourseStats(req: Request, res: Response): Promise<void> {
+    try {
+      const instructorId = req.instructor?.id;
+      if (!instructorId) {
+        res
+          .status(httpStatus.NOT_FOUND)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+      const stats = await this._instructorAuthService.getCouresStats(
+        instructorId
+      );
+      res.status(httpStatus.OK).json(stats);
+    } catch (err: any) {
+      console.log(err);
+    }
+  }
+
+  async getDashboard(req: Request, res: Response): Promise<void> {
     try{
       const instructorId=req.instructor?.id
 
@@ -316,10 +459,44 @@ export class InstructorAuthController implements IInstructorController {
       return
     }
 
-    const wallet = await this._instructorAuthService.getWallet(instructorId)
-    res.status(httpStatus.OK).json({balance:wallet?.balance,transactions:wallet?.transactions})
+    const data=await this._instructorAuthService.getDashboard(instructorId)
+    res.status(httpStatus.OK).json(data)
+    }catch(err){
+      console.log(err)
+    }
+  }
+
+  async getNotifications(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const notifications = await this._instructorAuthService.getNotifications(userId);
+      res.status(httpStatus.OK).json(notifications);
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async markAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { notificationId } = req.params;
+      const notification = await this._instructorAuthService.markAsRead(notificationId);
+      res.status(httpStatus.OK).json({ message: "Message Read" });
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async getIncomeStats(req: Request, res: Response): Promise<void> {
+    try{
+      const instructorId=req.instructor?.id
+      if(!instructorId){
+        res.status(httpStatus.NOT_FOUND).json({message:"Instructor not found"})
+        return
+      }
+      const incomeStats=await this._instructorAuthService.getIncomeStats(instructorId)
+      res.status(httpStatus.OK).json(incomeStats)
     }catch(err:any){
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+      console.log(err)
     }
   }
 }

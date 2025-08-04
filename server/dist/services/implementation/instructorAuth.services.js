@@ -52,7 +52,7 @@ const sendMail_1 = require("../../utils/sendMail");
 const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 class InstructorAuthSerivce {
-    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository) {
+    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -61,6 +61,8 @@ class InstructorAuthSerivce {
         this._reviewRepository = _reviewRepository;
         this._orderRepository = _orderRepository;
         this._walletRepository = _walletRepository;
+        this._categoryRepository = _categoryRepository;
+        this._notificationRepository = _notificationRepository;
     }
     registerInstructor(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -97,7 +99,8 @@ class InstructorAuthSerivce {
             const instructor = yield this._instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword, resume: data.resume }));
             yield this._otpRepository.deleteOtpbyEmail(data.email);
             const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
-            return { instructor, token };
+            const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
+            return { instructor, token, instructorRefreshToken };
         });
     }
     reApplyS(email, resume) {
@@ -128,7 +131,8 @@ class InstructorAuthSerivce {
                 throw new Error("Passowrd doesn't match");
             }
             const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
-            return { instructor, token };
+            const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
+            return { instructor, token, instructorRefreshToken };
         });
     }
     handleForgotPassword(email) {
@@ -221,9 +225,9 @@ class InstructorAuthSerivce {
             return instructor;
         });
     }
-    getCoursesByInstructor(instructorId) {
+    getCoursesByInstructor(instructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findCoursesByInstructor(instructorId);
+            return yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit);
         });
     }
     getCourseById(courseId) {
@@ -233,6 +237,15 @@ class InstructorAuthSerivce {
                 throw new Error("No Course Found");
             }
             return course;
+        });
+    }
+    getCategory() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const categories = yield this._categoryRepository.getCatgeories();
+            if (!categories) {
+                throw new Error("No categories found");
+            }
+            return categories;
         });
     }
     getReviewsByInstructor(instructorId) {
@@ -253,6 +266,40 @@ class InstructorAuthSerivce {
                 throw new Error("No wallet found for the instructor");
             }
             return wallet;
+        });
+    }
+    getCouresStats(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._courseRepository.getCourseStatsOfInstructor(instructorId);
+        });
+    }
+    getDashboard(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._instructorAuthRepository.getDashboard(instructorId);
+        });
+    }
+    getIncomeStats(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._walletRepository.getIncome(instructorId);
+        });
+    }
+    getNotifications(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._notificationRepository.getAllNotifications(userId);
+        });
+    }
+    markAsRead(notificationId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const notification = yield this._notificationRepository.updateNotification(notificationId);
+            return notification;
+        });
+    }
+    getPurchasedUsers(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userIds = yield this._courseRepository.getUsersByInstructor(instructorId);
+            if (!userIds.length)
+                return [];
+            return this._userRepository.findUsersByIds(userIds);
         });
     }
 }

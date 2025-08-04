@@ -11,6 +11,8 @@ import { CourseRepository } from "../repository/implementations/course.repositor
 import { ReviewRepository } from "../repository/implementations/review.repository";
 import { OrderRepository } from "../repository/implementations/order.repository";
 import { WalletRepository } from "../repository/implementations/wallet.repository";
+import { CategoryRepository } from "../repository/implementations/category.repository";
+import { NotificationRepository } from "../repository/implementations/notification.repository";
 
 const instructorAuthRepository = new InstructorAuth();
 const userRepository = new AuthRepository();
@@ -19,7 +21,9 @@ const otpRepository = new OtpRepository();
 const courseRepository = new CourseRepository();
 const reviewRepository = new ReviewRepository();
 const orderRepository = new OrderRepository();
-const walletRepository=new WalletRepository()
+const walletRepository = new WalletRepository();
+const categoryRepository = new CategoryRepository();
+const notificationRepository = new NotificationRepository();
 const instructorAuthService = new InstructorAuthSerivce(
   instructorAuthRepository,
   otpRepository,
@@ -28,7 +32,9 @@ const instructorAuthService = new InstructorAuthSerivce(
   courseRepository,
   reviewRepository,
   orderRepository,
-  walletRepository
+  walletRepository,
+  categoryRepository,
+  notificationRepository
 );
 const instructorAuthController = new InstructorAuthController(
   instructorAuthService
@@ -40,6 +46,10 @@ router.post(
   "/register",
   upload.single("resume"),
   instructorAuthController.signup.bind(instructorAuthController)
+);
+router.post(
+  "/refresh-token",
+  instructorAuthController.refreshToken.bind(instructorAuthController)
 );
 router.post(
   "/login",
@@ -87,6 +97,11 @@ router.get(
   instructorAuthController.getCoursesById.bind(instructorAuthController)
 );
 router.get(
+  "/category",
+  authRole(["instructor"]),
+  instructorAuthController.getCategory.bind(instructorAuthController)
+);
+router.get(
   "/reviews",
   authRole(["instructor"]),
   instructorAuthController.getInstructorReviews.bind(instructorAuthController)
@@ -106,6 +121,38 @@ router.get(
   "/wallet",
   authRole(["instructor"]),
   instructorAuthController.getWallet.bind(instructorAuthController)
+);
+router.get(
+  "/dashboard",
+  authRole(["instructor"]),
+  instructorAuthController.getDashboard.bind(instructorAuthController)
+);
+router.get(
+  "/course-stats",
+  authRole(["instructor"]),
+  instructorAuthController.getCourseStats.bind(instructorAuthController)
+);
+router.get(
+  "/income-stats",
+  authRole(["instructor"]),
+  instructorAuthController.getIncomeStats.bind(instructorAuthController)
+);
+router.get(
+  "/users/purchased",
+  authRole(["instructor"]),
+  instructorAuthController.getPurchasedStudents.bind(instructorAuthController)
+);
+router.get(
+  "/notifications/:userId",
+  instructorAuthController.getNotifications.bind(instructorAuthController)
+);
+router.put(
+  "/notifications/read/:notificationId",
+  instructorAuthController.markAsRead.bind(instructorAuthController)
+);
+router.post(
+  "/logout",
+  instructorAuthController.logOut.bind(instructorAuthController)
 );
 
 export default router;

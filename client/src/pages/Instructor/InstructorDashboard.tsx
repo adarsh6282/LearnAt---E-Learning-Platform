@@ -2,21 +2,36 @@ import { useContext, useEffect, useState } from "react";
 import { InstructorContext } from "../../context/InstructorContext";
 import { reapplyS } from "../../services/instructor.services";
 import { errorToast, successToast } from "../../components/Toast";
+import InstructorChart from "../../components/InstructorChart";
+import instructorApi from "../../services/instructorApiService";
+
+interface Dashboard {
+  totalUsers: number;
+  totalCourses: number;
+}
 
 const InstructorDashboard = () => {
-  const context=useContext(InstructorContext)
-  if(!context){
-    return "no context here"
+  const context = useContext(InstructorContext);
+  if (!context) {
+    return "no context here";
   }
-  const {instructor,getInstructorProfile}=context
+  const { instructor, getInstructorProfile } = context;
+  const [dashboardData, setDashboardData] = useState<Dashboard | null>(null);
   const [resume, setResume] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      const res = await instructorApi.get<Dashboard>("/instructors/dashboard");
+      setDashboardData(res.data);
+    };
+    fetchDashboard();
+  }, []);
 
   useEffect(() => {
     const fetchInstructor = async () => {
       try {
         await getInstructorProfile();
-        
       } catch (err) {
         console.error("Error fetching instructor", err);
       } finally {
@@ -35,7 +50,7 @@ const InstructorDashboard = () => {
   const handleReapply = async () => {
     if (!resume) return errorToast("Please upload your resume");
     const formData = new FormData();
-    formData.append("email",instructor?.email!)
+    formData.append("email", instructor?.email!);
     formData.append("resume", resume);
     try {
       await reapplyS(formData);
@@ -48,10 +63,16 @@ const InstructorDashboard = () => {
 
   if (loading) return <div>Loading...</div>;
 
-  if (instructor?.isRejected && !instructor?.isVerified && instructor?.accountStatus==="rejected") {
+  if (
+    instructor?.isRejected &&
+    !instructor?.isVerified &&
+    instructor?.accountStatus === "rejected"
+  ) {
     return (
       <div className="p-8 bg-yellow-50 min-h-screen">
-        <h2 className="text-xl font-bold text-red-700 mb-4">Application Rejected</h2>
+        <h2 className="text-xl font-bold text-red-700 mb-4">
+          Application Rejected
+        </h2>
         <p className="text-gray-700 mb-4">
           Please upload a new resume to reapply.
         </p>
@@ -75,7 +96,29 @@ const InstructorDashboard = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold">Instructor Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4">Instructor Dashboard</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-blue-500 text-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-lg font-medium">Total Users</h2>
+          <p className="text-3xl font-bold">{dashboardData?.totalUsers}</p>
+        </div>
+        <div className="bg-purple-500 text-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-lg font-medium">Total Courses</h2>
+          <p className="text-3xl font-bold">{dashboardData?.totalCourses}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">
+            Course Enrollments
+          </h2>
+          <InstructorChart type="course" />
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800">Revenue</h2>
+          <InstructorChart type="income" />
+        </div>
+      </div>
     </div>
   );
 };

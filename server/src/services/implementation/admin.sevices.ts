@@ -4,7 +4,7 @@ import { IUser } from "../../models/interfaces/auth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
-import { generateToken } from "../../utils/jwt";
+import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import { AdminLoginResponse, DashboardData } from "../../types/admin.types";
 import { sendRejectionMail } from "../../utils/sendMail";
 import { ICategory } from "../../models/interfaces/category.interface";
@@ -13,8 +13,15 @@ import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
 import { IReviewRepository } from "../../repository/interfaces/review.interface";
 import { IReview } from "../../models/interfaces/review.interface";
-import { IWallet } from "../../models/interfaces/wallet.interface";
+import {
+  ITransaction,
+  IWallet,
+} from "../../models/interfaces/wallet.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
+import { IComplaint } from "../../models/interfaces/complaint.interface";
+import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
+import { INotification } from "../../models/interfaces/notification.interface";
+import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 
 export class AdminService implements IAdminService {
   constructor(
@@ -24,7 +31,9 @@ export class AdminService implements IAdminService {
     private _categoryRepository: ICategoryRepository,
     private _courseRepository: ICourseRepository,
     private _reviewRepository: IReviewRepository,
-    private _walletRepository:IWalletRepository
+    private _walletRepository: IWalletRepository,
+    private _complaintRepository: IComplaintRepository,
+    private _notificationRepository: INotificationRepository
   ) {}
 
   async login(email: string, password: string): Promise<AdminLoginResponse> {
@@ -39,8 +48,13 @@ export class AdminService implements IAdminService {
     }
 
     const token = generateToken(admin._id.toString(), admin.email, "admin");
+    const adminRefreshToken = generateRefreshToken(
+      admin._id.toString(),
+      admin.email,
+      "admin"
+    );
 
-    return { token, email: admin.email };
+    return { token, email: admin.email, adminRefreshToken };
   }
 
   async blockUnblockUser(
@@ -69,14 +83,21 @@ export class AdminService implements IAdminService {
     return await this._adminRepository.updateTutorBlockStatus(email, blocked);
   }
 
-  async getAllUsers(): Promise<IUser[]> {
-    const users = await this._adminRepository.getAllUsers();
+  async getAllUsers(
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ users: IUser[]; total: number; totalPages: number }> {
+    const users = await this._adminRepository.getAllUsers(page, limit, search);
     return users;
   }
 
-  async getAllTutors(): Promise<IInstructor[]> {
-    const instrcutors = await this._adminRepository.getAllTutors();
-    return instrcutors;
+  async getAllTutors(
+    page: number,
+    limit: number,
+    filter: any
+  ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }> {
+    return await this._adminRepository.getAllTutors(page, limit, filter);
   }
 
   async verifyTutor(email: string): Promise<IInstructor | null> {
@@ -108,8 +129,9 @@ export class AdminService implements IAdminService {
   async getDashboardData(): Promise<DashboardData> {
     const totalUsers = await this._adminRepository.getTotalUsers();
     const totalTutors = await this._adminRepository.getTotalTutors();
+    const totalCourses = await this._adminRepository.getTotalCourses();
 
-    return { totalUsers, totalTutors };
+    return { totalUsers, totalTutors, totalCourses };
   }
 
   async addCategory(name: string): Promise<ICategory | null> {
@@ -158,8 +180,11 @@ export class AdminService implements IAdminService {
     return await this._courseRepository.updateCourseStatus(courseId, true);
   }
 
-  async getAllReviews(): Promise<IReview[] | null> {
-    return await this._reviewRepository.getAllReviews();
+  async getAllReviews(
+    page: number,
+    limit: number
+  ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
+    return await this._reviewRepository.getAllReviews(page, limit);
   }
 
   async hideReview(id: string): Promise<IReview | null> {
@@ -183,16 +208,85 @@ export class AdminService implements IAdminService {
   }
 
   async deleteReview(id: string): Promise<IReview | null> {
-    const review=await this._reviewRepository.deleteReview(id)
+    const review = await this._reviewRepository.deleteReview(id);
 
-    if(!review){
-      throw new Error("Review not found")
+    if (!review) {
+      throw new Error("Review not found");
     }
-    return review
+    return review;
   }
 
-  async getWallet(): Promise<IWallet | null> {
-    const wallet=await this._walletRepository.findWalletOfAdmin()
-    return wallet
+  async getWallet(
+    page: number,
+    limit: number
+  ): Promise<{
+    wallet: Partial<IWallet>;
+    total: number;
+    totalPages: number;
+    transactions: ITransaction[];
+  }> {
+    const { wallet, total, totalPages, transactions } =
+      await this._walletRepository.findWalletOfAdmin(page, limit);
+    return { wallet, total, totalPages, transactions };
+  }
+
+  async getComplaints(): Promise<IComplaint[] | null> {
+    return await this._complaintRepository.getComplaints();
+  }
+
+  async responseComplaint(
+    id: string,
+    status: string,
+    response: string
+  ): Promise<IComplaint | null> {
+    if (!response || response.trim() == "") {
+      throw new Error("Please fill in a response");
+    }
+
+    const complaint = await this._complaintRepository.updateComplaint(
+      id,
+      status,
+      response
+    );
+    return complaint;
+  }
+
+  async getCourseStats(): Promise<{ title: string; enrolledCount: number }[]> {
+    return await this._courseRepository.getCourseStats();
+  }
+
+  async getIncomeStats(): Promise<{ month: string; revenue: number }[]> {
+    return await this._walletRepository.getIncomeStats();
+  }
+
+  async getSpecificCourseForAdmin(courseId: string): Promise<ICourse | null> {
+    const course = await this._courseRepository.findCourseById(courseId);
+
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    return course;
+  }
+
+  async getNotifications(userId: string): Promise<INotification[]> {
+    return await this._notificationRepository.getAllNotifications(userId);
+  }
+
+  async markAsRead(notificationId: string): Promise<INotification | null> {
+    const notification = await this._notificationRepository.updateNotification(
+      notificationId
+    );
+    return notification;
+  }
+
+  async getSpecificTutor(id: string): Promise<IInstructor | null> {
+    const tutor = await this._instructorRepository.findById(id);
+
+    if (!tutor) {
+      throw new Error("Tutor not found");
+    }
+
+    return tutor;
   }
 }

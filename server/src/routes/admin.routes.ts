@@ -9,6 +9,8 @@ import { CourseRepository } from "../repository/implementations/course.repositor
 import authRole from "../middlewares/authRole";
 import { ReviewRepository } from "../repository/implementations/review.repository";
 import { WalletRepository } from "../repository/implementations/wallet.repository";
+import { ComplaintRepository } from "../repository/implementations/complaint.repository";
+import { NotificationRepository } from "../repository/implementations/notification.repository";
 
 const adminRepository = new AdminRepository();
 const instructorRepository = new InstructorAuth();
@@ -16,7 +18,9 @@ const categoryRepository = new CategoryRepository();
 const userRepository = new AuthRepository();
 const courseRepository = new CourseRepository();
 const reviewRepository = new ReviewRepository();
-const walletRepository=new WalletRepository()
+const walletRepository = new WalletRepository();
+const complaintRepository = new ComplaintRepository();
+const notificationRepository = new NotificationRepository();
 const adminService = new AdminService(
   adminRepository,
   instructorRepository,
@@ -24,13 +28,19 @@ const adminService = new AdminService(
   categoryRepository,
   courseRepository,
   reviewRepository,
-  walletRepository
+  walletRepository,
+  complaintRepository,
+  notificationRepository
 );
 const adminController = new AdminController(adminService);
 
 const router = Router();
 
 router.post("/login", adminController.login.bind(adminController));
+router.post(
+  "/refresh-token",
+  adminController.refreshToken.bind(adminController)
+);
 router.get(
   "/users",
   authRole(["admin"]),
@@ -63,7 +73,7 @@ router.put(
 );
 router.get(
   "/category",
-  authRole(["admin"]),
+  authRole(["admin", "instructor"]),
   adminController.getCatgeories.bind(adminController)
 );
 router.post(
@@ -121,6 +131,45 @@ router.delete(
   authRole(["admin"]),
   adminController.rejectTutor.bind(adminController)
 );
-router.get("/wallet",authRole(["admin"]),adminController.getWallet.bind(adminController))
+router.get(
+  "/wallet",
+  authRole(["admin"]),
+  adminController.getWallet.bind(adminController)
+);
+router.get(
+  "/complaints",
+  authRole(["admin"]),
+  adminController.getComplaints.bind(adminController)
+);
+router.put(
+  "/complaints/:id",
+  authRole(["admin"]),
+  adminController.responseComplaint.bind(adminController)
+);
+router.get(
+  "/course-status",
+  adminController.getCourseStats.bind(adminController)
+);
+router.get(
+  "/income-status",
+  adminController.getIncomeStats.bind(adminController)
+);
+router.get(
+  "/courses/:courseId",
+  adminController.getSpecificCourseforAdmin.bind(adminController)
+);
+router.get(
+  "/tutor-view/:id",
+  adminController.getSpecificTutor.bind(adminController)
+);
+router.get(
+  "/notifications/:userId",
+  adminController.getNotifications.bind(adminController)
+);
+router.put(
+  "/notifications/read/:notificationId",
+  adminController.markAsRead.bind(adminController)
+);
+router.post("/logout", adminController.logOut.bind(adminController));
 
 export default router;

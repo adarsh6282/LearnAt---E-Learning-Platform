@@ -1,21 +1,35 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IProgress } from "../interfaces/progress.interface";
 
-const courseProgressSchema:Schema<IProgress> = new Schema({
-  userId: {
-     type: mongoose.Schema.Types.ObjectId,
+const courseProgressSchema: Schema<IProgress> = new Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
-     },
+      required: true,
+    },
 
-  courseId: {
-     type: mongoose.Schema.Types.ObjectId,
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
-      required: true },
+      required: true,
+    },
 
-  watchedLectures: [{
-     type: String 
-    }],
-}, { timestamps: true });
+    watchedLectures: [
+      {
+        type: String,
+      },
+    ],
+    
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model<IProgress>("CourseProgress", courseProgressSchema);
+export default mongoose.model<IProgress>(
+  "CourseProgress",
+  courseProgressSchema
+);

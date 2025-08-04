@@ -16,8 +16,8 @@ const EditCourse: React.FC = () => {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>("");
 
-  if(!courseId){
-    return <div>No course id</div>
+  if (!courseId) {
+    return <div>No course id</div>;
   }
 
   const [courseData, setCourseData] = useState<CourseData>({
@@ -51,8 +51,7 @@ const EditCourse: React.FC = () => {
         setCategories(activeNames);
 
         if (courseId) {
-          const token = localStorage.getItem("instructorsToken");
-          const courseResponse = await getCourseById(courseId, token!);
+          const courseResponse = await getCourseById(courseId);
 
           if (courseResponse.status === 200) {
             const course = courseResponse.data;
@@ -153,7 +152,7 @@ const EditCourse: React.FC = () => {
   ) => {
     const file = event.target.files?.[0];
     if (file && file.size <= 5 * 1024 * 1024) {
-      console.log(file)
+      console.log(file);
       setThumbnail(file);
     } else {
       errorToast("Thumbnail must be under 5MB");
@@ -262,8 +261,7 @@ const EditCourse: React.FC = () => {
         });
       }
 
-      const token = localStorage.getItem("instructorsToken");
-      const response = await editCourseS(courseId,formData,token!)
+      const response = await editCourseS(courseId, formData);
 
       if (response.status === 200) {
         successToast("Course updated successfully!");

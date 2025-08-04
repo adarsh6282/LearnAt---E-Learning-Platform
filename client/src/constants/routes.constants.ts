@@ -27,14 +27,13 @@ export const INSTRUCTOR_ROUTES = {
   COURSES: "/instructors/courses",
 } as const;
 
-
-export const ADMIN_ROUTES={
-    LOGIN:"/admin/login",
-    COURSES:"/admin/courses",
-    DASHBOARD:"/admin/dashboard",
-    BASE:"/admin",
-    USERS:"/admin/users",
-    TUTORS:"/admin/tutors",
-    TUTOR_REQUESTS:"/admin/tutor-requests",
-    CATEGORY:"/admin/category"
-} as const
+export const ADMIN_ROUTES = {
+  LOGIN: "/admin/login",
+  COURSES: "/admin/courses",
+  DASHBOARD: "/admin/dashboard",
+  BASE: "/admin",
+  USERS: "/admin/users",
+  TUTORS: "/admin/tutors",
+  TUTOR_REQUESTS: "/admin/tutor-requests",
+  CATEGORY: "/admin/category",
+} as const;

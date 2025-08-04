@@ -21,13 +21,18 @@ class OtpRepository extends base_repository_1.BaseRepository {
     }
     saveOTP(data) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             let saveotp;
             const existing = yield this.model.findOne({ email: data.email });
             if (existing) {
-                saveotp = yield otpModel_1.default.findOneAndUpdate({ email: data.email }, { otp: data.otp, expiresAt: new Date() }, { new: true });
+                saveotp = yield this.model.findOneAndUpdate({ email: data.email }, { otp: data.otp, expiresAt: (_a = data.expiresAt) !== null && _a !== void 0 ? _a : new Date() }, { new: true });
             }
             else {
-                saveotp = yield otpModel_1.default.create(data);
+                saveotp = yield this.model.create({
+                    email: data.email,
+                    otp: data.otp,
+                    expiresAt: (_b = data.expiresAt) !== null && _b !== void 0 ? _b : new Date(),
+                });
             }
             return saveotp;
         });

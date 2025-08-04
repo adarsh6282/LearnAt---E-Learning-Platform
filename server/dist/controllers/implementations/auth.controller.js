@@ -38,7 +38,14 @@ class Authcontroller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { email, password } = req.body;
-                const { user, token } = yield this._authService.loginUser(email, password);
+                const { user, token, userRefreshToken } = yield this._authService.loginUser(email, password);
+                res.cookie("userRefreshToken", userRefreshToken, {
+                    httpOnly: true,
+                    path: "/api/users",
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
                 res
                     .status(statusCodes_1.httpStatus.OK)
                     .json({ user, token, message: "User Login Successfull" });
@@ -54,7 +61,14 @@ class Authcontroller {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const userData = req.body;
-                const { user, token } = yield this._authService.verifyOtp(userData);
+                const { user, token, userRefreshToken } = yield this._authService.verifyOtp(userData);
+                res.cookie("userRefreshToken", userRefreshToken, {
+                    path: "/api/users",
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
                 res
                     .status(statusCodes_1.httpStatus.CREATED)
                     .json({ user, token, message: "User Registered Successfully" });
@@ -294,6 +308,126 @@ class Authcontroller {
                     success: false,
                     message: err.message,
                 });
+            }
+        });
+    }
+    checkStatus(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const { courseId } = req.params;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (!userId) {
+                res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "NO user found" });
+                return;
+            }
+            const isCompleted = yield this._authService.checkStatus(userId, courseId);
+            res.status(statusCodes_1.httpStatus.OK).json(isCompleted);
+        });
+    }
+    refreshToken(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const token = req.cookies.userRefreshToken;
+            if (!token) {
+                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "No Refresh Token" });
+                return;
+            }
+            try {
+                const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_REFRESH_SECRET);
+                if (decoded.role !== "user") {
+                    res.status(statusCodes_1.httpStatus.FORBIDDEN).json({ message: "Invalid role" });
+                    return;
+                }
+                const usersToken = (0, jwt_1.generateToken)(decoded._id, decoded.email, decoded.role);
+                res.status(statusCodes_1.httpStatus.OK).json({ token: usersToken });
+            }
+            catch (err) {
+                console.log(err);
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    logOut(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            res.clearCookie("userRefreshToken", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                path: "/api/users",
+            });
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });
+        });
+    }
+    getPurchasedInstructors(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "user not found" });
+                    return;
+                }
+                const instructors = yield this._authService.fetchPurchasedInstructors(userId);
+                res.status(statusCodes_1.httpStatus.OK).json(instructors);
+            }
+            catch (error) {
+                console.log(error);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching instructors", error });
+            }
+        });
+    }
+    getNotifications(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { userId } = req.params;
+                const notifications = yield this._authService.getNotifications(userId);
+                res.status(statusCodes_1.httpStatus.OK).json(notifications);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    markAsRead(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { notificationId } = req.params;
+                const notification = yield this._authService.markAsRead(notificationId);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Message Read" });
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    submitComplaint(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const { type, subject, message, targetId } = req.body;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "User not found" });
+                    return;
+                }
+                if (!type || !subject || !message) {
+                    res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "All fields are required" });
+                    return;
+                }
+                const complaint = yield this._authService.submitComplaint({
+                    userId,
+                    type,
+                    subject,
+                    message,
+                    targetId,
+                });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Complaint submitted successfully" });
+            }
+            catch (err) {
+                console.log(err);
             }
         });
     }

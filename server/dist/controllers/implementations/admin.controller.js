@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
 const statusCodes_1 = require("../../constants/statusCodes");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const jwt_1 = require("../../utils/jwt");
 class AdminController {
     constructor(_adminService) {
         this._adminService = _adminService;
@@ -19,7 +24,14 @@ class AdminController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { email, password } = req.body;
-                const { token, email: adminEmail } = yield this._adminService.login(email, password);
+                const { token, email: adminEmail, adminRefreshToken, } = yield this._adminService.login(email, password);
+                res.cookie("adminRefreshToken", adminRefreshToken, {
+                    path: "/api/admin",
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === "production",
+                    sameSite: "strict",
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
                 res
                     .status(statusCodes_1.httpStatus.OK)
                     .json({ message: "Login successful", token, email: adminEmail });
@@ -52,9 +64,7 @@ class AdminController {
             const { blocked } = req.body;
             try {
                 const updatedUser = yield this._adminService.blockUnblockUser(email, blocked);
-                res
-                    .status(statusCodes_1.httpStatus.OK)
-                    .json({
+                res.status(statusCodes_1.httpStatus.OK).json({
                     message: `Tutor has been ${blocked ? "blocked" : "unblocked"}`,
                     user: updatedUser,
                 });
@@ -72,9 +82,7 @@ class AdminController {
             const { blocked } = req.body;
             try {
                 const updatedTutor = yield this._adminService.blockUnblockTutor(email, blocked);
-                res
-                    .status(statusCodes_1.httpStatus.OK)
-                    .json({
+                res.status(statusCodes_1.httpStatus.OK).json({
                     message: `User has been ${blocked ? "blocked" : "unblocked"}`,
                     tutor: updatedTutor,
                 });
@@ -89,8 +97,13 @@ class AdminController {
     getAllUsers(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const users = yield this._adminService.getAllUsers();
-                res.status(statusCodes_1.httpStatus.OK).json(users);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const search = req.query.search || "";
+                const { users, total, totalPages } = yield this._adminService.getAllUsers(page, limit, search);
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ users, total, totalPages, currentPage: page });
             }
             catch (err) {
                 res
@@ -102,8 +115,25 @@ class AdminController {
     getAllTutors(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const tutors = yield this._adminService.getAllTutors();
-                res.status(statusCodes_1.httpStatus.OK).json(tutors);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const isVerified = req.query.isVerified;
+                const search = req.query.search || "";
+                const filter = {};
+                if (isVerified === "true")
+                    filter.isVerified = true;
+                if (isVerified === "false")
+                    filter.isVerified = false;
+                if (search.trim() !== "") {
+                    filter.$or = [
+                        { name: { $regex: search, $options: "i" } },
+                        { email: { $regex: search, $options: "i" } },
+                    ];
+                }
+                const { tutors, total, totalPages } = yield this._adminService.getAllTutors(page, limit, filter);
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ tutors, total, totalPages, currentPage: page });
             }
             catch (err) {
                 res
@@ -225,7 +255,9 @@ class AdminController {
             try {
                 const { id } = req.params;
                 const updated = yield this._adminService.softDeleteCourseS(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Course disabled successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Course disabled successfully" });
             }
             catch (error) {
                 res
@@ -239,7 +271,9 @@ class AdminController {
             try {
                 const { id } = req.params;
                 const updated = yield this._adminService.recoverCourseS(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Course enabled successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Course enabled successfully" });
             }
             catch (error) {
                 res
@@ -251,12 +285,18 @@ class AdminController {
     getAllReviews(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const reviews = yield this._adminService.getAllReviews();
-                res.status(statusCodes_1.httpStatus.OK).json(reviews);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 6;
+                const { reviews, total, totalPages } = yield this._adminService.getAllReviews(page, limit);
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ reviews, total, totalPages, currentPage: page });
             }
             catch (err) {
                 console.log(err);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
             }
         });
     }
@@ -269,7 +309,9 @@ class AdminController {
             }
             catch (err) {
                 console.log(err);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
             }
         });
     }
@@ -278,11 +320,15 @@ class AdminController {
             const { id } = req.params;
             try {
                 const review = yield this._adminService.unhideReview(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Review retrieved successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Review retrieved successfully" });
             }
             catch (err) {
                 console.log(err);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
             }
         });
     }
@@ -291,7 +337,80 @@ class AdminController {
             const { id } = req.params;
             try {
                 const review = this._adminService.deleteReview(id);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Review Deleted Successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Review Deleted Successfully" });
+            }
+            catch (err) {
+                console.log(err);
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    getWallet(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const { wallet, total, totalPages, transactions } = yield this._adminService.getWallet(page, limit);
+                res.status(statusCodes_1.httpStatus.OK).json({
+                    balance: wallet.balance,
+                    transactions,
+                    total,
+                    totalPages,
+                    currentPage: page,
+                });
+            }
+            catch (err) {
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    refreshToken(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const token = req.cookies.adminRefreshToken;
+            if (!token) {
+                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "No Refresh Token" });
+                return;
+            }
+            try {
+                const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_REFRESH_SECRET);
+                if (decoded.role !== "admin") {
+                    res.status(statusCodes_1.httpStatus.FORBIDDEN).json({ message: "Invalid role" });
+                    return;
+                }
+                const adminToken = (0, jwt_1.generateToken)(decoded._id, decoded.email, decoded.role);
+                res.status(statusCodes_1.httpStatus.OK).json({ token: adminToken });
+            }
+            catch (err) {
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
+            }
+        });
+    }
+    getComplaints(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const complaints = yield this._adminService.getComplaints();
+                res.status(statusCodes_1.httpStatus.OK).json(complaints);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    responseComplaint(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { status, response } = req.body;
+                const { id } = req.params;
+                const complaint = yield this._adminService.responseComplaint(id, status, response);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Response Submitted successfully" });
             }
             catch (err) {
                 console.log(err);
@@ -299,15 +418,84 @@ class AdminController {
             }
         });
     }
-    getWallet(req, res) {
+    getCourseStats(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const wallet = yield this._adminService.getWallet();
-                res.status(statusCodes_1.httpStatus.OK).json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: wallet === null || wallet === void 0 ? void 0 : wallet.transactions });
+                const courseStats = yield this._adminService.getCourseStats();
+                res.status(statusCodes_1.httpStatus.OK).json(courseStats);
             }
             catch (err) {
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                console.log(err);
             }
+        });
+    }
+    getIncomeStats(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const incomeStats = yield this._adminService.getIncomeStats();
+                res.status(statusCodes_1.httpStatus.OK).json(incomeStats);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    getSpecificCourseforAdmin(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { courseId } = req.params;
+            if (!courseId) {
+                res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "Course not found" });
+                return;
+            }
+            const course = yield this._adminService.getSpecificCourseForAdmin(courseId);
+            res.status(statusCodes_1.httpStatus.OK).json(course);
+        });
+    }
+    getSpecificTutor(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { id } = req.params;
+                const tutor = yield this._adminService.getSpecificTutor(id);
+                res.status(statusCodes_1.httpStatus.OK).json(tutor);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    getNotifications(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { userId } = req.params;
+                const notifications = yield this._adminService.getNotifications(userId);
+                res.status(statusCodes_1.httpStatus.OK).json(notifications);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    markAsRead(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { notificationId } = req.params;
+                const notification = yield this._adminService.markAsRead(notificationId);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Message Read" });
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    logOut(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            res.clearCookie("adminRefreshToken", {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                path: "/admin",
+            });
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });
         });
     }
 }

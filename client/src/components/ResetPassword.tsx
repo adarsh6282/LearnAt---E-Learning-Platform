@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import axiosInstance from "../services/apiService";
 import { successToast } from "./Toast";
 import { useNavigate } from "react-router-dom";
+import userApi from "../services/userApiService";
+import instructorApi from "../services/instructorApiService";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -20,8 +21,9 @@ const ResetPassword: React.FC<OtpPageProps> = ({ role }) => {
     } else {
       setError("");
       try {
+        const selectedApi = role == "users" ? userApi : instructorApi;
         const email = localStorage.getItem("email");
-        const response = await axiosInstance.put(`/${role}/resetpassword`, {
+        const response = await selectedApi.put(`/${role}/resetpassword`, {
           email,
           newPassword,
           confirmPassword,
@@ -38,44 +40,52 @@ const ResetPassword: React.FC<OtpPageProps> = ({ role }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-indigo-500 to-purple-600">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Reset Password
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-1">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              required
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition"
-          >
-            Reset Password
-          </button>
-        </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+  <div className="w-full max-w-md bg-gray-800 text-white rounded-lg shadow-lg p-8">
+    <h2 className="text-3xl font-semibold text-center mb-6">Reset Password</h2>
+
+    {error && (
+      <p className="text-red-400 text-sm mb-4 text-center">{error}</p>
+    )}
+
+    <form onSubmit={handleSubmit}>
+      <div className="mb-4">
+        <label htmlFor="newPassword" className="block text-sm font-medium mb-1">
+          New Password
+        </label>
+        <input
+          type="password"
+          id="newPassword"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+          className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
-    </div>
+
+      <div className="mb-6">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+          Confirm Password
+        </label>
+        <input
+          type="password"
+          id="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 transition-colors py-3 rounded-lg font-semibold text-white"
+      >
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
   );
 };
 

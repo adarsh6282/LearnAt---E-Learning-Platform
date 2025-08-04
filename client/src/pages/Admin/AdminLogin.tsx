@@ -59,7 +59,7 @@ export default function AdminLogin() {
 
     setIsLoading(true);
     try {
-      const response = await adminLoginS(formData)
+      const response = await adminLoginS(formData);
       setIsLoading(false);
       if (response && response.status === 200) {
         const { message, token, email } = response.data;
@@ -155,7 +155,7 @@ export default function AdminLogin() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isLoading||!isFormValid}
+              disabled={isLoading || !isFormValid}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (

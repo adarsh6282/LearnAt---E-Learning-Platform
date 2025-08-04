@@ -8,11 +8,15 @@ import {
   handleRejectS,
 } from "../../services/admin.services";
 import Pagination from "../../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 const AdminTutorRequests = () => {
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<Tutor[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 5;
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
   const [rejectingEmail, setRejectingEmail] = useState<string | null>(null);
@@ -21,8 +25,9 @@ const AdminTutorRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const unverifiedTutors = await getRequestsS();
-        setRequests(unverifiedTutors);
+        const res = await getRequestsS(currentPage, itemsPerPage);
+        setRequests(res.tutors);
+        setTotalPages(res.totalPages);
       } catch (err: any) {
         const msg = err.response?.data?.message;
         errorToast(msg);
@@ -31,7 +36,17 @@ const AdminTutorRequests = () => {
       }
     };
     fetchRequests();
-  }, []);
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   const handleAccept = async (email: string) => {
     try {
@@ -60,9 +75,7 @@ const AdminTutorRequests = () => {
       setRejectingEmail(null);
       setRejectReason("");
     } catch (err: any) {
-
-    }finally{
-
+    } finally {
     }
   };
 
@@ -75,12 +88,6 @@ const AdminTutorRequests = () => {
     setRejectReason("");
   };
 
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const paginatedRequests = requests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   return loading ? (
     <div className="flex justify-center items-center h-180">
       <BeatLoader color="#7e22ce" size={30} />
@@ -92,7 +99,7 @@ const AdminTutorRequests = () => {
           Tutor Verification Requests
         </h2>
 
-        {paginatedRequests.length === 0 ? (
+        {requests.length === 0 ? (
           <p className="text-gray-500">No pending tutor requests.</p>
         ) : (
           <div className="space-y-4">
@@ -176,7 +183,7 @@ const AdminTutorRequests = () => {
         )}
         <Pagination
           currentPage={currentPage}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           totalPages={totalPages}
         />
       </div>

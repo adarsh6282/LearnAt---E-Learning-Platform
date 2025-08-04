@@ -1,118 +1,104 @@
-import axiosInstance from "./apiService";
+import adminApi from "./adminApiService";
 import type { User } from "../types/user.types";
 import type { Tutor } from "../types/instructor.types";
 import type { ICourse } from "../types/course.types";
 import type { DashboardData } from "../types/admin.types";
 import type { AdminLoginResponse } from "../types/admin.types";
 
-interface Message{
-  message:string
+interface Message {
+  message: string;
 }
 
-export const getTutorsS = async (): Promise<Tutor[]> => {
-  const response = await axiosInstance.get<Tutor[]>("/admin/tutors", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+export const getTutorsS = async (
+  page: number,
+  limit: number,
+  searchQuery: string
+): Promise<{ tutors: Tutor[]; total: number; totalPages: number }> => {
+  const response = await adminApi.get<{
+    tutors: Tutor[];
+    total: number;
+    totalPages: number;
+  }>("/admin/tutors", {
+    params: {
+      page,
+      limit,
+      isVerified: true,
+      search: searchQuery.trim(),
+    },
   });
-  return response.data.filter((tutor) => tutor.isVerified === true);
+  return response.data;
 };
 
 export const toggleTutorBlockS = async (email: string, isBlocked: boolean) => {
-  return await axiosInstance.put(
-    `/admin/tutors/block/${email}`,
-    { blocked: !isBlocked },
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    }
-  );
+  return await adminApi.put(`/admin/tutors/block/${email}`, {
+    blocked: !isBlocked,
+  });
 };
 
-export const getUsersS = async () => {
-  return await axiosInstance.get<User[]>("/admin/users", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+export const getUsersS = async (
+  page: number,
+  limit: number,
+  searchQuery: string
+) => {
+  return await adminApi.get<{
+    users: User[];
+    total: number;
+    totalPages: number;
+  }>(`/admin/users?page=${page}&limit=${limit}`, {
+    params: { search: searchQuery?.trim() },
   });
 };
 
 export const toggleUserBlockS = async (email: string, isBlocked: boolean) => {
-  return await axiosInstance.put(
-    `/admin/users/block/${email}`,
-    { blocked: !isBlocked },
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    }
-  );
+  return await adminApi.put(`/admin/users/block/${email}`, {
+    blocked: !isBlocked,
+  });
 };
 
-export const getRequestsS = async () => {
-  const res = await axiosInstance.get<Tutor[]>("/admin/tutors", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+export const getRequestsS = async (page: number, limit: number) => {
+  const res = await adminApi.get<{
+    tutors: Tutor[];
+    total: number;
+    totalPages: number;
+  }>(`/admin/tutors`, {
+    params: {
+      page,
+      limit,
+      isVerified: false,
+    },
   });
-  return res.data.filter((tutor) => !tutor.isVerified);
+  return res.data;
 };
 
 export const handleAcceptS = async (email: string) => {
-  return await axiosInstance.put(
-    `/admin/tutors/verify`,
-    { email },
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    }
-  );
+  return await adminApi.put(`/admin/tutors/verify`, { email });
 };
 
 export const handleRejectS = async (email: string, reason: string) => {
-  return await axiosInstance.delete(`/admin/tutors/reject/${email}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-    },
+  return await adminApi.delete(`/admin/tutors/reject/${email}`, {
     data: { reason },
   } as any);
 };
 
 export const getCoursesS = async () => {
-  return await axiosInstance.get<ICourse[]>("/admin/courses", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
-  });
+  return await adminApi.get<ICourse[]>("/admin/courses");
 };
 
 export const handleSoftDeleteS = async (id: string) => {
-  return await axiosInstance.put<Message>(
-    `/admin/courses/${id}`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    }
-  );
+  return await adminApi.put<Message>(`/admin/courses/${id}`, {});
 };
 
 export const handleRestoreS = async (id: string) => {
-  return await axiosInstance.put<Message>(
-    `/admin/courses/recover/${id}`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    }
-  );
+  return await adminApi.put<Message>(`/admin/courses/recover/${id}`, {});
 };
 
 export const getDashboardS = async () => {
-  return await axiosInstance.get<DashboardData>("/admin/dashboard", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
-  });
+  return await adminApi.get<DashboardData>("/admin/dashboard");
 };
 
 export const adminLoginS = async (formData: {
   email: string;
   password: string;
 }) => {
-  return axiosInstance.post<AdminLoginResponse>("/admin/login", formData);
+  return adminApi.post<AdminLoginResponse>("/admin/login", formData);
 };

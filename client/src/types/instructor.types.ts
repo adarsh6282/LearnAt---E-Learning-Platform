@@ -8,6 +8,7 @@ export interface VerifyInstructor {
 
 
 export interface Tutor{
+  _id:string,
   name:string,
   email:string,
   username:string,
@@ -24,6 +25,7 @@ export interface Tutor{
 }
 
 export interface IInstructorProfile {
+  _id?:string;
   name: string;
   username: string;
   email: string;
@@ -33,6 +35,7 @@ export interface IInstructorProfile {
   education: string;
   accountStatus: "pending" | "blocked" | "active" | "rejected";
   isVerified: boolean;
+  role:string;
   isRejected?:boolean;
   profilePicture?: string;
 }

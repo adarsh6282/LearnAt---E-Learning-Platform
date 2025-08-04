@@ -1,31 +1,32 @@
 export interface VerifyOtpResponse {
   token: string;
   user: {
-    email:string
-  }
-  message:string
+    email: string;
+  };
+  message: string;
 }
 
-export interface User{
-  name:string,
-  username:string,
-  email:string,
-  password:string,
-  googleId:string
-  phone:string,
-  isBlocked:boolean
-  role:"admin"|"user"|"instructor",
-  createdAt:Date,
-  updatedAt:Date
+export interface User {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  googleId: string;
+  phone: string;
+  isBlocked: boolean;
+  role: "admin" | "user" | "instructor";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-
-export interface IUserProfile{
-    name:string,
-    username:string,
-    email:string,
-    phone:string,
-    profilePicture?:string
+export interface IUserProfile {
+  _id?: string;
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  role:string;
+  profilePicture?: string;
 }
 
 export type Course = {
@@ -38,7 +39,7 @@ export type Course = {
   level?: string;
   rating?: number;
   studentsCount?: number;
-  isActive?:boolean
+  isActive?: boolean;
   instructor?: string;
   description?: string;
 };
@@ -59,7 +60,7 @@ export type CourseViewType = {
 };
 
 export type Lecture = {
-  _id:string;
+  _id: string;
   title: string;
   description: string;
   videoUrl: string;
@@ -67,4 +68,9 @@ export type Lecture = {
   order?: number;
 };
 
-export type SortOption = "title" | "price-low" | "price-high" | "rating" | "newest";
+export type SortOption =
+  | "title"
+  | "price-low"
+  | "price-high"
+  | "rating"
+  | "newest";

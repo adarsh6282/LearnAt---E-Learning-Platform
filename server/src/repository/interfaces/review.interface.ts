@@ -16,7 +16,7 @@ export interface IReviewRepository {
 
   getReviewsByInstructor(instructorId:string):Promise<IReview[]|null>
 
-  getAllReviews():Promise<IReview[]|null>
+  getAllReviews(page:number,limit:number):Promise<{reviews:IReview[],total:number,totalPages:number}>
 
   findReviewAndHide(id:string):Promise<IReview|null>
   

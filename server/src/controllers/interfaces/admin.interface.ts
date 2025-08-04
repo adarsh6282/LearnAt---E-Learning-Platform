@@ -20,5 +20,15 @@ export interface IAdminController{
     hideReview(req:Request,res:Response):Promise<void>,
     unhideReview(req:Request,res:Response):Promise<void>,
     deleteReview(req:Request,res:Response):Promise<void>,
-    getWallet(req:Request,res:Response):Promise<void>
+    getWallet(req:Request,res:Response):Promise<void>,
+    refreshToken(req:Request,res:Response):Promise<void>,
+    getComplaints(req:Request,res:Response):Promise<void>,
+    responseComplaint(req:Request,res:Response):Promise<void>,
+    getCourseStats(req:Request,res:Response):Promise<void>,
+    getIncomeStats(req:Request,res:Response):Promise<void>,
+    getSpecificCourseforAdmin(req:Request,res:Response):Promise<void>,
+    getNotifications(req:Request,res:Response):Promise<void>,
+    getSpecificTutor(req:Request,res:Response):Promise<void>,
+    markAsRead(req:Request,res:Response):Promise<void>,
+    logOut(req:Request,res:Response):Promise<void>
 }

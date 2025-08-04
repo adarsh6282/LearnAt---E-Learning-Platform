@@ -1,5 +1,7 @@
 import Order from "../../models/implementations/orderModel";
+import Progress from "../../models/implementations/progressModel";
 import { IOrder } from "../../models/interfaces/order.interface";
+import { IEnrollment } from "../../types/enrollment.types";
 import { IOrderRepository } from "../interfaces/order.interace";
 import { Types } from "mongoose";
 
@@ -41,27 +43,52 @@ export class OrderRepository implements IOrderRepository {
 
   async getEnrollmentsByInstructor(
     instructorId: string
-  ): Promise<IOrder[] | null> {
+  ): Promise<IEnrollment[] | null> {
     const orders = await Order.find({ status: "paid" })
       .populate({
         path: "courseId",
         match: { instructor: instructorId },
-        select: "title",
+        select: "_id title",
       })
-      .populate("userId", "name email");
+      .populate("userId", "_id name email");
 
     const filteredOrders = orders.filter((order) => order.courseId !== null);
 
-    return filteredOrders.map((order) => ({
-      _id: order._id.toString(),
-      course: {
-        title: (order.courseId as any).title,
-      },
-      user: {
-        name: (order.userId as any).name,
-        email: (order.userId as any).email,
-      },
-      createdAt: order.createdAt.toISOString(),
-    })) as unknown as IOrder[];
+    const enrollments = await Promise.all(
+      filteredOrders.map(async (order) => {
+        const courseId = (order.courseId as any)._id;
+        const userId = (order.userId as any)._id;
+
+        const progress = await Progress.findOne({
+          courseId,
+          userId,
+        });
+
+        return {
+          _id: order._id.toString(),
+          course: {
+            _id: courseId.toString(),
+            title: (order.courseId as any).title,
+          },
+          user: {
+            _id: userId.toString(),
+            name: (order.userId as any).name,
+            email: (order.userId as any).email,
+          },
+          isCompleted: progress?.isCompleted || false,
+          createdAt: order.createdAt.toISOString(),
+        };
+      })
+    );
+
+    return enrollments;
+  }
+
+  async findExistingOrder(filter: {
+    userId: string;
+    courseId: string;
+    status: { $in: string[] };
+  }): Promise<IOrder | null> {
+    return Order.findOne(filter);
   }
 }

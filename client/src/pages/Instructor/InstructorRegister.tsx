@@ -8,7 +8,7 @@ import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 const InstructorRegister: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [resume,setResume]=useState<File|null>(null)
+  const [resume, setResume] = useState<File | null>(null);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -77,7 +77,7 @@ const InstructorRegister: React.FC = () => {
     }
     try {
       if (!resume) return errorToast("Please upload your resume");
-      const response = await instructorRegisterS({...formData,resume});
+      const response = await instructorRegisterS({ ...formData, resume });
       if (response && response.status === 200) {
         successToast((response.data as { message: string }).message);
         localStorage.setItem("signUpData", JSON.stringify(response.data.data));

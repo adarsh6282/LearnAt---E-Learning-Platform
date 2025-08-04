@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderRepository = void 0;
 const orderModel_1 = __importDefault(require("../../models/implementations/orderModel"));
+const progressModel_1 = __importDefault(require("../../models/implementations/progressModel"));
 const mongoose_1 = require("mongoose");
 class OrderRepository {
     createOrderRecord(orderData) {
@@ -60,21 +61,38 @@ class OrderRepository {
                 .populate({
                 path: "courseId",
                 match: { instructor: instructorId },
-                select: "title",
+                select: "_id title",
             })
-                .populate("userId", "name email");
+                .populate("userId", "_id name email");
             const filteredOrders = orders.filter((order) => order.courseId !== null);
-            return filteredOrders.map((order) => ({
-                _id: order._id.toString(),
-                course: {
-                    title: order.courseId.title,
-                },
-                user: {
-                    name: order.userId.name,
-                    email: order.userId.email,
-                },
-                createdAt: order.createdAt.toISOString(),
-            }));
+            const enrollments = yield Promise.all(filteredOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
+                const courseId = order.courseId._id;
+                const userId = order.userId._id;
+                const progress = yield progressModel_1.default.findOne({
+                    courseId,
+                    userId,
+                });
+                return {
+                    _id: order._id.toString(),
+                    course: {
+                        _id: courseId.toString(),
+                        title: order.courseId.title,
+                    },
+                    user: {
+                        _id: userId.toString(),
+                        name: order.userId.name,
+                        email: order.userId.email,
+                    },
+                    isCompleted: (progress === null || progress === void 0 ? void 0 : progress.isCompleted) || false,
+                    createdAt: order.createdAt.toISOString(),
+                };
+            })));
+            return enrollments;
+        });
+    }
+    findExistingOrder(filter) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return orderModel_1.default.findOne(filter);
         });
     }
 }
