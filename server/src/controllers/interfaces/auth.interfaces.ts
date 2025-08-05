@@ -22,5 +22,6 @@ export interface IAuthController{
     checkStatus(req:Request,res:Response):Promise<void>,
     getNotifications(req:Request,res:Response):Promise<void>,
     markAsRead(req:Request,res:Response):Promise<void>,
+    getPurchases(req:Request,res:Response):Promise<void>,
     logOut(req:Request,res:Response):Promise<void>
 }

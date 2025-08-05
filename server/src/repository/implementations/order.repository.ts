@@ -1,9 +1,18 @@
 import Order from "../../models/implementations/orderModel";
 import Progress from "../../models/implementations/progressModel";
+import { ICourse } from "../../models/interfaces/course.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IEnrollment } from "../../types/enrollment.types";
 import { IOrderRepository } from "../interfaces/order.interace";
 import { Types } from "mongoose";
+
+export interface IPurchase {
+  _id: string | Types.ObjectId;
+  course: string | Types.ObjectId;
+  amount: number;
+  purchasedAt: Date;
+  status: string;
+}
 
 export class OrderRepository implements IOrderRepository {
   async createOrderRecord(orderData: IOrder): Promise<IOrder | null> {
@@ -90,5 +99,39 @@ export class OrderRepository implements IOrderRepository {
     status: { $in: string[] };
   }): Promise<IOrder | null> {
     return Order.findOne(filter);
+  }
+
+  async getPurchases(userId: string, page: number, limit: number): Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+
+    const total = await Order.countDocuments({
+      userId: userId,
+      status: "paid",
+    });
+
+    const orders = await Order.find({
+      userId: userId,
+      status: "paid",
+    })
+      .populate({
+        path: "courseId",
+        select: "title",
+      })
+      .skip(skip)
+      .limit(limit);
+
+    const purchases: IPurchase[] = orders.map((order) => ({
+      _id: order._id.toString(),
+      course: order.courseId,
+      amount: order.amount ?? 0,
+      purchasedAt: order.createdAt,
+      status: order.status,
+    }));
+
+    return {
+      purchases,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

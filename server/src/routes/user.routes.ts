@@ -24,7 +24,7 @@ const orderRepository = new OrderRepository();
 const progressRepository = new ProgressRepository();
 const walletRepository = new WalletRepository();
 const complaintRepository = new ComplaintRepository();
-const notificationRepository=new NotificationRepository()
+const notificationRepository = new NotificationRepository();
 const authService = new AuthService(
   authRepository,
   otpRepository,
@@ -124,8 +124,19 @@ router.post(
   authRole(["user"]),
   authController.submitComplaint.bind(authController)
 );
-router.get("/notifications/:userId",authController.getNotifications.bind(authController))
-router.put("/notifications/read/:notificationId",authController.markAsRead.bind(authController))
+router.get(
+  "/notifications/:userId",
+  authController.getNotifications.bind(authController)
+);
+router.put(
+  "/notifications/read/:notificationId",
+  authController.markAsRead.bind(authController)
+);
+router.get(
+  "/purchase-history",
+  authRole(["user"]),
+  authController.getPurchases.bind(authController)
+);
 router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

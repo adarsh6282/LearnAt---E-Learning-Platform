@@ -95,5 +95,39 @@ class OrderRepository {
             return orderModel_1.default.findOne(filter);
         });
     }
+    getPurchases(userId, page, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const total = yield orderModel_1.default.countDocuments({
+                userId: userId,
+                status: "paid",
+            });
+            const orders = yield orderModel_1.default.find({
+                userId: userId,
+                status: "paid",
+            })
+                .populate({
+                path: "courseId",
+                select: "title",
+            })
+                .skip(skip)
+                .limit(limit);
+            const purchases = orders.map((order) => {
+                var _a;
+                return ({
+                    _id: order._id.toString(),
+                    course: order.courseId,
+                    amount: (_a = order.amount) !== null && _a !== void 0 ? _a : 0,
+                    purchasedAt: order.createdAt,
+                    status: order.status,
+                });
+            });
+            return {
+                purchases,
+                total,
+                totalPages: Math.ceil(total / limit),
+            };
+        });
+    }
 }
 exports.OrderRepository = OrderRepository;

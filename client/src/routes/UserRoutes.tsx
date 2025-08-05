@@ -46,6 +46,7 @@ const UserRoutes = () => {
           <Route path=":chatId" element={<ChatWindow />} />
         </Route>
         <Route path="/users/video/:chatId" element={<VideoCall />} />
+        <Route path="/users/purchase-history" element={<PurchaseHistory/>}/>
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}

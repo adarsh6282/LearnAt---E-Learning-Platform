@@ -5,6 +5,7 @@ import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IProgress } from "../../models/interfaces/progress.interface";
+import { IPurchase } from "../../repository/implementations/order.repository";
 
 export interface IAuthService {
   registerUser(email: string): Promise<void>;
@@ -51,4 +52,5 @@ export interface IAuthService {
   getNotifications(userId:string):Promise<INotification[]>
   markAsRead(notificationId:string):Promise<INotification|null>
   submitComplaint(data:Partial<IComplaint>):Promise<IComplaint|null>
+  getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }>
 }

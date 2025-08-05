@@ -24,6 +24,7 @@ import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
+import { IPurchase } from "../../repository/implementations/order.repository";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -458,5 +459,10 @@ export class AuthService implements IAuthService {
 
   async submitComplaint(data: Partial<IComplaint>): Promise<IComplaint | null> {
     return await this._complaintRepository.createComplaint(data);
+  }
+
+  async getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
+    const purchases= await this._orderRepsitory.getPurchases(userId,page,limit)
+    return purchases
   }
 }

@@ -171,7 +171,7 @@ export class Authcontroller implements IAuthController {
       const email = req.user?.email;
 
       if (!email) {
-        res.status(httpStatus.BAD_REQUEST).json({ message: "EMail not found" });
+        res.status(httpStatus.BAD_REQUEST).json({ message: "Email not found" });
       }
 
       const updatedUser = await this._authService.updateProfileService(email!, {
@@ -363,7 +363,9 @@ export class Authcontroller implements IAuthController {
       res.status(httpStatus.OK).json(instructors);
     } catch (error) {
       console.log(error);
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching instructors", error });
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: "Error fetching instructors", error });
     }
   }
 
@@ -383,7 +385,7 @@ export class Authcontroller implements IAuthController {
       const notification = await this._authService.markAsRead(notificationId);
       res.status(httpStatus.OK).json({ message: "Message Read" });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 
@@ -398,7 +400,9 @@ export class Authcontroller implements IAuthController {
       }
 
       if (!type || !subject || !message) {
-        res.status(httpStatus.BAD_REQUEST).json({ message: "All fields are required" });
+        res
+          .status(httpStatus.BAD_REQUEST)
+          .json({ message: "All fields are required" });
         return;
       }
 
@@ -415,6 +419,24 @@ export class Authcontroller implements IAuthController {
         .json({ message: "Complaint submitted successfully" });
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async getPurchases(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (!userId) {
+        res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+        return
+      }
+
+      const {purchases, total, totalPages} = await this._authService.getPurchases(userId,page,limit);
+      res.status(httpStatus.OK).json({purchases:purchases,total,totalPages,currentPage:page});
+    } catch (error) {
+      console.log(error)
     }
   }
 }

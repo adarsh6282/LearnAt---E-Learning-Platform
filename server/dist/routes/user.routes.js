@@ -62,5 +62,6 @@ router.get("/instructors/purchased", (0, authRole_1.default)(["user"]), authCont
 router.post("/complaints", (0, authRole_1.default)(["user"]), authController.submitComplaint.bind(authController));
 router.get("/notifications/:userId", authController.getNotifications.bind(authController));
 router.put("/notifications/read/:notificationId", authController.markAsRead.bind(authController));
+router.get("/purchase-history", (0, authRole_1.default)(["user"]), authController.getPurchases.bind(authController));
 router.post("/logout", authController.logOut.bind(authController));
 exports.default = router;

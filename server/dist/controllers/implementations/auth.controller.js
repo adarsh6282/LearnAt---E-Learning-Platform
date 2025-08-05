@@ -190,7 +190,7 @@ class Authcontroller {
                 console.log(req.file);
                 const email = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
                 if (!email) {
-                    res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "EMail not found" });
+                    res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "Email not found" });
                 }
                 const updatedUser = yield this._authService.updateProfileService(email, {
                     name,
@@ -373,7 +373,9 @@ class Authcontroller {
             }
             catch (error) {
                 console.log(error);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error fetching instructors", error });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: "Error fetching instructors", error });
             }
         });
     }
@@ -412,7 +414,9 @@ class Authcontroller {
                     return;
                 }
                 if (!type || !subject || !message) {
-                    res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "All fields are required" });
+                    res
+                        .status(statusCodes_1.httpStatus.BAD_REQUEST)
+                        .json({ message: "All fields are required" });
                     return;
                 }
                 const complaint = yield this._authService.submitComplaint({
@@ -428,6 +432,25 @@ class Authcontroller {
             }
             catch (err) {
                 console.log(err);
+            }
+        });
+    }
+    getPurchases(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "User not found" });
+                    return;
+                }
+                const { purchases, total, totalPages } = yield this._authService.getPurchases(userId, page, limit);
+                res.status(statusCodes_1.httpStatus.OK).json({ purchases: purchases, total, totalPages, currentPage: page });
+            }
+            catch (error) {
+                console.log(error);
             }
         });
     }

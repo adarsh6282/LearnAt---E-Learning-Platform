@@ -77,5 +77,9 @@ export const userLoginS = async (email: string, password: string) => {
 export const editProfileS = async (
   formPayload: FormData
 ) => {
-  return await userApi.put<IUserProfile>("/users/profile", formPayload);
+  return await userApi.put<IUserProfile>("/users/profile", formPayload,{
+    headers:{
+      "Content-Type":"multipart/form-data"
+    }
+  });
 };

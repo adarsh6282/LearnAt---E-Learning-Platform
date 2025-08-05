@@ -367,5 +367,11 @@ class AuthService {
             return yield this._complaintRepository.createComplaint(data);
         });
     }
+    getPurchases(userId, page, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const purchases = yield this._orderRepsitory.getPurchases(userId, page, limit);
+            return purchases;
+        });
+    }
 }
 exports.AuthService = AuthService;
