@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { successToast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import userApi from "../services/userApiService";
@@ -11,8 +11,15 @@ interface OtpPageProps {
 const ResetPassword: React.FC<OtpPageProps> = ({ role }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const usertoken=localStorage.getItem("usersToken")
+  const instructortoken=localStorage.getItem("instructorsToken")
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (usertoken) navigate('/');
+    if(instructortoken) navigate('/instructors/dashboard')
+  }, [usertoken, instructortoken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

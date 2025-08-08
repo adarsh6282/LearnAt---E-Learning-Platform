@@ -15,7 +15,7 @@ import { IReview } from "../../models/interfaces/review.interface";
 import { IReviewRepository } from "../../repository/interfaces/review.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
-import { IWallet } from "../../models/interfaces/wallet.interface";
+import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 import { ICategoryRepository } from "../../repository/interfaces/category.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
@@ -316,29 +316,31 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async getCategory(): Promise<ICategory[] | null> {
-    const categories = await this._categoryRepository.getCatgeories();
+    const categories = await this._categoryRepository.getCatgeoriesInstructor();
     if (!categories) {
       throw new Error("No categories found");
     }
     return categories;
   }
 
-  async getReviewsByInstructor(
-    instructorId: string
-  ): Promise<IReview[] | null> {
-    return this._reviewRepository.getReviewsByInstructor(instructorId);
+  async getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:IReview[],total:number,totalPages:number}> {
+    return this._reviewRepository.getReviewsByInstructor(instructorId,page,limit,rating);
   }
 
-  async getEnrollments(instructorId: string): Promise<IEnrollment[] | null> {
+  async getEnrollments(instructorId:string,page:number,limit:number):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}> {
     const enrollments = await this._orderRepository.getEnrollmentsByInstructor(
-      instructorId
+      instructorId,
+      page,
+      limit
     );
     return enrollments;
   }
 
-  async getWallet(instructorId: string): Promise<IWallet | null> {
+  async getWallet(instructorId:string,page:number,limit:number):Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}> {
     const wallet = await this._walletRepository.findWalletOfInstructor(
-      instructorId
+      instructorId,
+      page,
+      limit
     );
 
     if (!wallet) {

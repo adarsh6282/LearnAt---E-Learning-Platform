@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Users, Clock, BookOpen, User } from "lucide-react";
+import { Star, Users, Clock, BookOpen, User, X } from "lucide-react";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
 import { errorToast, successToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
@@ -14,30 +14,35 @@ import {
 import type { Review } from "../../types/review.types";
 import { USER_ROUTES } from "../../constants/routes.constants";
 import userApi from "../../services/userApiService";
+import type { IInstructorProfile } from "../../types/instructor.types";
+import Navbar from "../../components/Navbar";
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseViewType | null>(null);
+  const instructorId = course?.instructor?._id;
+  const [instructor, setInstructor] = useState<IInstructorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState({ rating: 0, text: "" });
-  const [isCompleted,setIsCompleted]=useState<boolean>()
+  const [isCompleted, setIsCompleted] = useState<boolean>();
   const [error, setError] = useState<string | null>(null);
+  const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "overview" | "curriculum" | "instructor" | "reviews"
   >("overview");
 
-  console.log(isCompleted)
-
-  useEffect(()=>{
-    const fetchIsCourseCompleted=async()=>{
-      const res=await userApi.get<boolean>(`/users/courses/progress/${courseId}`)
-      setIsCompleted(res.data)
-    }
-    fetchIsCourseCompleted()
-  },[courseId])
+  useEffect(() => {
+    const fetchIsCourseCompleted = async () => {
+      const res = await userApi.get<boolean>(
+        `/users/courses/progress/${courseId}`
+      );
+      setIsCompleted(res.data);
+    };
+    fetchIsCourseCompleted();
+  }, [courseId]);
 
   const handlePayment = async () => {
     if (!course?._id) return;
@@ -78,7 +83,7 @@ const CourseDetail: React.FC = () => {
       razor.open();
     } catch (err) {
       console.error("Error in payment", err);
-      errorToast("Course is purchased or payment in progress")
+      errorToast("Course is purchased or payment in progress");
     }
   };
 
@@ -100,12 +105,12 @@ const CourseDetail: React.FC = () => {
     if (!courseId) return;
 
     try {
-      const res=await postReviewS(courseId, userReview);
+      await postReviewS(courseId, userReview);
       successToast("Review Submitted");
       setUserReview({ rating: 0, text: "" });
       fetchReviews();
     } catch (err) {
-      errorToast("Already reviewed the course")
+      errorToast("Already reviewed the course");
       console.log(err);
     }
   };
@@ -127,30 +132,39 @@ const CourseDetail: React.FC = () => {
         setError("Failed to load course details");
       } finally {
         setLoading(false);
-        console.log("Finished loading");
       }
     };
 
     fetchCourse();
   }, [courseId]);
 
+  const fetchInstructor = async () => {
+    try {
+      const res = await userApi.get<IInstructorProfile>(
+        `/users/courseinstructor/${instructorId}`
+      );
+      setInstructor(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <Navbar />
         <div className="animate-pulse">
-          <div className="bg-white border-b">
-            <div className="max-w-7xl mx-auto px-4 py-6">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
-              <div className="h-6 bg-gray-200 rounded w-96"></div>
-            </div>
+          <div className="max-w-5xl mx-auto px-4 py-6">
+            <div className="h-8 bg-slate-800 rounded w-48 mb-4"></div>
+            <div className="h-6 bg-slate-800 rounded w-96"></div>
           </div>
-          <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="max-w-5xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <div className="h-64 bg-gray-200 rounded-lg"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-64 bg-slate-800 rounded-lg"></div>
+                <div className="h-32 bg-slate-800 rounded"></div>
               </div>
-              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="h-96 bg-slate-800 rounded-lg"></div>
             </div>
           </div>
         </div>
@@ -160,20 +174,20 @@ const CourseDetail: React.FC = () => {
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Navbar />
         <div className="text-center">
-          <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <BookOpen className="mx-auto h-12 w-12 text-cyan-400" />
+          <h3 className="mt-2 text-lg font-bold text-slate-200">
             Course not found
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-slate-400">
             {error || "The course you're looking for doesn't exist."}
           </p>
           <Link
             to={USER_ROUTES.COURSES}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="mt-4 inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white rounded-full font-semibold hover:scale-105 transition-all duration-300"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Courses
           </Link>
         </div>
@@ -182,7 +196,6 @@ const CourseDetail: React.FC = () => {
   }
 
   const totalLessons = course.lectures?.length || 0;
-
   const totalDuration =
     course.lectures?.reduce((total, lecture) => {
       const minutes = parseInt(lecture.duration) || 0;
@@ -190,108 +203,82 @@ const CourseDetail: React.FC = () => {
     }, 0) || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <div className="bg-gray-900 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link
-            to={USER_ROUTES.COURSES}
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Courses
-          </Link>
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link to={USER_ROUTES.COURSES} className="hover:text-white">
-              Courses
-            </Link>
-            <span>/</span>
-            <span className="text-white">{course.title}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Course Header */}
-            <div className="bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 mb-6">
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {course.category && (
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  <span className="px-3 py-1 bg-cyan-100 text-cyan-800 text-xs rounded-full">
                     {course.category}
                   </span>
                 )}
               </div>
-
-              <h1 className="text-3xl font-bold text-white mb-4">
+              <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-indigo-600 bg-clip-text text-transparent mb-4">
                 {course.title}
               </h1>
-
-              <p className="text-white mb-6">{course.description}</p>
-
-              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
+              <p className="text-slate-200 mb-6">{course.description}</p>
+              <div className="flex flex-wrap items-center gap-6 text-sm text-slate-400">
                 {course.rating && (
                   <div className="flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-slate-100">
                       {course.rating}
                     </span>
                     <span className="ml-1">rating</span>
                   </div>
                 )}
-
                 {course.studentsCount && (
                   <div className="flex items-center">
                     <Users className="h-4 w-4 mr-1" />
                     <span>{course.studentsCount} students</span>
                   </div>
                 )}
-
-                <div className="flex items-center text-white">
+                <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>
-                    {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
-                    total
+                    {Math.floor(totalDuration / 60)}h {totalDuration % 60}m total
                   </span>
                 </div>
-
-                <div className="flex items-center text-white">
+                <div className="flex items-center">
                   <BookOpen className="h-4 w-4 mr-1" />
                   <span>{totalLessons} lessons</span>
                 </div>
               </div>
             </div>
 
-            {/* Course Image */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+            {/* Course Image or Video */}
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow overflow-hidden mb-6">
               {course.lectures && course.lectures.length > 0 ? (
                 <video
                   controls
-                  className="w-full h-64 sm:h-80 object-cover"
+                  className="w-full h-56 sm:h-72 object-cover"
                   src={course.lectures[0].videoUrl}
                 />
               ) : (
-                <p className="p-4 text-center text-gray-500">
+                <p className="p-4 text-center text-slate-400">
                   No lecture video available
                 </p>
               )}
             </div>
 
             {/* Tabs */}
-            <div className="bg-gray-800 rounded-lg shadow-sm">
-              <div className="border-b">
-                <nav className="flex space-x-8 px-6 text-white">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow">
+              <div className="border-b border-cyan-400/10">
+                <nav className="flex space-x-8 px-6 text-slate-100">
                   {["overview", "curriculum", "instructor", "reviews"].map(
                     (tab) => (
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab as typeof activeTab)}
-                        className={`py-4 text-sm text-white font-medium border-b-2 ${
+                        className={`py-4 text-sm font-semibold border-b-2 transition-colors ${
                           activeTab === tab
-                            ? "border-blue-500 text-blue-600"
-                            : "border-transparent text-white"
+                            ? "border-cyan-500 text-cyan-400"
+                            : "border-transparent"
                         }`}
                       >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -300,16 +287,15 @@ const CourseDetail: React.FC = () => {
                   )}
                 </nav>
               </div>
-
               <div className="p-6">
                 {activeTab === "overview" && (
                   <div className="space-y-6">
                     {course.description && (
                       <div>
-                        <h3 className="text-white text-lg font-semibold mb-3">
+                        <h3 className="text-lg font-semibold mb-3 text-cyan-300">
                           About this course
                         </h3>
-                        <p className="text-white leading-relaxed">
+                        <p className="text-slate-200 leading-relaxed">
                           {course.description}
                         </p>
                       </div>
@@ -319,7 +305,7 @@ const CourseDetail: React.FC = () => {
 
                 {activeTab === "curriculum" && (
                   <div>
-                    <h3 className="text-lg text-white font-semibold mb-6">
+                    <h3 className="text-lg text-cyan-300 font-semibold mb-6">
                       Course Curriculum
                     </h3>
                     {course.lectures && course.lectures.length > 0 ? (
@@ -327,10 +313,10 @@ const CourseDetail: React.FC = () => {
                         {course.lectures.map((chapter, chapterIndex) => (
                           <div
                             key={`${chapter.title}-${chapterIndex}`}
-                            className="border rounded-lg"
+                            className="border rounded-lg border-cyan-400/10 bg-slate-900/60"
                           >
-                            <div className="bg-gray-800 px-4 py-3 border-b">
-                              <h4 className="font-medium text-white">
+                            <div className="px-4 py-3">
+                              <h4 className="font-medium text-slate-100">
                                 Chapter {chapterIndex + 1}: {chapter.title}
                               </h4>
                             </div>
@@ -338,7 +324,7 @@ const CourseDetail: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500">
+                      <p className="text-slate-400">
                         Curriculum information not available.
                       </p>
                     )}
@@ -347,26 +333,36 @@ const CourseDetail: React.FC = () => {
 
                 {activeTab === "instructor" && (
                   <div>
-                    <h3 className="text-lg text-white font-semibold mb-6">
+                    <h3 className="text-lg text-cyan-300 font-semibold mb-6">
                       About the Instructor
                     </h3>
                     {course.instructor ? (
                       <div className="flex items-start space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="h-8 w-8 text-gray-400" />
-                        </div>
+                        <button
+                          onClick={() => {
+                            if (course.instructor?._id) {
+                              fetchInstructor();
+                              setIsInstructorModalOpen(true);
+                            } else {
+                              console.warn("Instructor ID not available");
+                            }
+                          }}
+                          className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center hover:scale-105 transition"
+                        >
+                          <User className="h-8 w-8 text-cyan-400" />
+                        </button>
                         <div>
-                          <h4 className="font-medium text-white">
+                          <h4 className="font-medium text-slate-100">
                             {course.instructor?.name}
                           </h4>
-                          <p className="text-white mt-2">
+                          <p className="text-slate-200 mt-2">
                             Experienced instructor with expertise in{" "}
                             {course.category || "this field"}.
                           </p>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-gray-500">
+                      <p className="text-slate-400">
                         Instructor information not available.
                       </p>
                     )}
@@ -375,19 +371,17 @@ const CourseDetail: React.FC = () => {
 
                 {activeTab === "reviews" && (
                   <div>
-                    <h3 className="text-lg text-white font-semibold mb-6">
+                    <h3 className="text-lg text-cyan-300 font-semibold mb-6">
                       Ratings & Reviews
                     </h3>
-
                     {/* Review Form - Only for enrolled users */}
                     {isCompleted && (
-                      <div className="mb-8 p-4 bg-gray-700 rounded-lg">
-                        <h4 className="text-white font-medium mb-4">
+                      <div className="mb-8 p-4 bg-slate-900/60 rounded-lg">
+                        <h4 className="text-slate-100 font-medium mb-4">
                           Write a Review
                         </h4>
-
                         <div className="mb-4">
-                          <label className="block mb-2 text-white font-medium">
+                          <label className="block mb-2 text-slate-100 font-medium">
                             Your Rating:
                           </label>
                           <div className="flex space-x-1 mb-2">
@@ -400,13 +394,12 @@ const CourseDetail: React.FC = () => {
                                 className={`h-6 w-6 cursor-pointer ${
                                   userReview.rating >= star
                                     ? "text-yellow-400 fill-current"
-                                    : "text-gray-400 hover:text-yellow-300"
+                                    : "text-slate-400 hover:text-yellow-300"
                                 }`}
                               />
                             ))}
                           </div>
                         </div>
-
                         <div className="mb-4">
                           <textarea
                             placeholder="Write your review..."
@@ -417,20 +410,18 @@ const CourseDetail: React.FC = () => {
                                 text: e.target.value,
                               })
                             }
-                            className="w-full p-3 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full p-3 border border-cyan-400/10 bg-slate-900 text-slate-100 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                             rows={4}
                           />
                         </div>
-
                         <button
                           onClick={handleSubmitReview}
-                          className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
+                          className="bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-2 px-6 rounded-full font-semibold hover:scale-105 transition-all duration-300"
                         >
                           Submit Review
                         </button>
                       </div>
                     )}
-
                     {/* Reviews List */}
                     <div className="space-y-4">
                       {reviews.length > 0 ? (
@@ -439,7 +430,7 @@ const CourseDetail: React.FC = () => {
                           .map((review) => (
                             <div
                               key={review._id}
-                              className="border-t border-gray-600 pt-4"
+                              className="border-t border-cyan-400/10 pt-4"
                             >
                               <div className="flex items-center mb-2">
                                 <div className="flex space-x-1">
@@ -449,25 +440,25 @@ const CourseDetail: React.FC = () => {
                                       className={`h-4 w-4 ${
                                         review.rating >= star
                                           ? "text-yellow-400 fill-current"
-                                          : "text-gray-400"
+                                          : "text-slate-400"
                                       }`}
                                     />
                                   ))}
                                 </div>
-                                <span className="ml-2 text-sm text-gray-300">
+                                <span className="ml-2 text-sm text-slate-300">
                                   By {review.user?.name || "Anonymous"}
                                 </span>
                               </div>
-                              <p className="text-white leading-relaxed">
+                              <p className="text-slate-100 leading-relaxed">
                                 {review.text}
                               </p>
                             </div>
                           ))
                       ) : (
                         <div className="text-center py-8">
-                          <Star className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                          <p className="text-gray-400">No reviews yet.</p>
-                          <p className="text-gray-500 text-sm mt-2">
+                          <Star className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                          <p className="text-slate-400">No reviews yet.</p>
+                          <p className="text-slate-400 text-sm mt-2">
                             Be the first to review this course!
                           </p>
                         </div>
@@ -478,19 +469,16 @@ const CourseDetail: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
-              <div className="text-center text-white mb-6">
-                <div className="text-3xl font-bold text-white mb-2">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 sticky top-6">
+              <div className="text-center text-slate-100 mb-6">
+                <div className="text-3xl font-bold text-fuchsia-400 mb-2">
                   ₹{course.price}
                 </div>
               </div>
-
               {isEnrolled ? (
                 <button
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-md font-medium cursor-pointer mb-4"
+                  className="w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-4 rounded-full font-semibold cursor-pointer mb-4 hover:scale-105 transition-all duration-300"
                   onClick={() => navigate(`/users/course-view/${courseId}`)}
                 >
                   Continue to Course
@@ -498,32 +486,78 @@ const CourseDetail: React.FC = () => {
               ) : (
                 <button
                   onClick={handlePayment}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors mb-4"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-3 px-4 rounded-full font-semibold hover:scale-105 transition-all duration-300 mb-4"
                 >
                   Enroll Now
                 </button>
               )}
-
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-white">Total Duration:</span>
-                  <span className="font-medium text-white">
+                  <span className="text-slate-200">Total Duration:</span>
+                  <span className="font-medium text-slate-100">
                     {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
                   </span>
                 </div>
-
                 <div className="flex justify-between">
-                  <span className="text-white">Lessons:</span>
-                  <span className="font-medium text-white">{totalLessons}</span>
+                  <span className="text-slate-200">Lessons:</span>
+                  <span className="font-medium text-slate-100">{totalLessons}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white">Access:</span>
-                  <span className="font-medium text-white">Lifetime</span>
+                  <span className="text-slate-200">Access:</span>
+                  <span className="font-medium text-slate-100">Lifetime</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        {isInstructorModalOpen && course.instructor && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg w-11/12 max-w-md p-6 relative">
+              <button
+                onClick={() => setIsInstructorModalOpen(false)}
+                className="absolute top-3 right-3 text-slate-400 hover:text-fuchsia-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex flex-col items-center text-center">
+                {instructor?.profilePicture ? (
+                  <img
+                    src={instructor.profilePicture}
+                    alt="Instructor Profile"
+                    className="w-24 h-24 rounded-full object-cover mb-4"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-slate-300 flex items-center justify-center text-slate-500 mb-4">
+                    <User className="w-10 h-10" />
+                  </div>
+                )}
+                <h2 className="text-2xl font-bold text-slate-100">
+                  {instructor?.name}
+                </h2>
+                <p className="text-slate-300 text-sm mb-1">
+                  @{instructor?.username}
+                </p>
+                <p className="text-slate-100 font-medium mb-2">
+                  {instructor?.title}
+                </p>
+                <div className="text-sm text-slate-200 space-y-1">
+                  <p>
+                    🎓 <span className="font-semibold">Education:</span>{" "}
+                    {instructor?.education}
+                  </p>
+                  <p>
+                    🧑‍💼 <span className="font-semibold">Experience:</span>{" "}
+                    {instructor?.yearsOfExperience} years
+                  </p>
+                  <p>
+                    📞 <span className="font-semibold">Phone:</span>{" "}
+                    {instructor?.phone}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

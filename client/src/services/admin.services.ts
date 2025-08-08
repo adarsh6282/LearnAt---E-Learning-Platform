@@ -80,8 +80,18 @@ export const handleRejectS = async (email: string, reason: string) => {
   } as any);
 };
 
-export const getCoursesS = async () => {
-  return await adminApi.get<ICourse[]>("/admin/courses");
+export const getCoursesS = async (
+  page: number,
+  limit: number,
+  searchQuery: string
+) => {
+  return await adminApi.get<{
+    course: ICourse[];
+    total: number;
+    totalPage: number;
+  }>(`/admin/courses?page=${page}&limit=${limit}`, {
+    params: { search: searchQuery?.trim() },
+  });
 };
 
 export const handleSoftDeleteS = async (id: string) => {

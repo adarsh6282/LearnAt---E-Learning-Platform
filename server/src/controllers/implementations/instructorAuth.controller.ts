@@ -308,6 +308,9 @@ export class InstructorAuthController implements IInstructorController {
 
   async getInstructorReviews(req: Request, res: Response): Promise<void> {
     try {
+      const page=parseInt(req.query.page as string)||1
+      const limit=parseInt(req.query.limit as string)||10
+      const rating = req.query.rating ? parseInt(req.query.rating as string) : 0
       const instructorId = req.instructor?.id;
       if (!instructorId) {
         res
@@ -316,7 +319,10 @@ export class InstructorAuthController implements IInstructorController {
         return;
       }
       const review = await this._instructorAuthService.getReviewsByInstructor(
-        instructorId
+        instructorId,
+        page,
+        limit,
+        rating
       );
       res.status(httpStatus.OK).json(review);
     } catch (err: any) {
@@ -329,6 +335,8 @@ export class InstructorAuthController implements IInstructorController {
 
   async getEnrollments(req: Request, res: Response): Promise<void> {
     try {
+      const page=parseInt(req.query.page as string)||1
+      const limit=parseInt(req.query.limit as string)||10
       const instructorId = req.instructor?.id;
       if (!instructorId) {
         res
@@ -338,7 +346,9 @@ export class InstructorAuthController implements IInstructorController {
       }
 
       const enrollments = await this._instructorAuthService.getEnrollments(
-        instructorId
+        instructorId,
+        page,
+        limit
       );
       res.status(httpStatus.OK).json(enrollments);
     } catch (err: any) {
@@ -351,6 +361,8 @@ export class InstructorAuthController implements IInstructorController {
 
   async getWallet(req: Request, res: Response): Promise<void> {
     try {
+      const page=parseInt(req.query.page as string)||1
+      const limit=parseInt(req.query.limit as string)||10
       const instructorId = req.instructor?.id;
 
       if (!instructorId) {
@@ -360,10 +372,10 @@ export class InstructorAuthController implements IInstructorController {
         return;
       }
 
-      const wallet = await this._instructorAuthService.getWallet(instructorId);
+      const {wallet,total,totalPages,transactions} = await this._instructorAuthService.getWallet(instructorId,page,limit);
       res
         .status(httpStatus.OK)
-        .json({ balance: wallet?.balance, transactions: wallet?.transactions });
+        .json({ balance: wallet?.balance, transactions: transactions,total,totalPages,currentPage:page });
     } catch (err: any) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)

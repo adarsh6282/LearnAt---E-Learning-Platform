@@ -241,27 +241,27 @@ class InstructorAuthSerivce {
     }
     getCategory() {
         return __awaiter(this, void 0, void 0, function* () {
-            const categories = yield this._categoryRepository.getCatgeories();
+            const categories = yield this._categoryRepository.getCatgeoriesInstructor();
             if (!categories) {
                 throw new Error("No categories found");
             }
             return categories;
         });
     }
-    getReviewsByInstructor(instructorId) {
+    getReviewsByInstructor(instructorId, page, limit, rating) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this._reviewRepository.getReviewsByInstructor(instructorId);
+            return this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
         });
     }
-    getEnrollments(instructorId) {
+    getEnrollments(instructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId);
+            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId, page, limit);
             return enrollments;
         });
     }
-    getWallet(instructorId) {
+    getWallet(instructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            const wallet = yield this._walletRepository.findWalletOfInstructor(instructorId);
+            const wallet = yield this._walletRepository.findWalletOfInstructor(instructorId, page, limit);
             if (!wallet) {
                 throw new Error("No wallet found for the instructor");
             }

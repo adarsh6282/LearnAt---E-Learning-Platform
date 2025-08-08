@@ -22,6 +22,7 @@ import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
+import { stringify } from "querystring";
 
 export class AdminService implements IAdminService {
   constructor(
@@ -144,8 +145,8 @@ export class AdminService implements IAdminService {
     return await this._categoryRepository.createCategory(name);
   }
 
-  async getCategories(): Promise<ICategory[]> {
-    const categories = await this._categoryRepository.getCatgeories();
+  async getCategories(page:number,limit:number):Promise<{category:ICategory[],total:number,totalPages:number}> {
+    const categories = await this._categoryRepository.getCatgeories(page,limit);
     if (!categories) {
       throw new Error("No categories found");
     }
@@ -168,8 +169,8 @@ export class AdminService implements IAdminService {
     return await this._categoryRepository.restoreCategory(id);
   }
 
-  async getCoursesService(): Promise<ICourse[]> {
-    return await this._courseRepository.findAll();
+  async getCoursesService(page:number,limit:number,search:string): Promise<{course:ICourse[],total:number,totalPage:number}> {
+    return await this._courseRepository.findAllCourse(page,limit,search);
   }
 
   async softDeleteCourseS(courseId: string): Promise<ICourse | null> {
@@ -230,8 +231,8 @@ export class AdminService implements IAdminService {
     return { wallet, total, totalPages, transactions };
   }
 
-  async getComplaints(): Promise<IComplaint[] | null> {
-    return await this._complaintRepository.getComplaints();
+  async getComplaints(page:number,limit:number):Promise<{complaints:IComplaint[],total:number,totalPages:number}> {
+    return await this._complaintRepository.getComplaints(page,limit);
   }
 
   async responseComplaint(

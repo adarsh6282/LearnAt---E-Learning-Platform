@@ -9,6 +9,7 @@ import type { IOrder, VerifyResponse } from "../types/order.types";
 import type { Review } from "../types/review.types";
 import userApi from "./userApiService";
 
+
 export const userRegisterS = async (formData: { email: string }) => {
   return await userApi.post("/users/register", {
     email: formData.email,
@@ -20,7 +21,7 @@ export const getUserProfileS = async () => {
 };
 
 export const getCoursesS = async () => {
-  return await userApi.get<Course[]>("/users/courses");
+  return await userApi.get<Course[]>(`/users/courses`);
 };
 
 export const CreateOrderS = async (courseId: string) => {
@@ -77,7 +78,7 @@ export const userLoginS = async (email: string, password: string) => {
 export const editProfileS = async (
   formPayload: FormData
 ) => {
-  return await userApi.put<IUserProfile>("/users/profile", formPayload,{
+  return await userApi.patch<IUserProfile>("/users/profile", formPayload,{
     headers:{
       "Content-Type":"multipart/form-data"
     }

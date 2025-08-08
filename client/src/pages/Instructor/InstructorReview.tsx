@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import instructorApi from "../../services/instructorApiService";
+import { useSearchParams } from "react-router-dom";
+import Pagination from "../../components/Pagination";
 
 interface Review {
   _id: string;
@@ -13,19 +15,35 @@ interface Review {
 const InstructorReview = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const itemsPerPage=1;
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await instructorApi.get<Review[]>("/instructors/reviews");
-        setReviews(res.data);
+        const res = await instructorApi.get<{reviews:Review[],total:number,totalPages:number}>(`/instructors/reviews?page=${currentPage}&limit=${itemsPerPage}&rating=${ratingFilter ?? "0"}`);
+        setReviews(res.data.reviews);
+        setTotalPages(res.data.totalPages)
       } catch (err) {
         console.error("Error fetching reviews:", err);
       }
     };
 
     fetchReviews();
-  }, []);
+  }, [currentPage,itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">
@@ -33,7 +51,6 @@ const InstructorReview = () => {
         Your Course Reviews
       </h1>
 
-      {/* Filter */}
       <div className="mb-4 flex items-center space-x-4">
         <label className="text-sm font-medium text-gray-700">Filter</label>
         <select
@@ -52,7 +69,6 @@ const InstructorReview = () => {
         </select>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -137,6 +153,11 @@ const InstructorReview = () => {
           </div>
         )}
       </div>
+        <Pagination
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          totalPages={totalPages}
+        />
     </div>
   );
 };

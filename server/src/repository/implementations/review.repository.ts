@@ -1,12 +1,22 @@
-import Review from "../../models/implementations/reviewModel"
+import Review from "../../models/implementations/reviewModel";
 import { Types } from "mongoose";
 import { IReviewRepository } from "../interfaces/review.interface";
 import { IReview } from "../../models/interfaces/review.interface";
-import Course from "../../models/implementations/courseModel"
+import Course from "../../models/implementations/courseModel";
 
-export class ReviewRepository implements IReviewRepository  {
-  async createReview(courseId: string, userId: string, rating: number, text: string) {
-    return await Review.create({ course: courseId, user: userId, rating, text });
+export class ReviewRepository implements IReviewRepository {
+  async createReview(
+    courseId: string,
+    userId: string,
+    rating: number,
+    text: string
+  ) {
+    return await Review.create({
+      course: courseId,
+      user: userId,
+      rating,
+      text,
+    });
   }
 
   async getCourseReviews(courseId: string) {
@@ -25,52 +35,85 @@ export class ReviewRepository implements IReviewRepository  {
     return result[0]?.avg || 0;
   }
 
-  async getReviewsByInstructor(instructorId: string): Promise<IReview[] | null> {
-    const courses=await Course.find({instructor:instructorId},"_id")
-    const courseIds=courses.map((c)=>c._id)
+  async getReviewsByInstructor(
+    instructorId: string,
+    page: number,
+    limit: number,
+    rating: number
+  ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
+    const courses = await Course.find({ instructor: instructorId }).select(
+      "_id"
+    );
+    const courseIds = courses.map((c) => c._id);
 
-    return Review.find({
-      course:{$in:courseIds},
-      isHidden:false
-    }).populate("user","name")
-    .populate("course","title")
+    if (courseIds.length === 0) {
+      return { reviews: [], total: 0, totalPages: 0 };
+    }
+
+    const filter: any = {
+      course: { $in: courseIds },
+      isHidden: false,
+    };
+
+    if (rating) {
+      filter.rating = rating;
+    }
+
+    const total = await Review.countDocuments(filter);
+
+    const reviews = await Review.find(filter)
+      .populate("user", "name")
+      .populate("course", "title")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    return {
+      reviews,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  async getAllReviews(page:number,limit:number): Promise<{reviews:IReview[],total:number,totalPages:number}> {
+  async getAllReviews(
+    page: number,
+    limit: number
+  ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-  const [reviews, total] = await Promise.all([
-    Review.find()
-      .populate({
-        path: "user",
-        select: "name",
-      })
-      .populate({
-        path: "course",
-        select: "title instructor",
-        populate: {
-          path: "instructor",
+    const [reviews, total] = await Promise.all([
+      Review.find()
+        .populate({
+          path: "user",
           select: "name",
-        },
-      })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit),
-    Review.countDocuments(),
-  ]);
-  const totalPages = Math.ceil(total / limit)
-  return {reviews,total,totalPages}
+        })
+        .populate({
+          path: "course",
+          select: "title instructor",
+          populate: {
+            path: "instructor",
+            select: "name",
+          },
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Review.countDocuments(),
+    ]);
+    const totalPages = Math.ceil(total / limit);
+    return { reviews, total, totalPages };
   }
 
   async findReviewAndHide(id: string): Promise<IReview | null> {
-    return Review.findByIdAndUpdate(id,{isHidden:true},{new:true})
+    return Review.findByIdAndUpdate(id, { isHidden: true }, { new: true });
   }
 
   async findReviewAndUnhide(id: string): Promise<IReview | null> {
-    return Review.findByIdAndUpdate(id,{isHidden:false},{new:true})
+    return Review.findByIdAndUpdate(id, { isHidden: false }, { new: true });
   }
 
   async deleteReview(id: string): Promise<IReview | null> {
-    return Review.findByIdAndDelete(id)
+    return Review.findByIdAndDelete(id);
   }
-};
+}

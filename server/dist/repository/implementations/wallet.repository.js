@@ -32,9 +32,24 @@ class WalletRepository {
             }, { upsert: true, new: true });
         });
     }
-    findWalletOfInstructor(InstructorId) {
+    findWalletOfInstructor(InstructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield walletModel_1.default.findOne({ ownerId: InstructorId });
+            const skip = (page - 1) * limit;
+            const wallet = yield walletModel_1.default.findOne({ ownerId: InstructorId })
+                .select("balance transactions")
+                .lean();
+            const allTransactions = (wallet === null || wallet === void 0 ? void 0 : wallet.transactions) || [];
+            const total = allTransactions.length;
+            const totalPages = Math.ceil(total / limit);
+            const paginatedTransactions = allTransactions
+                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                .slice(skip, skip + limit);
+            return {
+                wallet: { balance: (wallet === null || wallet === void 0 ? void 0 : wallet.balance) || 0 },
+                transactions: paginatedTransactions,
+                total,
+                totalPages,
+            };
         });
     }
     findWalletOfAdmin(page, limit) {

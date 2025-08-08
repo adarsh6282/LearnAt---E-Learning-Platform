@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
 import { MessageService } from "../services/implementation/message.service";
 import { MessageRepository } from "../repository/implementations/message.repository";
+import Chat from "../models/implementations/chatModel"
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -43,7 +44,7 @@ export const initSocket = (server: HTTPServer): void => {
       socket.to(chatId).emit("incoming-call", {
         chatId,
         callerId: senderId,
-        receiverId
+        receiverId,
       });
 
       socket.to(chatId).emit("webrtc-offer", { offer, senderId });
@@ -53,9 +54,9 @@ export const initSocket = (server: HTTPServer): void => {
       io.to(chatId).emit("call-accepted", { chatId });
     });
 
-    socket.on("call-rejected",({callerId,chatId})=>{
-      socket.to(chatId).emit("end-call")
-    })
+    socket.on("call-rejected", ({ callerId, chatId }) => {
+      socket.to(chatId).emit("end-call");
+    });
 
     socket.on("webrtc-answer", ({ chatId, answer, senderId }) => {
       socket.to(chatId).emit("webrtc-answer", { answer, senderId });

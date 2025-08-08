@@ -14,6 +14,23 @@ export interface IPurchase {
   status: string;
 }
 
+export interface PurchasedCourse {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  purchasedAt: string;
+  thumbnail: string;
+}
+
+interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  thumbnail: string;
+}
+
 export class OrderRepository implements IOrderRepository {
   async createOrderRecord(orderData: IOrder): Promise<IOrder | null> {
     const newOrder = await Order.create(orderData);
@@ -51,8 +68,14 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async getEnrollmentsByInstructor(
-    instructorId: string
-  ): Promise<IEnrollment[] | null> {
+    instructorId: string,
+    page: number,
+    limit: number
+  ): Promise<{
+    enrollments: IEnrollment[];
+    total: number;
+    totalPages: number;
+  }> {
     const orders = await Order.find({ status: "paid" })
       .populate({
         path: "courseId",
@@ -63,8 +86,15 @@ export class OrderRepository implements IOrderRepository {
 
     const filteredOrders = orders.filter((order) => order.courseId !== null);
 
+    const total = filteredOrders.length;
+    const totalPages = Math.ceil(total / limit);
+    const paginatedOrders = filteredOrders.slice(
+      (page - 1) * limit,
+      page * limit
+    );
+
     const enrollments = await Promise.all(
-      filteredOrders.map(async (order) => {
+      paginatedOrders.map(async (order) => {
         const courseId = (order.courseId as any)._id;
         const userId = (order.userId as any)._id;
 
@@ -90,7 +120,7 @@ export class OrderRepository implements IOrderRepository {
       })
     );
 
-    return enrollments;
+    return { enrollments, total, totalPages };
   }
 
   async findExistingOrder(filter: {
@@ -101,7 +131,11 @@ export class OrderRepository implements IOrderRepository {
     return Order.findOne(filter);
   }
 
-  async getPurchases(userId: string, page: number, limit: number): Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
+  async getPurchases(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
     const total = await Order.countDocuments({
@@ -130,6 +164,52 @@ export class OrderRepository implements IOrderRepository {
 
     return {
       purchases,
+      total,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async purchasedCourses(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{
+    purchasedCourses: PurchasedCourse[];
+    total: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const total = await Order.countDocuments({
+      userId,
+      status: "paid",
+    });
+
+    const courses = await Order.find({
+      userId,
+      status: "paid",
+    })
+      .populate("courseId", "title description price createdAt thumbnail")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const purchasedCourses: PurchasedCourse[] = courses
+      .filter((order: any) => order.courseId)
+      .map((order: any) => {
+        const course = order.courseId as any;
+        return {
+          id: course._id.toString(),
+          title: course.title,
+          description: course.description,
+          price: course.price,
+          purchasedAt: order.createdAt.toISOString(),
+          thumbnail: course.thumbnail,
+        };
+      });
+
+    return {
+      purchasedCourses,
       total,
       totalPages: Math.ceil(total / limit),
     };

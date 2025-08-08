@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { successToast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import { forgotPasswordS } from "../services/common.service";
@@ -9,8 +9,15 @@ interface OtpPageProps {
 
 const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
+  const usertoken=localStorage.getItem("usersToken")
+  const instructortoken=localStorage.getItem("instructorsToken")
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+      if (usertoken) navigate('/');
+      if(instructortoken) navigate('/instructors/dashboard')
+    }, [usertoken, instructortoken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

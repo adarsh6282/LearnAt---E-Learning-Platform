@@ -15,4 +15,5 @@ export interface IAuthRepository{
     }>
   ): Promise<IUser|null>,
   findUsersByIds(ids:string[]):Promise<IUser[]>
+  updatePassword(userId:string,hashedPassword:string):Promise<IUser|null>
 }

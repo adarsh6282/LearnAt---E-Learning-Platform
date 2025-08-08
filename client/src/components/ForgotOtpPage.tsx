@@ -9,11 +9,18 @@ interface OtpPageProps {
 
 const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const [otp, setOtp] = useState("");
+  const usertoken=localStorage.getItem("usersToken")
+  const instructortoken=localStorage.getItem("instructorsToken")
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (usertoken) navigate('/');
+    if(instructortoken) navigate('/instructors/dashboard')
+  }, [usertoken, instructortoken, navigate]);
 
   useEffect(() => {
     if (timer === 0) {

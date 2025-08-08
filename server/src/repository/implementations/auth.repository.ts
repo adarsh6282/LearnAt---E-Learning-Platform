@@ -46,4 +46,8 @@ export class AuthRepository extends BaseRepository<IUser> implements IAuthReposi
   async findUsersByIds(ids: string[]): Promise<IUser[]> {
     return User.find({ _id: { $in: ids } });
   }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<IUser | null> {
+    return User.findByIdAndUpdate(userId,{password:hashedPassword})
+  }
 }

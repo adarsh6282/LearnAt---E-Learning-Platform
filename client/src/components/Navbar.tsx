@@ -1,4 +1,5 @@
-import { User, Bell } from "lucide-react";
+import { useState } from "react";
+import { User, Bell, Menu, X } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/learnAt-removebg-preview.png";
 import { USER_ROUTES } from "../constants/routes.constants";
@@ -7,6 +8,7 @@ import userApi from "../services/userApiService";
 export default function Navbar() {
   const token = localStorage.getItem("usersToken");
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigateLogin = () => navigate(USER_ROUTES.LOGIN);
   const navigateRegister = () => navigate(USER_ROUTES.REGISTER);
@@ -22,60 +24,122 @@ export default function Navbar() {
     }
   };
 
+  const cta =
+    "bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300";
+
   return (
-    <nav className="flex justify-between items-center px-8 py-5 bg-gray-900 shadow-md top-0 w-full z-50 fixed">
-      <img src={logo} className="w-15 h-8" alt="Logo" />
+    <nav className="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md border-b border-cyan-400/10">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-8 py-3">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <img
+            src={logo}
+            alt="Learn At Logo"
+            className="h-8 sm:h-10 object-contain cursor-pointer transition-transform duration-300 hover:scale-105"
+            onClick={() => navigate("/")}
+          />
+        </div>
 
-      <div className="hidden md:flex items-center gap-6 text-gray-300">
-        <Link to={USER_ROUTES.COURSES} className="hover:text-blue-400 transition-colors">
-          Courses
-        </Link>
-        <a href="#about" className="hover:text-blue-400 transition-colors">
-          About
-        </a>
-        <a href="#contact" className="hover:text-blue-400 transition-colors">
-          Contact Us
-        </a>
-        <Link to="/users/chat" className="hover:text-blue-400 transition-colors">
-          Chats
-        </Link>
-      </div>
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-7 text-slate-200 text-base font-medium">
+          <Link to={USER_ROUTES.COURSES} className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded">
+            Courses
+          </Link>
+          <a href="#about" className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded">
+            About
+          </a>
+          <a href="#contact" className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded">
+            Contact Us
+          </a>
+          <Link to="/users/chat" className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded">
+            Chats
+          </Link>
+        </div>
 
-      <div className="flex items-center gap-4 text-gray-300">
-        {token && (
-          <>
-            <Link to="/users/notifications" className="hover:text-yellow-400 transition-colors">
-              <Bell size={22} />
-            </Link>
-            <Link to={USER_ROUTES.PROFILE} className="hover:text-violet-400 transition-colors">
-              <User size={22} />
-            </Link>
-          </>
-        )}
-        {!token ? (
-          <>
+        {/* Right Side Actions */}
+        <div className="hidden md:flex items-center gap-3">
+          {token && (
+            <>
+              <Link to="/users/notifications" className="p-2 rounded-full hover:bg-cyan-400/10 transition-colors duration-200" title="Notifications">
+                <Bell size={22} className="text-cyan-300" />
+              </Link>
+              <Link to={USER_ROUTES.PROFILE} className="p-2 rounded-full hover:bg-cyan-400/10 transition-colors duration-200" title="Profile">
+                <User size={22} className="text-cyan-300" />
+              </Link>
+            </>
+          )}
+          {!token ? (
+            <>
+              <button onClick={navigateLogin} className={cta + " min-w-[90px]"}>
+                Login
+              </button>
+              <button onClick={navigateRegister} className={cta + " min-w-[90px]"}>
+                Register
+              </button>
+            </>
+          ) : (
             <button
-              onClick={navigateLogin}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              onClick={handleLogout}
+              className="bg-gradient-to-r from-red-500 to-pink-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 min-w-[90px]"
             >
-              Login
+              Logout
             </button>
-            <button
-              onClick={navigateRegister}
-              className="bg-violet-500 text-white px-4 py-2 rounded-md hover:bg-violet-600 transition"
-            >
-              Register
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-          >
-            Logout
+          )}
+        </div>
+
+        <div className="md:hidden">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-cyan-300 p-2">
+            {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
-        )}
+        </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="md:hidden flex flex-col items-start px-6 py-4 gap-3 bg-slate-900 border-t border-cyan-400/10 text-slate-200 text-base font-medium">
+          <Link to={USER_ROUTES.COURSES} className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+            Courses
+          </Link>
+          <a href="#about" className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+            About
+          </a>
+          <a href="#contact" className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+            Contact Us
+          </a>
+          <Link to="/users/chat" className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+            Chats
+          </Link>
+          {token && (
+            <>
+              <Link to="/users/notifications" className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+                Notifications
+              </Link>
+              <Link to={USER_ROUTES.PROFILE} className="hover:text-cyan-400" onClick={() => setIsMenuOpen(false)}>
+                Profile
+              </Link>
+            </>
+          )}
+          {!token ? (
+            <>
+              <button onClick={() => { navigateLogin(); setIsMenuOpen(false); }} className={cta + " w-full"}>
+                Login
+              </button>
+              <button onClick={() => { navigateRegister(); setIsMenuOpen(false); }} className={cta + " w-full"}>
+                Register
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsMenuOpen(false);
+              }}
+              className="bg-gradient-to-r from-red-500 to-pink-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 w-full"
+            >
+              Logout
+            </button>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

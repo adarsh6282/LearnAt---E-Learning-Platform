@@ -21,10 +21,10 @@ export interface IAdminService{
     verifyTutor(email:string):Promise<IInstructor|null>,
     rejectTutor(email:string,reason:string):Promise<IInstructor|null>
     addCategory(name:string):Promise<ICategory|null>,
-    getCategories():Promise<ICategory[]>,
+    getCategories(page:number,limit:number):Promise<{category:ICategory[],total:number,totalPages:number}>,
     deleteCategory(id:string):Promise<ICategory|null>
     restoreCategory(id:string):Promise<ICategory|null>
-    getCoursesService(skip:number,limit:number):Promise<ICourse[]>
+    getCoursesService(page:number,limit:number,search:string): Promise<{course:ICourse[],total:number,totalPage:number}>
     softDeleteCourseS(courseId:string):Promise<ICourse|null>
     recoverCourseS(courseId:string):Promise<ICourse|null>
     getAllReviews(page:number,limit:number): Promise<{reviews:IReview[],total:number,totalPages:number}>,
@@ -32,7 +32,7 @@ export interface IAdminService{
     unhideReview(id:string):Promise<IReview|null>
     deleteReview(id:string):Promise<IReview|null>,
     getWallet(page:number,limit:number): Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}>
-    getComplaints():Promise<IComplaint[]|null>,
+    getComplaints(page:number,limit:number):Promise<{complaints:IComplaint[],total:number,totalPages:number}>,
     responseComplaint(id:string,status:string,response:string):Promise<IComplaint|null>,
     getCourseStats():Promise<{title:string,enrolledCount:number}[]>,
     getIncomeStats():Promise<{month:string,revenue:number}[]>,

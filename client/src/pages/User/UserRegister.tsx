@@ -18,6 +18,7 @@ interface FormData {
 
 const UserRegister: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const usertoken=localStorage.getItem("usersToken")
   const [formData, setFormData] = useState<FormData>({
     name: "",
     username: "",
@@ -30,6 +31,10 @@ const UserRegister: React.FC = () => {
   const navigate = useNavigate();
   const [canSubmit, setCanSubmit] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+
+  useEffect(() => {
+    if (usertoken) navigate('/');
+  }, [usertoken, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

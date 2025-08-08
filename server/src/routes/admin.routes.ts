@@ -159,7 +159,7 @@ router.get(
   adminController.getSpecificCourseforAdmin.bind(adminController)
 );
 router.get(
-  "/tutor-view/:id",
+  "/tutor-view/:id",authRole(["admin"]),
   adminController.getSpecificTutor.bind(adminController)
 );
 router.get(

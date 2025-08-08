@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ const InstructorRegister: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [resume, setResume] = useState<File | null>(null);
+  const instructortoken=localStorage.getItem("instructorsToken")
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +24,10 @@ const InstructorRegister: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if(instructortoken) navigate('/instructors/dashboard')
+  }, [instructortoken, navigate]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

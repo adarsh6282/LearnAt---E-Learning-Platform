@@ -50,7 +50,7 @@ const initSocket = (server) => {
             socket.to(chatId).emit("incoming-call", {
                 chatId,
                 callerId: senderId,
-                receiverId
+                receiverId,
             });
             socket.to(chatId).emit("webrtc-offer", { offer, senderId });
         });

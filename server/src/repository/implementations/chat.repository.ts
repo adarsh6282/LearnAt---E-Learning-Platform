@@ -15,10 +15,10 @@ export class ChatRepository implements IChatRepository {
   }
 
   async getUsersChat(userId: string): Promise<IChat[] | null> {
-    return Chat.find({ user: userId }).populate("instructor", "name");
+    return Chat.find({ user: userId }).populate("instructor", "name").sort({lastMessage:-1});
   }
 
   async getInstructorsChat(instructorId: string): Promise<IChat[] | null> {
-      return Chat.find({ instructor: instructorId }).populate("user", "name");
+      return Chat.find({ instructor: instructorId }).populate("user", "name").sort({lastMessage:-1});
   }
 }

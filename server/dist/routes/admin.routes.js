@@ -54,7 +54,7 @@ router.put("/complaints/:id", (0, authRole_1.default)(["admin"]), adminControlle
 router.get("/course-status", adminController.getCourseStats.bind(adminController));
 router.get("/income-status", adminController.getIncomeStats.bind(adminController));
 router.get("/courses/:courseId", adminController.getSpecificCourseforAdmin.bind(adminController));
-router.get("/tutor-view/:id", adminController.getSpecificTutor.bind(adminController));
+router.get("/tutor-view/:id", (0, authRole_1.default)(["admin"]), adminController.getSpecificTutor.bind(adminController));
 router.get("/notifications/:userId", adminController.getNotifications.bind(adminController));
 router.put("/notifications/read/:notificationId", adminController.markAsRead.bind(adminController));
 router.post("/logout", adminController.logOut.bind(adminController));

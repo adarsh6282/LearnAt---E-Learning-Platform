@@ -26,12 +26,11 @@ const ChatList = () => {
 
   useEffect(() => {
     if (!authUser || !authUser._id) return;
-    console.log(authUser);
 
     const fetchChats = async () => {
       try {
         const res = await userApi.get<ChatPartner[]>(
-          `/chats/list/${authUser?._id}?role=user`
+          `/chats/list/${authUser._id}?role=user`
         );
         const formattedChats = res.data
           .filter((chat: any) => chat.instructor)
@@ -39,7 +38,8 @@ const ChatList = () => {
             chatId: chat._id,
             partnerId: chat.instructor._id,
             partnerName: chat.instructor.name,
-          }));
+          }))
+
         setChats(formattedChats);
       } catch (err) {
         console.error("Error fetching user chats:", err);
@@ -49,14 +49,17 @@ const ChatList = () => {
     fetchChats();
   }, [authUser]);
 
+
   const fetchInstructors = async () => {
     try {
-      const res = await userApi.get<Instructor[]>("/users/instructors/purchased");
+      const res = await userApi.get<Instructor[]>(
+        "/users/instructors/purchased"
+      );
       const filtered = res.data.filter(
         (inst: any) => !chats.some((chat) => chat.partnerId === inst._id)
       );
       setInstructors(filtered);
-      console.log(filtered)
+      console.log(filtered);
       setShowInstructors(true);
     } catch (err) {
       console.error("Error fetching instructors:", err);

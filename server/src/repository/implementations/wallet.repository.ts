@@ -37,8 +37,37 @@ export class WalletRepository implements IWalletRepository {
     );
   }
 
-  async findWalletOfInstructor(InstructorId: string): Promise<IWallet | null> {
-    return await Wallet.findOne({ ownerId: InstructorId });
+  async findWalletOfInstructor(
+    InstructorId:string,
+    page: number,
+    limit: number
+  ): Promise<{
+    wallet: Partial<IWallet>;
+    transactions: ITransaction[];
+    total: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const wallet = await Wallet.findOne({ ownerId: InstructorId })
+      .select("balance transactions")
+      .lean();
+
+    const allTransactions = wallet?.transactions || [];
+
+    const total = allTransactions.length;
+    const totalPages = Math.ceil(total / limit);
+
+    const paginatedTransactions = allTransactions
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(skip, skip + limit);
+
+    return {
+      wallet: { balance: wallet?.balance || 0 },
+      transactions: paginatedTransactions,
+      total,
+      totalPages,
+    };
   }
 
   async findWalletOfAdmin(

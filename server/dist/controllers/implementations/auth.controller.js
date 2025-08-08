@@ -187,7 +187,6 @@ class Authcontroller {
             try {
                 const { name, phone } = req.body;
                 const profilePicture = req.file;
-                console.log(req.file);
                 const email = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
                 if (!email) {
                     res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "Email not found" });
@@ -451,6 +450,74 @@ class Authcontroller {
             }
             catch (error) {
                 console.log(error);
+            }
+        });
+    }
+    changePassword(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "User not found" });
+                    return;
+                }
+                const { oldPassword, newPassword, confirmPassword } = req.body;
+                yield this._authService.changePassword(userId, oldPassword, newPassword, confirmPassword);
+                res.status(statusCodes_1.httpStatus.OK).json({ message: "Password changed successfully" });
+            }
+            catch (error) {
+                console.log(error);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+            }
+        });
+    }
+    courseInstructorView(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const instructorId = req.params.instructorId;
+                const instructor = yield this._authService.getSpecificInstructor(instructorId);
+                res.status(statusCodes_1.httpStatus.OK).json(instructor);
+            }
+            catch (err) {
+                console.log(err);
+                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+            }
+        });
+    }
+    purchasedCourses(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!userId) {
+                    res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "user not found" });
+                    return;
+                }
+                const { purchasedCourses, total, totalPages } = yield this._authService.purchasedCourses(userId, page, limit);
+                res.status(statusCodes_1.httpStatus.OK).json({ purchasedCourses, total, totalPages, currentPage: page });
+            }
+            catch (err) {
+                console.log(err);
+            }
+        });
+    }
+    getCertificates(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const user = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                if (!user) {
+                    res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "user not authorized" });
+                    return;
+                }
+                const certificates = yield this._authService.getCertificates(user);
+                res.status(statusCodes_1.httpStatus.OK).json(certificates);
+            }
+            catch (err) {
+                console.log(err);
             }
         });
     }

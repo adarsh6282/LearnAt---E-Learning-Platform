@@ -115,13 +115,15 @@ const UserChatWindow = () => {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`p-3 rounded-xl text-sm max-w-sm break-words transition-all ${
-              msg.sender === authUser?._id
-                ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
-                : "bg-[#1a1a1d] text-gray-300 shadow-inner"
-            }`}
+            className={`p-3 rounded-xl text-sm max-w-sm break-words transition-all relative
+      ${
+        msg.sender === authUser?._id
+          ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
+          : "bg-[#1a1a1d] text-gray-300 shadow-inner"
+      }`}
           >
             {msg.content && <p>{msg.content}</p>}
+
             {msg.image && msg.image.trim() !== "" && (
               <img
                 src={msg.image}
@@ -130,12 +132,19 @@ const UserChatWindow = () => {
                 onClick={() => setFullscreenImage(msg.image || "")}
               />
             )}
+
+            <span className="text-xs text-white absolute bottom-1 right-2">
+              {new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
           </div>
         ))}
         <div ref={scrollRef} />
       </div>
 
-        {/* File Upload */}
+      {/* File Upload */}
       <div className="flex items-center gap-2">
         <label className="cursor-pointer relative">
           <FiPaperclip className="w-6 h-6 text-cyan-400 hover:text-cyan-300 transition duration-200" />

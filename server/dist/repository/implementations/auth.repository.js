@@ -54,5 +54,10 @@ class AuthRepository extends base_repository_1.BaseRepository {
             return userModel_1.default.find({ _id: { $in: ids } });
         });
     }
+    updatePassword(userId, hashedPassword) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return userModel_1.default.findByIdAndUpdate(userId, { password: hashedPassword });
+        });
+    }
 }
 exports.AuthRepository = AuthRepository;

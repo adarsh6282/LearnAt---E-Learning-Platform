@@ -104,9 +104,9 @@ class AdminService {
             return yield this._categoryRepository.createCategory(name);
         });
     }
-    getCategories() {
+    getCategories(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            const categories = yield this._categoryRepository.getCatgeories();
+            const categories = yield this._categoryRepository.getCatgeories(page, limit);
             if (!categories) {
                 throw new Error("No categories found");
             }
@@ -131,9 +131,9 @@ class AdminService {
             return yield this._categoryRepository.restoreCategory(id);
         });
     }
-    getCoursesService() {
+    getCoursesService(page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findAll();
+            return yield this._courseRepository.findAllCourse(page, limit, search);
         });
     }
     softDeleteCourseS(courseId) {
@@ -184,9 +184,9 @@ class AdminService {
             return { wallet, total, totalPages, transactions };
         });
     }
-    getComplaints() {
+    getComplaints(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._complaintRepository.getComplaints();
+            return yield this._complaintRepository.getComplaints(page, limit);
         });
     }
     responseComplaint(id, status, response) {

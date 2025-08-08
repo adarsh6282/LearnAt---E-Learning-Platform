@@ -302,6 +302,9 @@ class InstructorAuthController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const rating = req.query.rating ? parseInt(req.query.rating) : 0;
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
                     res
@@ -309,7 +312,7 @@ class InstructorAuthController {
                         .json({ message: "Instructor not found" });
                     return;
                 }
-                const review = yield this._instructorAuthService.getReviewsByInstructor(instructorId);
+                const review = yield this._instructorAuthService.getReviewsByInstructor(instructorId, page, limit, rating);
                 res.status(statusCodes_1.httpStatus.OK).json(review);
             }
             catch (err) {
@@ -324,6 +327,8 @@ class InstructorAuthController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
                     res
@@ -331,7 +336,7 @@ class InstructorAuthController {
                         .json({ message: "Instructor not found" });
                     return;
                 }
-                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId);
+                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId, page, limit);
                 res.status(statusCodes_1.httpStatus.OK).json(enrollments);
             }
             catch (err) {
@@ -346,6 +351,8 @@ class InstructorAuthController {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
             try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
                     res
@@ -353,10 +360,10 @@ class InstructorAuthController {
                         .json({ message: "Instructor not found" });
                     return;
                 }
-                const wallet = yield this._instructorAuthService.getWallet(instructorId);
+                const { wallet, total, totalPages, transactions } = yield this._instructorAuthService.getWallet(instructorId, page, limit);
                 res
                     .status(statusCodes_1.httpStatus.OK)
-                    .json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: wallet === null || wallet === void 0 ? void 0 : wallet.transactions });
+                    .json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: transactions, total, totalPages, currentPage: page });
             }
             catch (err) {
                 res

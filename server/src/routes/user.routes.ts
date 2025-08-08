@@ -14,6 +14,9 @@ import { ProgressRepository } from "../repository/implementations/progress.repos
 import { WalletRepository } from "../repository/implementations/wallet.repository";
 import { ComplaintRepository } from "../repository/implementations/complaint.repository";
 import { NotificationRepository } from "../repository/implementations/notification.repository";
+import { auth } from "google-auth-library";
+import { CertificateRepository } from "../repository/implementations/certificate.repository";
+import { CertificateService } from "../services/implementation/certificate.service";
 
 const authRepository = new AuthRepository();
 const instructorRepository = new InstructorAuth();
@@ -25,6 +28,8 @@ const progressRepository = new ProgressRepository();
 const walletRepository = new WalletRepository();
 const complaintRepository = new ComplaintRepository();
 const notificationRepository = new NotificationRepository();
+const certificateRepository=new CertificateRepository()
+const certificateService=new CertificateService(certificateRepository)
 const authService = new AuthService(
   authRepository,
   otpRepository,
@@ -35,7 +40,9 @@ const authService = new AuthService(
   progressRepository,
   walletRepository,
   complaintRepository,
-  notificationRepository
+  notificationRepository,
+  certificateRepository,
+  certificateService
 );
 const authController = new Authcontroller(authService);
 
@@ -61,7 +68,7 @@ router.get(
   authRole(["user"]),
   authController.getProfile.bind(authController)
 );
-router.put(
+router.patch(
   "/profile",
   authRole(["user"]),
   upload.single("profilePicture"),
@@ -137,6 +144,10 @@ router.get(
   authRole(["user"]),
   authController.getPurchases.bind(authController)
 );
+router.get("/purchased-courses",authRole(["user"]),authController.purchasedCourses.bind(authController))
+router.post("/change-password",authRole(["user"]),authController.changePassword.bind(authController))
+router.get("/courseinstructor/:instructorId",authRole(["user"]),authController.courseInstructorView.bind(authController))
+router.get("/certificates/:id",authRole(["user"]),authController.getCertificates.bind(authController))
 router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

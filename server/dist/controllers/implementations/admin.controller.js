@@ -196,7 +196,9 @@ class AdminController {
     getCatgeories(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const category = yield this._adminService.getCategories();
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 1;
+                const category = yield this._adminService.getCategories(page, limit);
                 res.status(statusCodes_1.httpStatus.OK).json(category);
             }
             catch (err) {
@@ -239,8 +241,9 @@ class AdminController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
-                const courses = yield this._adminService.getCoursesService(page, limit);
-                res.status(statusCodes_1.httpStatus.OK).json(courses);
+                const search = req.query.search || '';
+                const { course, total, totalPage } = yield this._adminService.getCoursesService(page, limit, search);
+                res.status(statusCodes_1.httpStatus.OK).json({ course: course, total, totalPage, currentPage: page });
             }
             catch (err) {
                 console.log(err);
@@ -396,8 +399,10 @@ class AdminController {
     getComplaints(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const complaints = yield this._adminService.getComplaints();
-                res.status(statusCodes_1.httpStatus.OK).json(complaints);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const { complaints, total, totalPages } = yield this._adminService.getComplaints(page, limit);
+                res.status(statusCodes_1.httpStatus.OK).json({ complaints: complaints, total, totalPages, currentPage: page });
             }
             catch (err) {
                 console.log(err);

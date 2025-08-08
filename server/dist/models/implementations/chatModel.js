@@ -45,6 +45,10 @@ const chatSchema = new mongoose_1.Schema({
         ref: "Instructor",
         required: true,
     },
+    lastMessage: {
+        type: Date,
+        default: Date.now
+    }
 }, {
     timestamps: true,
 });

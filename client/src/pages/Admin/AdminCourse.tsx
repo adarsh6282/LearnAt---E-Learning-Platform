@@ -8,21 +8,36 @@ import {
 import type { ICourse } from "../../types/course.types";
 import { errorToast, successToast } from "../../components/Toast";
 import Pagination from "../../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 const AdminCourse: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState<ICourse[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 4;
+  const [totalPages, setTotalPages] = useState<number>(1);
+
+  useEffect(() => {
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const search = searchParams.get("search") || "";
+  setCurrentPage(pageParam);
+  setSearchQuery(search);
+}, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString(),search: searchQuery.trim(), });
+  };
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await getCoursesS();
-      setCourses(res.data);
-      setFilteredCourses(res.data);
+      const res = await getCoursesS(currentPage,itemsPerPage,searchQuery);
+      setCourses(res.data.course);
+      setTotalPages(res.data.totalPage)
     } catch (err: any) {
       console.error("Failed to fetch courses:", err);
       errorToast(err.response?.data?.message);
@@ -52,26 +67,8 @@ const AdminCourse: React.FC = () => {
   };
 
   useEffect(() => {
-    const filtered = courses.filter(
-      (course) =>
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor?.name
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase())
-    );
-    setFilteredCourses(filtered);
-    setCurrentPage(1);
-  }, [searchQuery, courses]);
-
-  useEffect(() => {
     fetchCourses();
-  }, []);
-
-  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
-  const paginatedCourses = filteredCourses.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  }, [currentPage,itemsPerPage,searchQuery]);
 
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -145,7 +142,7 @@ const AdminCourse: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedCourses.map((course, index) => (
+                  {courses.map((course, index) => (
                     <tr
                       key={course._id}
                       className={`border-b border-slate-100 hover:bg-slate-50 transition-colors duration-200 ${
@@ -227,7 +224,7 @@ const AdminCourse: React.FC = () => {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
         />
       </div>
     </div>

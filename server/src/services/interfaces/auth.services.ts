@@ -5,7 +5,7 @@ import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IProgress } from "../../models/interfaces/progress.interface";
-import { IPurchase } from "../../repository/implementations/order.repository";
+import { IPurchase, PurchasedCourse } from "../../repository/implementations/order.repository";
 
 export interface IAuthService {
   registerUser(email: string): Promise<void>;
@@ -33,7 +33,7 @@ export interface IAuthService {
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
   ): Promise<IUser | null>;
-  getCoursesService(): Promise<ICourse[]>;
+  getCoursesService(): Promise<ICourse[]|null>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: ICourse; isEnrolled: boolean }>;
   createOrder(courseId: string, userId: string): Promise<IOrder | null>;
   verifyPayment({
@@ -53,4 +53,8 @@ export interface IAuthService {
   markAsRead(notificationId:string):Promise<INotification|null>
   submitComplaint(data:Partial<IComplaint>):Promise<IComplaint|null>
   getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }>
+  changePassword(userId:string,oldPassword:string,newPassword:string,confirmPassword:string):Promise<void>
+  getSpecificInstructor(instructorId:string):Promise<IInstructor|null>
+  getCertificates(userId:string):Promise<{id:string,user:string,course:string,courseTitle:string,certificateUrl:string,issuedDate:Date}[]>
+  purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
 }

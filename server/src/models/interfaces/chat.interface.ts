@@ -6,6 +6,7 @@ export interface IChat {
   instructor: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
+  lastMessage:Date;
 }
 
 export interface IMessage {

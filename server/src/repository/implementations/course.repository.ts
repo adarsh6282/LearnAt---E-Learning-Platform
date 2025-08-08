@@ -15,7 +15,40 @@ export class CourseRepository
     return course;
   }
 
-  async findAll(): Promise<ICourse[]> {
+  async findAllCourse(
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ course: ICourse[]; total: number; totalPage: number }> {
+    const skip = (page - 1) * limit;
+
+    const searchQuery = search
+      ? { title: { $regex: search, $options: "i" } }
+      : {};
+
+    console.log(searchQuery);
+
+    const [course, total] = await Promise.all([
+      this.model
+        .find(searchQuery)
+        .skip(skip)
+        .limit(limit)
+        .populate("instructor", "name email")
+        .populate({
+          path: "category",
+          match: { isDeleted: false },
+          select: "name",
+        }),
+      this.model.countDocuments(searchQuery),
+    ]);
+
+    const totalPage = Math.ceil(total / limit);
+
+    return { course, total, totalPage };
+  }
+
+  async findCourses():Promise<ICourse[]|null> {
+
     const courses = await this.model
       .find({})
       .populate("instructor", "name email")
@@ -24,6 +57,7 @@ export class CourseRepository
         match: { isDeleted: false },
         select: "name",
       });
+
     return courses;
   }
 

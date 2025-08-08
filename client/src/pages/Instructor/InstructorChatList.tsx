@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import instructorApi from "../../services/instructorApiService";
 import { FiArrowLeft } from "react-icons/fi";
-
 interface ChatPartner {
   chatId: string;
   partnerId: string;
@@ -36,7 +35,7 @@ const InstructorChatList = () => {
           partnerId: chat.user._id,
           partnerName: chat.user.name,
         }));
-        setChats(formattedChats);
+        setChats(formattedChats)
       } catch (err) {
         console.error("Error fetching instructor chats:", err);
       }
@@ -47,7 +46,9 @@ const InstructorChatList = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await instructorApi.get<User[]>("/instructors/users/purchased");
+      const res = await instructorApi.get<User[]>(
+        "/instructors/users/purchased"
+      );
       const filtered = res.data.filter(
         (user) => !chats.some((chat) => chat.partnerId === user._id)
       );

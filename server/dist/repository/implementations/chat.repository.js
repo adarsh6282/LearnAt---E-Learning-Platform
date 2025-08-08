@@ -26,12 +26,12 @@ class ChatRepository {
     }
     getUsersChat(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return chatModel_1.default.find({ user: userId }).populate("instructor", "name");
+            return chatModel_1.default.find({ user: userId }).populate("instructor", "name").sort({ lastMessage: -1 });
         });
     }
     getInstructorsChat(instructorId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return chatModel_1.default.find({ instructor: instructorId }).populate("user", "name");
+            return chatModel_1.default.find({ instructor: instructorId }).populate("user", "name").sort({ lastMessage: -1 });
         });
     }
 }

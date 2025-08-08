@@ -16,7 +16,7 @@ export interface IWalletRepository {
     description: string;
   }): Promise<IWallet | null>;
 
-  findWalletOfInstructor(InstructorId: string): Promise<IWallet | null>;
+  findWalletOfInstructor(InstructorId: string,page:number,limit:number): Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}>
 
   findWalletOfAdmin(page:number,limit:number): Promise<{ wallet: Partial<IWallet>; total: number; totalPages: number,transactions:ITransaction[] }>;
 

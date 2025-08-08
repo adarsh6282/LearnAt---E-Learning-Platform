@@ -3,7 +3,8 @@ import { Types } from "mongoose";
 
 export interface ICourseRepository {
   createCourse(courseData: Partial<ICourse>): Promise<ICourse>;
-  findAll(): Promise<ICourse[]>;
+  findAllCourse(page:number,limit:number,search:string): Promise<{course:ICourse[],total:number,totalPage:number}>;
+  findCourses():Promise<ICourse[]|null>
   findCourseById(courseId: string): Promise<ICourse | null>;
   findCoursesByInstructor(
     instructorId: string,

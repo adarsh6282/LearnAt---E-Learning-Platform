@@ -55,7 +55,7 @@ class OrderRepository {
             return !!order;
         });
     }
-    getEnrollmentsByInstructor(instructorId) {
+    getEnrollmentsByInstructor(instructorId, page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
             const orders = yield orderModel_1.default.find({ status: "paid" })
                 .populate({
@@ -65,7 +65,10 @@ class OrderRepository {
             })
                 .populate("userId", "_id name email");
             const filteredOrders = orders.filter((order) => order.courseId !== null);
-            const enrollments = yield Promise.all(filteredOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
+            const total = filteredOrders.length;
+            const totalPages = Math.ceil(total / limit);
+            const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
+            const enrollments = yield Promise.all(paginatedOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
                 const courseId = order.courseId._id;
                 const userId = order.userId._id;
                 const progress = yield progressModel_1.default.findOne({
@@ -87,7 +90,7 @@ class OrderRepository {
                     createdAt: order.createdAt.toISOString(),
                 };
             })));
-            return enrollments;
+            return { enrollments, total, totalPages };
         });
     }
     findExistingOrder(filter) {
@@ -124,6 +127,41 @@ class OrderRepository {
             });
             return {
                 purchases,
+                total,
+                totalPages: Math.ceil(total / limit),
+            };
+        });
+    }
+    purchasedCourses(userId, page, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const total = yield orderModel_1.default.countDocuments({
+                userId,
+                status: "paid",
+            });
+            const courses = yield orderModel_1.default.find({
+                userId,
+                status: "paid",
+            })
+                .populate("courseId", "title description price createdAt thumbnail")
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 });
+            const purchasedCourses = courses
+                .filter((order) => order.courseId)
+                .map((order) => {
+                const course = order.courseId;
+                return {
+                    id: course._id.toString(),
+                    title: course.title,
+                    description: course.description,
+                    price: course.price,
+                    purchasedAt: order.createdAt.toISOString(),
+                    thumbnail: course.thumbnail,
+                };
+            });
+            return {
+                purchasedCourses,
                 total,
                 totalPages: Math.ceil(total / limit),
             };

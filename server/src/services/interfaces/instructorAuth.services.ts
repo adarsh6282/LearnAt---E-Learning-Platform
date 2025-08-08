@@ -5,7 +5,7 @@ import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IReview } from "../../models/interfaces/review.interface";
-import { IWallet } from "../../models/interfaces/wallet.interface";
+import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
 import { IEnrollment } from "../../types/enrollment.types";
 interface Dashboard{
   totalUsers:number,
@@ -22,7 +22,7 @@ export interface IInstructorAuthService{
     handleResetPassword(data:{email:string,newPassword:string,confirmPassword:string}):Promise<boolean>,
     handleResendOtp(email:string):Promise<void>,
     getProfileService(email:string):Promise<IInstructor|null>
-    getReviewsByInstructor(instructorId:string):Promise<IReview[]|null>
+    getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:IReview[],total:number,totalPages:number}>
     updateProfileService(
       email: string,
       {
@@ -37,8 +37,8 @@ export interface IInstructorAuthService{
     getCoursesByInstructor(instructorId:string,page:number,limit:number):Promise<{courses:ICourse[],total:number,totalPages:number}>
     getCategory():Promise<ICategory[]|null>
     getCourseById(courseId:string):Promise<ICourse|null>
-    getEnrollments(instructorId:string):Promise<IEnrollment[]|null>
-    getWallet(instructorId:string):Promise<IWallet|null>
+    getEnrollments(instructorId:string,page:number,limit:number):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}>
+    getWallet(instructorId:string,page:number,limit:number):Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}>
     getCouresStats(instructorId:string):Promise<{title:string,enrolledCount:number}[]>
     getIncomeStats(instructorId:string):Promise<{month:string,revenue:number}[]>
     getNotifications(userId:string):Promise<INotification[]>

@@ -65,7 +65,6 @@ const CoursePage = () => {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      {/* Sidebar */}
       <aside className="w-1/4 bg-gray-800 p-6 overflow-y-auto border-r border-gray-700">
         <h2 className="text-2xl font-bold mb-6">{course.title}</h2>
         <ul className="space-y-3">
@@ -91,8 +90,6 @@ const CoursePage = () => {
           targetId={course._id}
         />
       </aside>
-
-      {/* Video Player & Details */}
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-2xl font-semibold mb-4">

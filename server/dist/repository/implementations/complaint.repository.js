@@ -20,15 +20,29 @@ class ComplaintRepository {
             return yield complaintSchema_1.default.create(data);
         });
     }
-    getComplaints() {
+    getComplaints(page, limit) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield complaintSchema_1.default.find({}).populate("userId").populate("targetId");
+            const skip = (page - 1) * limit;
+            const [complaints, total] = yield Promise.all([
+                complaintSchema_1.default.find({})
+                    .populate("userId")
+                    .populate("targetId")
+                    .skip(skip)
+                    .limit(limit),
+                complaintSchema_1.default.countDocuments(),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return {
+                complaints,
+                total,
+                totalPages,
+            };
         });
     }
     updateComplaint(id, status, response) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield complaintSchema_1.default.findByIdAndUpdate(id, {
-                $set: { status: status, response: response }
+                $set: { status: status, response: response },
             }, { new: true });
         });
     }

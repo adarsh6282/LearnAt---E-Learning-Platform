@@ -25,7 +25,31 @@ class CourseRepository extends base_repository_1.BaseRepository {
             return course;
         });
     }
-    findAll() {
+    findAllCourse(page, limit, search) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const searchQuery = search
+                ? { title: { $regex: search, $options: "i" } }
+                : {};
+            console.log(searchQuery);
+            const [course, total] = yield Promise.all([
+                this.model
+                    .find(searchQuery)
+                    .skip(skip)
+                    .limit(limit)
+                    .populate("instructor", "name email")
+                    .populate({
+                    path: "category",
+                    match: { isDeleted: false },
+                    select: "name",
+                }),
+                this.model.countDocuments(searchQuery),
+            ]);
+            const totalPage = Math.ceil(total / limit);
+            return { course, total, totalPage };
+        });
+    }
+    findCourses() {
         return __awaiter(this, void 0, void 0, function* () {
             const courses = yield this.model
                 .find({})

@@ -15,7 +15,7 @@ import { Outlet } from "react-router-dom";
 import ProtectedRoute from "../pages/User/ProtectedRoute";
 import { USER_ROUTES } from "../constants/routes.constants";
 import CourseView from "../pages/User/CourseView";
-import PurchaseHistory from "../pages/User/PurchaseHistory";
+import PurchaseHistory from "../pages/User/CoursePurchaseHistory";
 import ChatWindow from "../components/ChatWindow";
 import ChatPage from "../components/ChatPage";
 import VideoCall from "../components/VideoCall";
@@ -23,6 +23,9 @@ import { CallProvider } from "../context/CallContext";
 import CallModal from "../components/CallModal";
 import UserNotification from "../pages/User/UserNotification";
 import { NotificationProvider } from "../context/NotificationContext";
+import PurchasedCourses from "../pages/User/PurchasedCourses";
+import ChangePassword from "../pages/User/ChangePassword";
+import UserCertificates from "../pages/User/Certificates";
 
 const UserRoutes = () => {
   return (
@@ -47,6 +50,9 @@ const UserRoutes = () => {
         </Route>
         <Route path="/users/video/:chatId" element={<VideoCall />} />
         <Route path="/users/purchase-history" element={<PurchaseHistory/>}/>
+        <Route path="/users/purchase-courses" element={<PurchasedCourses/>}/>
+        <Route path="/users/change-password" element={<ChangePassword/>}/>
+        <Route path="/users/certificates" element={<UserCertificates/>}/>
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}

@@ -9,19 +9,32 @@ import {
 } from "../../services/category.services";
 import type { Category } from "../../types/category.types";
 import Pagination from "../../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 const AdminCategory = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activePage, setActivePage] = useState(1);
-  const [deletedPage, setDeletedPage] = useState(1);
-  const itemsPerPage = 2;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 5;
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [showModal, setShowModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [currentPage,itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -41,8 +54,9 @@ const AdminCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const all = await getAllCategoriesS();
-      setCategories(all);
+      const all = await getAllCategoriesS(currentPage,itemsPerPage);
+      setCategories(all.category);
+      setTotalPages(all.totalPages)
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to fetch categories";
       errorToast(msg);
@@ -71,22 +85,6 @@ const AdminCategory = () => {
     }
   };
 
-  const activeCategories = categories.filter((c) => !c.isDeleted);
-  const totalActivePages = Math.ceil(activeCategories.length / itemsPerPage);
-
-  const paginatedActiveCategories = activeCategories.slice(
-    (activePage - 1) * itemsPerPage,
-    activePage * itemsPerPage
-  );
-
-  const deletedCategories = categories.filter((c) => c.isDeleted);
-  const totalDeletedPages = Math.ceil(deletedCategories.length / itemsPerPage);
-
-  const paginatedDeletedCategories = deletedCategories.slice(
-    (deletedPage - 1) * itemsPerPage,
-    deletedPage * itemsPerPage
-  );
-
   return loading ? (
     <div className="flex justify-center items-center h-screen">
       <BeatLoader color="#7e22ce" size={30} />
@@ -110,85 +108,41 @@ const AdminCategory = () => {
         </div>
 
         <div className="flex-1 px-6 pb-6 flex flex-col">
-          <section className="mb-8 flex flex-col">
-            <h3 className="text-xl font-semibold text-green-700 mb-3">
-              Active Categories
-            </h3>
-            <div className="border border-gray-200 rounded-lg bg-white p-4">
-              {activeCategories.length === 0 ? (
-                <p className="text-gray-500">No active categories.</p>
-              ) : (
-                <div className="space-y-4">
-                  {paginatedActiveCategories.map((category) => (
-                    <div
-                      key={category._id}
-                      className="bg-gray-50 p-4 rounded-lg shadow border border-gray-200 flex justify-between items-center"
-                    >
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          {category.name}
-                        </h4>
-                      </div>
+          <div className="border border-gray-200 rounded-lg bg-white p-4">
+            {categories.length === 0 ? (
+              <p className="text-gray-500">No categories found.</p>
+            ) : (
+              <div className="space-y-4">
+                {categories.map((category) => (
+                  <div
+                    key={category._id}
+                    className={`p-4 rounded-lg shadow border border-gray-200 flex justify-between items-center ${
+                      category.isDeleted ? "bg-red-50" : "bg-gray-50"
+                    }`}
+                  >
+                    <h4 className="text-lg font-semibold text-gray-800">
+                      {category.name}
+                    </h4>
+                    {category.isDeleted ? (
+                      <button
+                        onClick={() => handleRestore(category._id)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Restore
+                      </button>
+                    ) : (
                       <button
                         onClick={() => handleSoftDelete(category._id)}
                         className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                       >
                         Delete
                       </button>
-                    </div>
-                  ))}
-                  {totalActivePages && (
-                    <Pagination
-                      currentPage={activePage}
-                      totalPages={totalActivePages}
-                      onPageChange={setActivePage}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="flex flex-col">
-            <h3 className="text-xl font-semibold text-red-700 mb-3">
-              Deleted Categories
-            </h3>
-            <div className="border border-gray-200 rounded-lg bg-white p-4">
-              {deletedCategories.length === 0 ? (
-                <p className="text-gray-500">No deleted categories.</p>
-              ) : (
-                <div className="space-y-4">
-                  {paginatedDeletedCategories.map((category) => (
-                    <div
-                      key={category._id}
-                      className="bg-gray-50 p-4 rounded-lg shadow border border-gray-200 flex justify-between items-center"
-                    >
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          {category.name}
-                        </h4>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleRestore(category._id)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                          Restore
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {totalDeletedPages > 1 && (
-                    <Pagination
-                      currentPage={deletedPage}
-                      totalPages={totalDeletedPages}
-                      onPageChange={setDeletedPage}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -225,6 +179,10 @@ const AdminCategory = () => {
           </div>
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+        totalPages={totalPages}/>
     </div>
   );
 };

@@ -24,7 +24,12 @@ import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
-import { IPurchase } from "../../repository/implementations/order.repository";
+import {
+  IPurchase,
+  PurchasedCourse,
+} from "../../repository/implementations/order.repository";
+import { ICertificateReopsitory } from "../../repository/interfaces/certificate.interface";
+import { ICertificateService } from "../interfaces/certificate.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -37,7 +42,9 @@ export class AuthService implements IAuthService {
     private _progressRepository: IProgressRepository,
     private _walletRepository: IWalletRepository,
     private _complaintRepository: IComplaintRepository,
-    private _notificationRepository:INotificationRepository
+    private _notificationRepository: INotificationRepository,
+    private _certificateRepository: ICertificateReopsitory,
+    private _certificateService: ICertificateService
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -234,8 +241,8 @@ export class AuthService implements IAuthService {
     return user;
   }
 
-  async getCoursesService(): Promise<ICourse[]> {
-    return await this._courseRepository.findAll();
+  async getCoursesService(): Promise<ICourse[] | null> {
+    return await this._courseRepository.findCourses();
   }
 
   async findCourseByIdService(
@@ -362,18 +369,22 @@ export class AuthService implements IAuthService {
     });
 
     await this._notificationRepository.createNotification({
-      receiverId:course.instructor.id.toString(),
-      receiverModel:"Instructor",
-      message:`Your course "${course.title}" was purchased by ${user?.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`
-    })
+      receiverId: course.instructor.id.toString(),
+      receiverModel: "Instructor",
+      message: `Your course "${course.title}" was purchased by ${
+        user?.name
+      }. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`,
+    });
 
-    const admin=await this._adminRepository.findOneAdmin()
-    if(admin){
+    const admin = await this._adminRepository.findOneAdmin();
+    if (admin) {
       await this._notificationRepository.createNotification({
-        receiverId:admin.id,
-        receiverModel:"Admin",
-        message:`The course "${course.title}" was purchased by ${user?.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`
-      })
+        receiverId: admin.id,
+        receiverModel: "Admin",
+        message: `The course "${course.title}" was purchased by ${
+          user?.name
+        }. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`,
+      });
     }
 
     return { success: true };
@@ -410,6 +421,17 @@ export class AuthService implements IAuthService {
       !progress?.isCompleted
     ) {
       await this._progressRepository.markAsCompleted(userId, courseId);
+
+      const user = await this._userRepository.findById(userId);
+      const course = await this._courseRepository.findCourseById(courseId);
+
+      if (user && course) {
+        console.log("entered course completion certificate creation");
+        await this._certificateService.createCertificateForUser(
+          { id: userId, name: user.name },
+          { id: courseId, title: course.title }
+        );
+      }
     }
     return progress;
   }
@@ -441,9 +463,11 @@ export class AuthService implements IAuthService {
     return await this._notificationRepository.getAllNotifications(userId);
   }
 
-  async markAsRead(notificationId: string): Promise<INotification|null> {
-    const notification=await this._notificationRepository.updateNotification(notificationId)
-    return notification
+  async markAsRead(notificationId: string): Promise<INotification | null> {
+    const notification = await this._notificationRepository.updateNotification(
+      notificationId
+    );
+    return notification;
   }
 
   async checkStatus(userId: string, courseId: string): Promise<boolean> {
@@ -461,8 +485,78 @@ export class AuthService implements IAuthService {
     return await this._complaintRepository.createComplaint(data);
   }
 
-  async getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
-    const purchases= await this._orderRepsitory.getPurchases(userId,page,limit)
-    return purchases
+  async getPurchases(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{ purchases: IPurchase[]; total: number; totalPages: number }> {
+    const purchases = await this._orderRepsitory.getPurchases(
+      userId,
+      page,
+      limit
+    );
+    return purchases;
+  }
+
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<void> {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      throw new Error("Please fill in all fields");
+    }
+
+    if (newPassword != confirmPassword) {
+      throw new Error("new password and confirm password dont match");
+    }
+
+    const user = await this._userRepository.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new Error("Old password is incorrect");
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this._userRepository.updatePassword(userId, hashedPassword);
+  }
+
+  async getSpecificInstructor(
+    instructorId: string
+  ): Promise<IInstructor | null> {
+    const instructor = await this._instructorRepository.findById(instructorId);
+    if (!instructor) {
+      throw new Error("No Instructor Found");
+    }
+    return instructor;
+  }
+
+  async purchasedCourses(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{
+    purchasedCourses: PurchasedCourse[];
+    total: number;
+    totalPages: number;
+  }> {
+    return await this._orderRepsitory.purchasedCourses(userId, page, limit);
+  }
+
+  async getCertificates(
+    userId: string
+  ): Promise<{
+    id: string;
+    user: string;
+    course: string;
+    courseTitle: string;
+    certificateUrl: string;
+    issuedDate: Date;
+  }[]> {
+    return await this._certificateRepository.getCertificates(userId)
   }
 }

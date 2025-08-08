@@ -14,10 +14,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageRepository = void 0;
 const messageModel_1 = __importDefault(require("../../models/implementations/messageModel"));
+const chatModel_1 = __importDefault(require("../../models/implementations/chatModel"));
 class MessageRepository {
     saveMessage(messageData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield messageModel_1.default.create(messageData);
+            const message = yield messageModel_1.default.create(messageData);
+            yield chatModel_1.default.findByIdAndUpdate(messageData.chat, { lastMessage: new Date() });
+            return message;
         });
     }
     getChatMessages(chatId) {

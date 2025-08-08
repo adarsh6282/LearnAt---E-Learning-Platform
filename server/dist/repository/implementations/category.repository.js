@@ -39,7 +39,18 @@ class CategoryRepository extends base_repository_1.BaseRepository {
             return category;
         });
     }
-    getCatgeories() {
+    getCatgeories(page, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const skip = (page - 1) * limit;
+            const [category, total] = yield Promise.all([
+                this.model.find({}).skip(skip).limit(limit),
+                this.model.countDocuments(),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { category, total, totalPages };
+        });
+    }
+    getCatgeoriesInstructor() {
         return __awaiter(this, void 0, void 0, function* () {
             const categories = yield this.model.find({});
             return categories;

@@ -53,6 +53,7 @@ export type CourseViewType = {
   rating?: number;
   studentsCount?: number;
   instructor?: {
+    _id:string;
     name: string;
   };
   description?: string;

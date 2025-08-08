@@ -54,7 +54,7 @@ const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.con
 const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
 const crypto_1 = __importDefault(require("crypto"));
 class AuthService {
-    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository) {
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService) {
         this._userRepository = _userRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -65,6 +65,8 @@ class AuthService {
         this._walletRepository = _walletRepository;
         this._complaintRepository = _complaintRepository;
         this._notificationRepository = _notificationRepository;
+        this._certificateRepository = _certificateRepository;
+        this._certificateService = _certificateService;
     }
     registerUser(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -206,7 +208,7 @@ class AuthService {
     }
     getCoursesService() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findAll();
+            return yield this._courseRepository.findCourses();
         });
     }
     findCourseByIdService(courseId, userId) {
@@ -297,14 +299,14 @@ class AuthService {
             yield this._notificationRepository.createNotification({
                 receiverId: course.instructor.id.toString(),
                 receiverModel: "Instructor",
-                message: `Your course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`
+                message: `Your course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`,
             });
             const admin = yield this._adminRepository.findOneAdmin();
             if (admin) {
                 yield this._notificationRepository.createNotification({
                     receiverId: admin.id,
                     receiverModel: "Admin",
-                    message: `The course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`
+                    message: `The course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`,
                 });
             }
             return { success: true };
@@ -324,6 +326,12 @@ class AuthService {
                 (progress === null || progress === void 0 ? void 0 : progress.watchedLectures.length) === totalLectures &&
                 !(progress === null || progress === void 0 ? void 0 : progress.isCompleted)) {
                 yield this._progressRepository.markAsCompleted(userId, courseId);
+                const user = yield this._userRepository.findById(userId);
+                const course = yield this._courseRepository.findCourseById(courseId);
+                if (user && course) {
+                    console.log("entered course completion certificate creation");
+                    yield this._certificateService.createCertificateForUser({ id: userId, name: user.name }, { id: courseId, title: course.title });
+                }
             }
             return progress;
         });
@@ -371,6 +379,45 @@ class AuthService {
         return __awaiter(this, void 0, void 0, function* () {
             const purchases = yield this._orderRepsitory.getPurchases(userId, page, limit);
             return purchases;
+        });
+    }
+    changePassword(userId, oldPassword, newPassword, confirmPassword) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                throw new Error("Please fill in all fields");
+            }
+            if (newPassword != confirmPassword) {
+                throw new Error("new password and confirm password dont match");
+            }
+            const user = yield this._userRepository.findById(userId);
+            if (!user) {
+                throw new Error("User not found");
+            }
+            const isMatch = yield bcrypt_1.default.compare(oldPassword, user.password);
+            if (!isMatch) {
+                throw new Error("Old password is incorrect");
+            }
+            const hashedPassword = yield bcrypt_1.default.hash(newPassword, 10);
+            yield this._userRepository.updatePassword(userId, hashedPassword);
+        });
+    }
+    getSpecificInstructor(instructorId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const instructor = yield this._instructorRepository.findById(instructorId);
+            if (!instructor) {
+                throw new Error("No Instructor Found");
+            }
+            return instructor;
+        });
+    }
+    purchasedCourses(userId, page, limit) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._orderRepsitory.purchasedCourses(userId, page, limit);
+        });
+    }
+    getCertificates(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._certificateRepository.getCertificates(userId);
         });
     }
 }

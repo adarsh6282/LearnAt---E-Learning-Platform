@@ -11,10 +11,15 @@ export default function UserLogin() {
   const [email, setEmail] = useState('')
   const [canSubmit, setCanSubmit] = useState(false)
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)  
+  const usertoken=localStorage.getItem("usersToken")
   const [errors, setErrors] = useState<{email?: string; password?: string}>({});
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (usertoken) navigate('/');
+  }, [usertoken,navigate]);
 
   useEffect(() => {
     const filled = email.trim() &&

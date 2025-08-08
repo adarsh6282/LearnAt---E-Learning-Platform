@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Upload, Save, Edit2 } from "lucide-react";
-import { getAllCategoriesS } from "../../services/category.services";
 import type { CourseData, Lecture } from "../../types/course.types";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 import { editCourseS, getCourseById } from "../../services/instructor.services";
+import instructorApi from "../../services/instructorApiService";
+import type { Category } from "../../types/category.types";
 
 const EditCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -44,8 +45,8 @@ const EditCourse: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const categoriesData = await getAllCategoriesS();
-        const activeNames = categoriesData
+        const categoriesData = await instructorApi.get<Category[]>("/instructors/category")
+        const activeNames = categoriesData.data
           .filter((cat: any) => !cat.isDeleted)
           .map((cat: any) => cat.name);
         setCategories(activeNames);

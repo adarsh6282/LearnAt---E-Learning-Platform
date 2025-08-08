@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { FormEvent } from "react";
 import { errorToast, successToast } from "../../components/Toast";
@@ -12,9 +12,14 @@ export default function InstructorLogin() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
+  const instructortoken=localStorage.getItem("instructorsToken")
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if(instructortoken) navigate('/instructors/dashboard')
+  }, [instructortoken, navigate]);
 
   const isFormValid = () => {
     return email !== "" && password !== "";

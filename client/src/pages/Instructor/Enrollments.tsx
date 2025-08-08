@@ -1,28 +1,42 @@
 import { useEffect, useState } from "react";
 import instructorApi from "../../services/instructorApiService";
+import { useSearchParams } from "react-router-dom";
+import Pagination from "../../components/Pagination";
 
 interface Enrollment {
   _id: string;
   course: { title: string };
   user: { name: string; email: string };
-  isCompleted:boolean;
+  isCompleted: boolean;
   createdAt: string;
 }
 
 const Enrollments = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-
-  console.log(enrollments)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 7;
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    const fetchEnrollments=async()=>{
-      await instructorApi
-        .get<Enrollment[]>("/instructors/enrollments")
-        .then((res) => setEnrollments(res.data))
-        .catch((err) => console.error(err));
-    }
-    fetchEnrollments()
-  }, []);
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
+
+  useEffect(() => {
+    const fetchEnrollments = async () => {
+      const res=await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${currentPage}&limit=${itemsPerPage}`)
+        setEnrollments(res.data.enrollments)
+        setTotalPages(res.data.totalPages)
+    };
+    fetchEnrollments();
+  }, [currentPage,itemsPerPage]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">
@@ -70,8 +84,12 @@ const Enrollments = () => {
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(enroll.createdAt).toLocaleDateString()}
                   </td>
-                  <td className={`px-6 py-4 text-sm text-gray-700 ${enroll.isCompleted?"text-green-500":"text-red-500"}`}>
-                    {enroll.isCompleted?"Completed":"InComplete"}
+                  <td
+                    className={`px-6 py-4 text-sm text-gray-700 ${
+                      enroll.isCompleted ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {enroll.isCompleted ? "Completed" : "InComplete"}
                   </td>
                 </tr>
               ))}
@@ -103,6 +121,11 @@ const Enrollments = () => {
           </div>
         )}
       </div>
+      <Pagination
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          totalPages={totalPages}
+        />
     </div>
   );
 };

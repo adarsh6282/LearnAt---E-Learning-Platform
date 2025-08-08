@@ -3,7 +3,8 @@ import { AlertCircle, CheckCircle } from "lucide-react";
 import adminApi from "../services/adminApiService";
 import { formatDistanceToNow } from "date-fns";
 import { errorToast, successToast } from "../components/Toast";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import Pagination from "./Pagination";
 
 interface Complaint {
   _id: string;
@@ -19,11 +20,14 @@ interface Complaint {
 
 const AdminComplaint: React.FC = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const isFormValid=()=>{
-    return(
-      response!==""
-    )
-  }
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 1;
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const isFormValid = () => {
+    return response !== "";
+  };
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(
     null
   );
@@ -33,15 +37,29 @@ const AdminComplaint: React.FC = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await adminApi.get<Complaint[]>("/admin/complaints");
-        setComplaints(res.data);
+        const res = await adminApi.get<{
+          complaints: Complaint[];
+          totalPages: number;
+        }>(`/admin/complaints?page=${currentPage}&limit=${itemsPerPage}`);
+        setComplaints(res.data.complaints);
+        setTotalPages(res.data.totalPages);
       } catch (err: any) {
         errorToast("Failed to fetch complaints");
         console.error(err);
       }
     };
     fetchReports();
-  }, []);
+  }, [currentPage,itemsPerPage]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   const handleSubmit = async () => {
     if (!selectedComplaint) return;
@@ -227,9 +245,13 @@ const AdminComplaint: React.FC = () => {
                       Cancel
                     </button>
                     <button
-                    disabled={!isFormValid()}
+                      disabled={!isFormValid()}
                       onClick={handleSubmit}
-                      className={`px-4 py-2 text-white rounded-md ${isFormValid()?"bg-blue-700 hover:bg-blue-600":"bg-gray-600 cursor-not-allowed"}`}
+                      className={`px-4 py-2 text-white rounded-md ${
+                        isFormValid()
+                          ? "bg-blue-700 hover:bg-blue-600"
+                          : "bg-gray-600 cursor-not-allowed"
+                      }`}
                     >
                       Submit
                     </button>
@@ -248,6 +270,11 @@ const AdminComplaint: React.FC = () => {
             </div>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          totalPages={totalPages}
+        />
       </div>
     </div>
   );

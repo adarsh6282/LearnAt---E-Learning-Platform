@@ -166,8 +166,6 @@ export class Authcontroller implements IAuthController {
       const { name, phone } = req.body;
       const profilePicture = req.file;
 
-      console.log(req.file);
-
       const email = req.user?.email;
 
       if (!email) {
@@ -437,6 +435,65 @@ export class Authcontroller implements IAuthController {
       res.status(httpStatus.OK).json({purchases:purchases,total,totalPages,currentPage:page});
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  async changePassword(req: Request, res: Response): Promise<void> {
+    try {
+      const userId=req.user?.id
+
+      if(!userId){
+        res.status(httpStatus.NOT_FOUND).json({message:"User not found"})
+        return
+      }
+      const {oldPassword,newPassword,confirmPassword}=req.body
+
+      await this._authService.changePassword(userId,oldPassword,newPassword,confirmPassword)
+      res.status(httpStatus.OK).json({message:"Password changed successfully"})
+    } catch (error:any) {
+      console.log(error)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:error.message})
+    }
+  }
+
+  async courseInstructorView(req: Request, res: Response): Promise<void> {
+    try{
+      const instructorId=req.params.instructorId
+      const instructor=await this._authService.getSpecificInstructor(instructorId)
+      res.status(httpStatus.OK).json(instructor)
+    }catch(err:any){
+      console.log(err)
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    }
+  }
+
+  async purchasedCourses(req: Request, res: Response): Promise<void> {
+    try{
+      const page=parseInt(req.query.page as string)||1
+      const limit=parseInt(req.query.limit as string)||10
+      const userId=req.user?.id
+      if(!userId){
+        res.status(httpStatus.UNAUTHORIZED).json({message:"user not found"})
+        return
+      }
+      const {purchasedCourses,total,totalPages}=await this._authService.purchasedCourses(userId,page,limit)
+      res.status(httpStatus.OK).json({purchasedCourses,total,totalPages,currentPage:page})
+    }catch(err){
+      console.log(err)
+    }
+  }
+
+  async getCertificates(req: Request, res: Response): Promise<void> {
+    try{
+      const user=req.user?.id
+      if(!user){
+        res.status(httpStatus.UNAUTHORIZED).json({message:"user not authorized"})
+        return
+      }
+      const certificates=await this._authService.getCertificates(user)
+      res.status(httpStatus.OK).json(certificates)
+    }catch(err){
+      console.log(err)
     }
   }
 }

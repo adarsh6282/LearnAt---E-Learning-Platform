@@ -13,6 +13,10 @@ const chatSchema:Schema<IChat> = new Schema(
       ref: "Instructor",
       required: true,
     },
+    lastMessage:{
+      type:Date,
+      default:Date.now
+    }
   },
   {
     timestamps: true,

@@ -14,7 +14,7 @@ export interface IReviewRepository {
 
   getAverageRating(courseId: string): Promise<number>;
 
-  getReviewsByInstructor(instructorId:string):Promise<IReview[]|null>
+  getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:IReview[],total:number,totalPages:number}>
 
   getAllReviews(page:number,limit:number):Promise<{reviews:IReview[],total:number,totalPages:number}>
 

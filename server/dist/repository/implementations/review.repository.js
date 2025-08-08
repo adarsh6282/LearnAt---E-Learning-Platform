@@ -19,7 +19,12 @@ const courseModel_1 = __importDefault(require("../../models/implementations/cour
 class ReviewRepository {
     createReview(courseId, userId, rating, text) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield reviewModel_1.default.create({ course: courseId, user: userId, rating, text });
+            return yield reviewModel_1.default.create({
+                course: courseId,
+                user: userId,
+                rating,
+                text,
+            });
         });
     }
     getCourseReviews(courseId) {
@@ -42,15 +47,33 @@ class ReviewRepository {
             return ((_a = result[0]) === null || _a === void 0 ? void 0 : _a.avg) || 0;
         });
     }
-    getReviewsByInstructor(instructorId) {
+    getReviewsByInstructor(instructorId, page, limit, rating) {
         return __awaiter(this, void 0, void 0, function* () {
-            const courses = yield courseModel_1.default.find({ instructor: instructorId }, "_id");
+            const skip = (page - 1) * limit;
+            const courses = yield courseModel_1.default.find({ instructor: instructorId }).select("_id");
             const courseIds = courses.map((c) => c._id);
-            return reviewModel_1.default.find({
+            if (courseIds.length === 0) {
+                return { reviews: [], total: 0, totalPages: 0 };
+            }
+            const filter = {
                 course: { $in: courseIds },
-                isHidden: false
-            }).populate("user", "name")
-                .populate("course", "title");
+                isHidden: false,
+            };
+            if (rating) {
+                filter.rating = rating;
+            }
+            const total = yield reviewModel_1.default.countDocuments(filter);
+            const reviews = yield reviewModel_1.default.find(filter)
+                .populate("user", "name")
+                .populate("course", "title")
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 });
+            return {
+                reviews,
+                total,
+                totalPages: Math.ceil(total / limit),
+            };
         });
     }
     getAllReviews(page, limit) {
@@ -96,4 +119,3 @@ class ReviewRepository {
     }
 }
 exports.ReviewRepository = ReviewRepository;
-;

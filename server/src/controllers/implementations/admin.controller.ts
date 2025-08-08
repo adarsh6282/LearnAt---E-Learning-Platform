@@ -185,7 +185,9 @@ export class AdminController implements IAdminController {
 
   async getCatgeories(req: Request, res: Response): Promise<void> {
     try {
-      const category = await this._adminService.getCategories();
+      const page=parseInt(req.query.page as string)||1
+      const limit=parseInt(req.query.limit as string)||1
+      const category = await this._adminService.getCategories(page,limit);
       res.status(httpStatus.OK).json(category);
     } catch (err: any) {
       res
@@ -222,8 +224,9 @@ export class AdminController implements IAdminController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const courses = await this._adminService.getCoursesService(page, limit);
-      res.status(httpStatus.OK).json(courses);
+      const search = req.query.search as string || ''
+      const {course,total,totalPage} = await this._adminService.getCoursesService(page, limit,search);
+      res.status(httpStatus.OK).json({course:course,total,totalPage,currentPage:page});
     } catch (err: any) {
       console.log(err);
       res
@@ -373,8 +376,10 @@ export class AdminController implements IAdminController {
 
   async getComplaints(req: Request, res: Response): Promise<void> {
     try{
-      const complaints=await this._adminService.getComplaints()
-      res.status(httpStatus.OK).json(complaints)
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const {complaints,total,totalPages}=await this._adminService.getComplaints(page,limit)
+      res.status(httpStatus.OK).json({complaints:complaints,total,totalPages,currentPage:page})
     } catch(err){
       console.log(err)
     } 
