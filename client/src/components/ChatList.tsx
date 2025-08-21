@@ -9,6 +9,9 @@ interface ChatPartner {
   chatId: string;
   partnerId: string;
   partnerName: string;
+  unreadCount: number;
+  lastMessage: string;
+  lastMessageContent: string;
 }
 
 interface Instructor {
@@ -29,26 +32,43 @@ const ChatList = () => {
 
     const fetchChats = async () => {
       try {
-        const res = await userApi.get<ChatPartner[]>(
+        const res = await userApi.get<any[]>(
           `/chats/list/${authUser._id}?role=user`
         );
-        const formattedChats = res.data
+
+        const formattedChats: ChatPartner[] = res.data
           .filter((chat: any) => chat.instructor)
           .map((chat: any) => ({
             chatId: chat._id,
             partnerId: chat.instructor._id,
             partnerName: chat.instructor.name,
-          }))
+            unreadCount: 0,
+            lastMessage: chat.lastMessage || chat.createdAt,
+            lastMessageContent: chat.lastMessageContent || "",
+          }));
 
-        setChats(formattedChats);
+        const countsRes = await userApi.get<{ chat: string; count: number }[]>(
+          `/users/chats/unread-counts?userId=${authUser._id}&userModel=User`
+        );
+
+        const countsMap = countsRes.data.reduce(
+          (acc, curr) => ({ ...acc, [curr.chat]: curr.count }),
+          {} as Record<string, number>
+        );
+
+        const merged = formattedChats.map((chat) => ({
+          ...chat,
+          unreadCount: countsMap[chat.chatId] || 0,
+        }));
+
+        setChats(merged);
       } catch (err) {
         console.error("Error fetching user chats:", err);
       }
     };
 
     fetchChats();
-  }, [authUser]);
-
+  }, [authUser?._id]);
 
   const fetchInstructors = async () => {
     try {
@@ -144,6 +164,11 @@ const ChatList = () => {
             }`}
           >
             {chat.partnerName}
+            {/* {chat.unreadCount && chat.unreadCount > 0 && (
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                {chat.unreadCount}
+              </span>
+            )} */}
           </div>
         ))}
       </div>

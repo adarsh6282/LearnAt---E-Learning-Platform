@@ -7,6 +7,7 @@ export interface IChat {
   createdAt?: Date;
   updatedAt?: Date;
   lastMessage:Date;
+  lastMessageContent:string;
 }
 
 export interface IMessage {
@@ -15,6 +16,10 @@ export interface IMessage {
   senderId: Types.ObjectId;
   image?:string;
   senderRole: "user" | "instructor";
+  readBy: {
+    readerId: Types.ObjectId;
+    readerModel: "User" | "Instructor";
+  }[]
   content: string;
   createdAt?: Date;
   updatedAt?: Date;

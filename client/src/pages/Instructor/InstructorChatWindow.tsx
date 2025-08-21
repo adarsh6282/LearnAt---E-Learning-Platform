@@ -19,7 +19,6 @@ const InstructorChatWindow = () => {
   const { chatId } = useParams();
   const { state } = useLocation();
   const { partnerName, targetUserId } = state || {};
-  console.log(targetUserId);
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const { authUser } = useAuth();
@@ -41,6 +40,25 @@ const InstructorChatWindow = () => {
       socket.off("receiveMessage");
     };
   }, [chatId]);
+
+  useEffect(() => {
+    const markMessagesRead = async () => {
+      if (!chatId || !authUser) return;
+
+      try {
+        await instructorApi.post(`/instructors/messages/mark-as-read/${chatId}`, {
+          userId: authUser._id,
+          userModel: authUser.role === "user" ? "User" : "Instructor",
+        });
+      } catch (err) {
+        console.error("Failed to mark messages as read", err);
+      }
+    };
+
+    if (chatId && authUser) {
+      markMessagesRead();
+    }
+  }, [chatId, authUser]);
 
   useEffect(() => {
     const fetchMessages = async () => {

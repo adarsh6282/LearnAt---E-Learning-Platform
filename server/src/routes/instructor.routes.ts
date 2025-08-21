@@ -13,6 +13,8 @@ import { OrderRepository } from "../repository/implementations/order.repository"
 import { WalletRepository } from "../repository/implementations/wallet.repository";
 import { CategoryRepository } from "../repository/implementations/category.repository";
 import { NotificationRepository } from "../repository/implementations/notification.repository";
+import { MessageRepository } from "../repository/implementations/message.repository";
+import { MessageService } from "../services/implementation/message.service";
 
 const instructorAuthRepository = new InstructorAuth();
 const userRepository = new AuthRepository();
@@ -23,7 +25,9 @@ const reviewRepository = new ReviewRepository();
 const orderRepository = new OrderRepository();
 const walletRepository = new WalletRepository();
 const categoryRepository = new CategoryRepository();
+const messageRepository=new MessageRepository()
 const notificationRepository = new NotificationRepository();
+const messageService=new MessageService(messageRepository)
 const instructorAuthService = new InstructorAuthSerivce(
   instructorAuthRepository,
   otpRepository,
@@ -37,7 +41,8 @@ const instructorAuthService = new InstructorAuthSerivce(
   notificationRepository
 );
 const instructorAuthController = new InstructorAuthController(
-  instructorAuthService
+  instructorAuthService,
+  messageService
 );
 
 const router = Router();
@@ -150,6 +155,8 @@ router.put(
   "/notifications/read/:notificationId",
   instructorAuthController.markAsRead.bind(instructorAuthController)
 );
+router.get("/chats/unread-counts",authRole(["instructor"]),instructorAuthController.getUnreadCounts.bind(instructorAuthController))
+router.post("/messages/mark-as-read/:chatId",authRole(["instructor"]),instructorAuthController.markRead.bind(instructorAuthController))
 router.post(
   "/logout",
   instructorAuthController.logOut.bind(instructorAuthController)

@@ -33,7 +33,7 @@ export interface IAuthService {
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
   ): Promise<IUser | null>;
-  getCoursesService(): Promise<ICourse[]|null>;
+  getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:ICourse[],total:number,totalPages:number}>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: ICourse; isEnrolled: boolean }>;
   createOrder(courseId: string, userId: string): Promise<IOrder | null>;
   verifyPayment({
@@ -55,6 +55,7 @@ export interface IAuthService {
   getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }>
   changePassword(userId:string,oldPassword:string,newPassword:string,confirmPassword:string):Promise<void>
   getSpecificInstructor(instructorId:string):Promise<IInstructor|null>
-  getCertificates(userId:string):Promise<{id:string,user:string,course:string,courseTitle:string,certificateUrl:string,issuedDate:Date}[]>
+  getCertificates(userId:string,page:number,limit:number):Promise<{id:string,user:string,course:string,courseTitle:string,certificateUrl:string,issuedDate:Date}[]>
+  getCategory():Promise<string[]|null>
   purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
 }

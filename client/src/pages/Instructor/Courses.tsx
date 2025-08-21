@@ -7,22 +7,30 @@ import Pagination from "../../components/Pagination";
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery,setSearchQuery]=useState<string>("")
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 3;
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [debounce,setDebounce]=useState<string>("")
   const token = localStorage.getItem("instructorsToken");
 
   if (!token) return;
+
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchQuery)
+    }, 300);
+    return ()=> clearTimeout(timeout)
+  },[searchQuery])
 
   useEffect(() => {
     const fetchInstructorCourses = async () => {
       try {
         setLoading(true);
-        const res = await getInstructorCoursesS(currentPage, itemsPerPage);
-
+        const res = await getInstructorCoursesS(currentPage, itemsPerPage, debounce);
         setCourses(res.data.courses);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
@@ -34,7 +42,7 @@ const Courses: React.FC = () => {
     };
 
     fetchInstructorCourses();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, debounce]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -52,6 +60,16 @@ const Courses: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">My Courses</h1>
+
+      <div className="mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search by course title"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
       {courses.length === 0 ? (
         <p className="text-gray-600">You haven't created any courses yet.</p>

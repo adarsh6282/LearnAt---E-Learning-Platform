@@ -27,5 +27,8 @@ export interface IAuthController{
     courseInstructorView(req:Request,res:Response):Promise<void>,
     purchasedCourses(req:Request,res:Response):Promise<void>,
     getCertificates(req:Request,res:Response):Promise<void>,
+    getCategory(req:Request,res:Response):Promise<void>,
+    getUnreadCounts(req: Request, res: Response):Promise<void>,
+    markRead(req: Request, res: Response):Promise<void>
     logOut(req:Request,res:Response):Promise<void>
 }

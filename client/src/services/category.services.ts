@@ -3,13 +3,15 @@ import adminApi from "./adminApiService";
 
 export const getAllCategoriesS = async (
   page: number,
-  limit: number
+  limit: number,
+  search:string,
+  status:string
 ): Promise<{ category: Category[]; total: number; totalPages: number }> => {
   const res = await adminApi.get<{
     category: Category[];
     total: number;
     totalPages: number;
-  }>(`/admin/category?page=${page}&limit=${limit}`);
+  }>(`/admin/category?page=${page}&limit=${limit}&search=${search}&status=${status}`);
 
   return res.data;
 };

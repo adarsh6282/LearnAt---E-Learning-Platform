@@ -5,9 +5,13 @@ import { httpStatus } from "../../constants/statusCodes";
 import { generateToken } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
 import Instructor from "../../models/implementations/instructorModel";
+import { IMessageService } from "../../services/interfaces/message.interface";
 
 export class Authcontroller implements IAuthController {
-  constructor(private _authService: IAuthService) {}
+  constructor(
+    private _authService: IAuthService,
+    private _messageService: IMessageService
+  ) {}
 
   async signup(req: Request, res: Response): Promise<void> {
     try {
@@ -189,12 +193,35 @@ export class Authcontroller implements IAuthController {
 
   async getCourses(req: Request, res: Response): Promise<void> {
     try {
-      const courses = await this._authService.getCoursesService();
-      res.status(httpStatus.OK).json(courses);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = (req.query.search as string) || "";
+      const category = (req.query.category as string) || "";
+      const minPrice = parseInt(req.query.minPrice as string) || 0;
+      const maxPrice = parseInt(req.query.maxPrice as string) || 10000;
+      const { courses, total, totalPages } =
+        await this._authService.getCoursesService(
+          page,
+          limit,
+          search,
+          category,
+          minPrice,
+          maxPrice
+        );
+      res.status(httpStatus.OK).json({ courses: courses, total, totalPages });
     } catch (err: any) {
       res
         .status(httpStatus.INTERNAL_SERVER_ERROR)
         .json({ message: err.message });
+    }
+  }
+
+  async getCategory(req: Request, res: Response): Promise<void> {
+    try {
+      const category = await this._authService.getCategory();
+      res.status(httpStatus.OK).json(category);
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -428,72 +455,126 @@ export class Authcontroller implements IAuthController {
 
       if (!userId) {
         res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
-        return
+        return;
       }
 
-      const {purchases, total, totalPages} = await this._authService.getPurchases(userId,page,limit);
-      res.status(httpStatus.OK).json({purchases:purchases,total,totalPages,currentPage:page});
+      const { purchases, total, totalPages } =
+        await this._authService.getPurchases(userId, page, limit);
+      res
+        .status(httpStatus.OK)
+        .json({ purchases: purchases, total, totalPages, currentPage: page });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
   async changePassword(req: Request, res: Response): Promise<void> {
     try {
-      const userId=req.user?.id
+      const userId = req.user?.id;
 
-      if(!userId){
-        res.status(httpStatus.NOT_FOUND).json({message:"User not found"})
-        return
+      if (!userId) {
+        res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+        return;
       }
-      const {oldPassword,newPassword,confirmPassword}=req.body
+      const { oldPassword, newPassword, confirmPassword } = req.body;
 
-      await this._authService.changePassword(userId,oldPassword,newPassword,confirmPassword)
-      res.status(httpStatus.OK).json({message:"Password changed successfully"})
-    } catch (error:any) {
-      console.log(error)
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:error.message})
+      await this._authService.changePassword(
+        userId,
+        oldPassword,
+        newPassword,
+        confirmPassword
+      );
+      res
+        .status(httpStatus.OK)
+        .json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      console.log(error);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: error.message });
     }
   }
 
   async courseInstructorView(req: Request, res: Response): Promise<void> {
-    try{
-      const instructorId=req.params.instructorId
-      const instructor=await this._authService.getSpecificInstructor(instructorId)
-      res.status(httpStatus.OK).json(instructor)
-    }catch(err:any){
-      console.log(err)
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    try {
+      const instructorId = req.params.instructorId;
+      const instructor = await this._authService.getSpecificInstructor(
+        instructorId
+      );
+      res.status(httpStatus.OK).json(instructor);
+    } catch (err: any) {
+      console.log(err);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
     }
   }
 
   async purchasedCourses(req: Request, res: Response): Promise<void> {
-    try{
-      const page=parseInt(req.query.page as string)||1
-      const limit=parseInt(req.query.limit as string)||10
-      const userId=req.user?.id
-      if(!userId){
-        res.status(httpStatus.UNAUTHORIZED).json({message:"user not found"})
-        return
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(httpStatus.UNAUTHORIZED).json({ message: "user not found" });
+        return;
       }
-      const {purchasedCourses,total,totalPages}=await this._authService.purchasedCourses(userId,page,limit)
-      res.status(httpStatus.OK).json({purchasedCourses,total,totalPages,currentPage:page})
-    }catch(err){
-      console.log(err)
+      const { purchasedCourses, total, totalPages } =
+        await this._authService.purchasedCourses(userId, page, limit);
+      res
+        .status(httpStatus.OK)
+        .json({ purchasedCourses, total, totalPages, currentPage: page });
+    } catch (err) {
+      console.log(err);
     }
   }
 
   async getCertificates(req: Request, res: Response): Promise<void> {
-    try{
-      const user=req.user?.id
-      if(!user){
-        res.status(httpStatus.UNAUTHORIZED).json({message:"user not authorized"})
-        return
+    try {
+      const user = req.user?.id;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      if (!user) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "user not authorized" });
+        return;
       }
-      const certificates=await this._authService.getCertificates(user)
-      res.status(httpStatus.OK).json(certificates)
-    }catch(err){
-      console.log(err)
+      const certificates = await this._authService.getCertificates(
+        user,
+        page,
+        limit
+      );
+      res.status(httpStatus.OK).json(certificates);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async markRead(req: Request, res: Response):Promise<void> {
+    try {
+      const chatId = req.params.chatId;
+      const { userId, userModel } = req.body;
+      await this._messageService.markRead(chatId, userId, userModel);
+      res.sendStatus(200);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to mark messages as read" });
+    }
+  }
+
+  async getUnreadCounts(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId, userModel } = req.query as {
+        userId: string;
+        userModel: "User" | "Instructor";
+      };
+      const counts = await this._messageService.getUnreadCounts(
+        userId,
+        userModel
+      );
+      res.json(counts);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch unread counts" });
     }
   }
 }

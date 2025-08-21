@@ -1,68 +1,100 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { socket } from "../services/socket.service";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 
-interface CallContextType {
-  incomingCall: boolean;
-  callerId: string | null;
-  chatId: string | null;
+interface CallContextValue {
+  incomingCall: {
+    chatId: string;
+    callerId: string;
+    calleName:string
+  } | null;
   acceptCall: () => void;
   rejectCall: () => void;
 }
 
-const CallContext = createContext<CallContextType | undefined>(undefined);
+const TIMEOUT_MS = 4000;
 
-export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [incomingCall, setIncomingCall] = useState(false);
-  const [callerId, setCallerId] = useState<string | null>(null);
-  const navigate = useNavigate();
+const CallContext = createContext<CallContextValue | undefined>(undefined);
+
+export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   const { authUser } = useAuth();
-  const [chatId, setChatId] = useState<string | null>(null);
-  
-  useEffect(() => {
-    socket.on("incoming-call", ({ callerId, chatId, receiverId }) => {
-      if (authUser?._id !== receiverId) return;
+  const timeoutRef = React.useRef<number | null>(null);
+  const [incomingCall, setIncomingCall] = useState<{
+    chatId: string;
+    callerId: string;
+    calleName:string
+    receiverId: string;
+  } | null>(null);
 
-      setIncomingCall(true);
-      setCallerId(callerId);
-      setChatId(chatId);
+  useEffect(() => {
+    const handleIncomingCall = ({ chatId, callerId,calleName,receiverId }:{chatId:string,callerId:string,calleName:string,receiverId:string}) => {
+      if (receiverId !== authUser?._id) return;
+
+      setIncomingCall({ chatId, callerId, calleName, receiverId });
+
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = window.setTimeout(() => {
+        setIncomingCall(null);
+        socket.emit("call-rejected", { chatId, receiverId: authUser?._id });
+      }, TIMEOUT_MS);
+    };
+
+    socket.on("incoming-call", handleIncomingCall);
+
+    socket.on("call-cancelled", () => {
+      setIncomingCall(null);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
     });
 
     return () => {
-      socket.off("incoming-call");
+      socket.off("incoming-call", handleIncomingCall);
+      socket.off("call-cancelled");
     };
   }, [authUser?._id]);
 
-  const acceptCall = () => {
-    socket.emit("call-accepted", { callerId, chatId });
-    setIncomingCall(false);
-    if (authUser?.role === "user") {
-      navigate(`/users/video/${chatId}`);
-    } else {
-      navigate(`/instructors/video/${chatId}`);
+    useEffect(() => {
+    if (authUser?._id) {
+      socket.emit("joinNotificationRoom", authUser._id);
+
+      return () => {
+        socket.off("joinNotificationRoom");
+      };
     }
+  }, [authUser?._id]);
+
+  const acceptCall = () => {
+    if (incomingCall) {
+      socket.emit("call-accepted", {
+        chatId: incomingCall.chatId,
+        receiverId: authUser?._id,
+      });
+    }
+    setIncomingCall(null);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
   };
 
   const rejectCall = () => {
-    socket.emit("call-rejected", { callerId, chatId });
-    setIncomingCall(false);
+    if (incomingCall) {
+      socket.emit("call-rejected", {
+        chatId: incomingCall.chatId,
+        receiverId: authUser?._id,
+      });
+    }
+    setIncomingCall(null);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
   };
 
   return (
-    <CallContext.Provider
-      value={{ incomingCall, callerId, chatId, acceptCall, rejectCall }}
-    >
+    <CallContext.Provider value={{ incomingCall, acceptCall, rejectCall }}>
       {children}
     </CallContext.Provider>
   );
 };
 
-export const useCallContext = () => {
+export const useCall = () => {
   const context = useContext(CallContext);
-  if (!context)
-    throw new Error("useCallContext must be used within CallProvider");
+  if (!context) {
+    throw new Error("useCall must be used within a CallProvider");
+  }
   return context;
 };

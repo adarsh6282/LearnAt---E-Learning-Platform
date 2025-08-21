@@ -23,5 +23,6 @@ export interface IInstructorController{
     getPurchasedStudents(req:Request,res:Response):Promise<void>,
     getNotifications(req:Request,res:Response):Promise<void>,
     markAsRead(req:Request,res:Response):Promise<void>,
+    markRead(req:Request,res:Response):Promise<void>
     logOut(req:Request,res:Response):Promise<void>
 }

@@ -24,5 +24,15 @@ class MessageService {
             return this._messageRepository.getChatMessages(chatId);
         });
     }
+    markRead(chatId, userId, userModel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._messageRepository.markMessagesAsRead(chatId, userId, userModel);
+        });
+    }
+    getUnreadCounts(userId, userModel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this._messageRepository.getUnreadCounts(userId, userModel);
+        });
+    }
 }
 exports.MessageService = MessageService;

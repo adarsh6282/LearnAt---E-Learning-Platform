@@ -30,6 +30,8 @@ import {
 } from "../../repository/implementations/order.repository";
 import { ICertificateReopsitory } from "../../repository/interfaces/certificate.interface";
 import { ICertificateService } from "../interfaces/certificate.interface";
+import { ICategoryRepository } from "../../repository/interfaces/category.interface";
+import { sendNotificationToUser } from "../../socket/socket";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -44,7 +46,8 @@ export class AuthService implements IAuthService {
     private _complaintRepository: IComplaintRepository,
     private _notificationRepository: INotificationRepository,
     private _certificateRepository: ICertificateReopsitory,
-    private _certificateService: ICertificateService
+    private _certificateService: ICertificateService,
+    private _categoryRepository:ICategoryRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -241,8 +244,19 @@ export class AuthService implements IAuthService {
     return user;
   }
 
-  async getCoursesService(): Promise<ICourse[] | null> {
-    return await this._courseRepository.findCourses();
+  async getCoursesService(
+    page: number,
+    limit: number,
+    search: string,
+    category: string,
+    minPrice: number,
+    maxPrice: number
+  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
+    return await this._courseRepository.findCourses(page,limit,search,category,minPrice,maxPrice);
+  }
+
+  async getCategory(): Promise<string[] | null> {
+    return await this._categoryRepository.getCategory()
   }
 
   async findCourseByIdService(
@@ -376,6 +390,19 @@ export class AuthService implements IAuthService {
       }. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`,
     });
 
+    sendNotificationToUser(
+      course.instructor.id.toString(),
+      "you have new notification"
+    );
+
+    await this._notificationRepository.createNotification({
+      receiverId: user?.id.toString(),
+      receiverModel: "User",
+      message: `Your Purchased course "${course.title}" of rupees ${course.price}`,
+    });
+
+    sendNotificationToUser(user?.id.toString(), "you have new notification");
+
     const admin = await this._adminRepository.findOneAdmin();
     if (admin) {
       await this._notificationRepository.createNotification({
@@ -385,6 +412,8 @@ export class AuthService implements IAuthService {
           user?.name
         }. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`,
       });
+
+      sendNotificationToUser(admin.id.toString(), "you have new notification");
     }
 
     return { success: true };
@@ -547,16 +576,16 @@ export class AuthService implements IAuthService {
     return await this._orderRepsitory.purchasedCourses(userId, page, limit);
   }
 
-  async getCertificates(
-    userId: string
-  ): Promise<{
-    id: string;
-    user: string;
-    course: string;
-    courseTitle: string;
-    certificateUrl: string;
-    issuedDate: Date;
-  }[]> {
-    return await this._certificateRepository.getCertificates(userId)
+  async getCertificates(userId: string): Promise<
+    {
+      id: string;
+      user: string;
+      course: string;
+      courseTitle: string;
+      certificateUrl: string;
+      issuedDate: Date;
+    }[]
+  > {
+    return await this._certificateRepository.getCertificates(userId);
   }
 }

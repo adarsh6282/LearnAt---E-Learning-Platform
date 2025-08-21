@@ -4,12 +4,16 @@ import {
   useEffect,
   useMemo,
   type ReactNode,
+  useRef,
 } from "react";
 import { useAuth } from "../hooks/useAuth";
 import useAdmin from "../hooks/useAdmin";
 import userApi from "../services/userApiService";
 import instructorApi from "../services/instructorApiService";
 import adminApi from "../services/adminApiService";
+import type { Socket } from "socket.io-client";
+import { io } from "socket.io-client";
+import { toast } from "react-toastify";
 
 export interface INotification {
   _id: string;
@@ -45,6 +49,7 @@ export const NotificationProvider = ({
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  const socketRef = useRef<Socket | null>(null);
 
   const { userId, role } = useMemo(() => {
     if (userRole === "User" && authUser?._id) {
@@ -106,6 +111,28 @@ export const NotificationProvider = ({
       fetchNotifications();
     }
   }, [userId, role]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    socketRef.current = io(import.meta.env.VITE_SOCKET_URL, {
+      withCredentials: true,
+    });
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected to socket:", socketRef.current?.id);
+      socketRef.current?.emit("joinNotificationRoom", userId);
+    });
+
+    socketRef.current.on("newNotification", (message: string) => {
+      toast.info(message || "You have a new message");
+      fetchNotifications();
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, [userId]);
 
   return (
     <NotificationContext.Provider

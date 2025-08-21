@@ -39,15 +39,31 @@ class CategoryRepository extends base_repository_1.BaseRepository {
             return category;
         });
     }
-    getCatgeories(page, limit) {
+    getCatgeories(page, limit, search, status) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
+            const query = {};
+            if (search) {
+                query.$or = [{ name: { $regex: search, $options: "i" } }];
+            }
+            if (status === "active") {
+                query.isDeleted = false;
+            }
+            else if (status === "inactive") {
+                query.isDeleted = true;
+            }
             const [category, total] = yield Promise.all([
-                this.model.find({}).skip(skip).limit(limit),
-                this.model.countDocuments(),
+                this.model.find(query).skip(skip).limit(limit),
+                this.model.countDocuments(query),
             ]);
             const totalPages = Math.ceil(total / limit);
             return { category, total, totalPages };
+        });
+    }
+    getCategory() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const category = yield categoryModel_1.default.find({}, { name: 1, _id: 0 });
+            return category.map(cat => cat.name);
         });
     }
     getCatgeoriesInstructor() {

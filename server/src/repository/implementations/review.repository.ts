@@ -78,12 +78,52 @@ export class ReviewRepository implements IReviewRepository {
 
   async getAllReviews(
     page: number,
-    limit: number
+    limit: number,
+    search: string,
+    rating: number | null,
+    sort: string
   ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
+    const query: any = {};
+
+    if (search) {
+      const matchedCourses = await Course.find({
+        title: { $regex: search, $options: "i" },
+      }).select("_id");
+
+      const courseIds = matchedCourses.map((c) => c._id);
+
+      query.$or = [
+        { text: { $regex: search, $options: "i" } },
+        { course: { $in: courseIds } },
+        
+      ];
+    }
+
+    let sortOption: any = { createdAt: -1 };
+
+    switch (sort) {
+      case "oldest":
+        sortOption = { createdAt: 1 };
+        break;
+      case "ratingHigh":
+        sortOption = { rating: -1 };
+        break;
+      case "ratingLow":
+        sortOption = { rating: 1 };
+        break;
+      case "date":
+      default:
+        sortOption = { createdAt: -1 };
+    }
+
+    if (rating !== null) {
+      query.rating = rating;
+    }
+
     const [reviews, total] = await Promise.all([
-      Review.find()
+      Review.find(query)
         .populate({
           path: "user",
           select: "name",
@@ -96,10 +136,10 @@ export class ReviewRepository implements IReviewRepository {
             select: "name",
           },
         })
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .skip(skip)
         .limit(limit),
-      Review.countDocuments(),
+      Review.countDocuments(query),
     ]);
     const totalPages = Math.ceil(total / limit);
     return { reviews, total, totalPages };

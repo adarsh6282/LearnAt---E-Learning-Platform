@@ -185,9 +185,16 @@ export class AdminController implements IAdminController {
 
   async getCatgeories(req: Request, res: Response): Promise<void> {
     try {
-      const page=parseInt(req.query.page as string)||1
-      const limit=parseInt(req.query.limit as string)||1
-      const category = await this._adminService.getCategories(page,limit);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = (req.query.search as string) || "";
+      const status = (req.query.status as string) || "";
+      const category = await this._adminService.getCategories(
+        page,
+        limit,
+        search,
+        status
+      );
       res.status(httpStatus.OK).json(category);
     } catch (err: any) {
       res
@@ -224,9 +231,12 @@ export class AdminController implements IAdminController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const search = req.query.search as string || ''
-      const {course,total,totalPage} = await this._adminService.getCoursesService(page, limit,search);
-      res.status(httpStatus.OK).json({course:course,total,totalPage,currentPage:page});
+      const search = (req.query.search as string) || "";
+      const { course, total, totalPage } =
+        await this._adminService.getCoursesService(page, limit, search);
+      res
+        .status(httpStatus.OK)
+        .json({ course: course, total, totalPage, currentPage: page });
     } catch (err: any) {
       console.log(err);
       res
@@ -267,8 +277,29 @@ export class AdminController implements IAdminController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 6;
+
+      const search =
+        typeof req.query.search === "string" ? req.query.search : "";
+
+      let rating: number | null = null;
+
+      if (req.query.rating && req.query.rating !== "null") {
+        const parsed = parseInt(req.query.rating as string, 10);
+        if (!isNaN(parsed)) {
+          rating = parsed;
+        }
+      }
+
+      const sort = typeof req.query.sort === "string" ? req.query.sort : "desc";
+
       const { reviews, total, totalPages } =
-        await this._adminService.getAllReviews(page, limit);
+        await this._adminService.getAllReviews(
+          page,
+          limit,
+          search,
+          rating,
+          sort
+        );
       res
         .status(httpStatus.OK)
         .json({ reviews, total, totalPages, currentPage: page });
@@ -327,7 +358,8 @@ export class AdminController implements IAdminController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const {wallet,total,totalPages,transactions} = await this._adminService.getWallet(page, limit);
+      const { wallet, total, totalPages, transactions } =
+        await this._adminService.getWallet(page, limit);
       res.status(httpStatus.OK).json({
         balance: wallet.balance,
         transactions,
@@ -375,63 +407,76 @@ export class AdminController implements IAdminController {
   }
 
   async getComplaints(req: Request, res: Response): Promise<void> {
-    try{
+    try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const {complaints,total,totalPages}=await this._adminService.getComplaints(page,limit)
-      res.status(httpStatus.OK).json({complaints:complaints,total,totalPages,currentPage:page})
-    } catch(err){
-      console.log(err)
-    } 
+      const search = (req.query.search as string) || "";
+      const filter = (req.query.status as string) || "";
+      const { complaints, total, totalPages } =
+        await this._adminService.getComplaints(page, limit, search, filter);
+      res
+        .status(httpStatus.OK)
+        .json({ complaints: complaints, total, totalPages, currentPage: page });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async responseComplaint(req: Request, res: Response): Promise<void> {
-    try{
-    const {status,response}=req.body
-    const {id}=req.params
-    const complaint = await this._adminService.responseComplaint(id,status,response)
-    res.status(httpStatus.OK).json({message:"Response Submitted successfully"}) 
-    }catch(err:any){
-      console.log(err)
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message:err.message})
+    try {
+      const { status, response } = req.body;
+      const { id } = req.params;
+      const complaint = await this._adminService.responseComplaint(
+        id,
+        status,
+        response
+      );
+      res
+        .status(httpStatus.OK)
+        .json({ message: "Response Submitted successfully" });
+    } catch (err: any) {
+      console.log(err);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
     }
   }
 
   async getCourseStats(req: Request, res: Response): Promise<void> {
-    try{
-      const courseStats=await this._adminService.getCourseStats()
-      res.status(httpStatus.OK).json(courseStats)
-    }catch(err:any){
-      console.log(err)
+    try {
+      const courseStats = await this._adminService.getCourseStats();
+      res.status(httpStatus.OK).json(courseStats);
+    } catch (err: any) {
+      console.log(err);
     }
   }
 
   async getIncomeStats(req: Request, res: Response): Promise<void> {
-    try{
-      const incomeStats=await this._adminService.getIncomeStats()
-      res.status(httpStatus.OK).json(incomeStats)
-    }catch(err:any){
-      console.log(err)
+    try {
+      const incomeStats = await this._adminService.getIncomeStats();
+      res.status(httpStatus.OK).json(incomeStats);
+    } catch (err: any) {
+      console.log(err);
     }
   }
 
   async getSpecificCourseforAdmin(req: Request, res: Response): Promise<void> {
-    const {courseId}=req.params
-    if(!courseId){
-      res.status(httpStatus.NOT_FOUND).json({message:"Course not found"})
-      return
+    const { courseId } = req.params;
+    if (!courseId) {
+      res.status(httpStatus.NOT_FOUND).json({ message: "Course not found" });
+      return;
     }
-    const course=await this._adminService.getSpecificCourseForAdmin(courseId)
-    res.status(httpStatus.OK).json(course)
+    const course = await this._adminService.getSpecificCourseForAdmin(courseId);
+    res.status(httpStatus.OK).json(course);
   }
 
   async getSpecificTutor(req: Request, res: Response): Promise<void> {
-    try{
-      const {id}=req.params
-      const tutor=await this._adminService.getSpecificTutor(id)
-      res.status(httpStatus.OK).json(tutor)
-    }catch(err){
-      console.log(err)
+    try {
+      const { id } = req.params;
+      const tutor = await this._adminService.getSpecificTutor(id);
+      res.status(httpStatus.OK).json(tutor);
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -441,7 +486,7 @@ export class AdminController implements IAdminController {
       const notifications = await this._adminService.getNotifications(userId);
       res.status(httpStatus.OK).json(notifications);
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 
@@ -451,7 +496,7 @@ export class AdminController implements IAdminController {
       const notification = await this._adminService.markAsRead(notificationId);
       res.status(httpStatus.OK).json({ message: "Message Read" });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 

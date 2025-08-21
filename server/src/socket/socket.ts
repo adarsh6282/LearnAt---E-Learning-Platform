@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { Server as HTTPServer } from "http";
 import { MessageService } from "../services/implementation/message.service";
 import { MessageRepository } from "../repository/implementations/message.repository";
-import Chat from "../models/implementations/chatModel"
+import Chat from "../models/implementations/chatModel";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,8 +10,10 @@ dotenv.config();
 const messageRepository = new MessageRepository();
 const messageService = new MessageService(messageRepository);
 
+let io: Server;
+
 export const initSocket = (server: HTTPServer): void => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: process.env.FRONTEND_URL,
       credentials: true,
@@ -26,10 +28,28 @@ export const initSocket = (server: HTTPServer): void => {
       console.log(`Socket joined room: ${chatId}`);
     });
 
+    socket.on("joinNotificationRoom", (userId: string) => {
+      socket.join(userId);
+      console.log(`Socket joined notification room: ${userId}`);
+    });
+
     socket.on("sendMessage", async (message) => {
       try {
         const saved = await messageService.sendMessage(message);
         socket.to(message.chat).emit("receiveMessage", saved);
+        const chat = await Chat.findById(message.chat);
+        let receiverId;
+        if (message.senderId === chat?.user.toString()) {
+          receiverId = chat?.instructor.toString();
+        } else {
+          receiverId = chat?.user.toString();
+        }
+
+        console.log(receiverId);
+
+        if (receiverId) {
+          io.to(receiverId.toString()).emit("receiveMessage", saved);
+        }
       } catch (error) {
         console.error("Socket Error Saving Message:", error);
       }
@@ -41,17 +61,16 @@ export const initSocket = (server: HTTPServer): void => {
     });
 
     socket.on("webrtc-offer", ({ chatId, offer, senderId, receiverId }) => {
-      socket.to(chatId).emit("incoming-call", {
+      socket.to(receiverId).emit("incoming-call", {
         chatId,
         callerId: senderId,
         receiverId,
       });
 
-      socket.to(chatId).emit("webrtc-offer", { offer, senderId });
-    });
+      console.log("chatId",chatId)
+      console.log("receiver",receiverId)
 
-    socket.on("call-accepted", ({ callerId, chatId }) => {
-      io.to(chatId).emit("call-accepted", { chatId });
+      socket.to(chatId).emit("webrtc-offer", { offer, senderId });
     });
 
     socket.on("call-rejected", ({ callerId, chatId }) => {
@@ -74,4 +93,15 @@ export const initSocket = (server: HTTPServer): void => {
       console.log("Socket disconnected:", socket.id);
     });
   });
+};
+
+export const getIO = (): Server => {
+  if (!io) {
+    throw new Error("Socket.io not initialized yet");
+  }
+  return io;
+};
+
+export const sendNotificationToUser = (userId: string, message: string) => {
+  getIO().to(userId).emit("newNotification", message);
 };

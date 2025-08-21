@@ -17,8 +17,9 @@ const statusCodes_1 = require("../../constants/statusCodes");
 const jwt_1 = require("../../utils/jwt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class Authcontroller {
-    constructor(_authService) {
+    constructor(_authService, _messageService) {
         this._authService = _authService;
+        this._messageService = _messageService;
     }
     signup(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -209,13 +210,30 @@ class Authcontroller {
     getCourses(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const courses = yield this._authService.getCoursesService();
-                res.status(statusCodes_1.httpStatus.OK).json(courses);
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const search = req.query.search || "";
+                const category = req.query.category || "";
+                const minPrice = parseInt(req.query.minPrice) || 0;
+                const maxPrice = parseInt(req.query.maxPrice) || 10000;
+                const { courses, total, totalPages } = yield this._authService.getCoursesService(page, limit, search, category, minPrice, maxPrice);
+                res.status(statusCodes_1.httpStatus.OK).json({ courses: courses, total, totalPages });
             }
             catch (err) {
                 res
                     .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
                     .json({ message: err.message });
+            }
+        });
+    }
+    getCategory(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const category = yield this._authService.getCategory();
+                res.status(statusCodes_1.httpStatus.OK).json(category);
+            }
+            catch (err) {
+                console.log(err);
             }
         });
     }
@@ -446,7 +464,9 @@ class Authcontroller {
                     return;
                 }
                 const { purchases, total, totalPages } = yield this._authService.getPurchases(userId, page, limit);
-                res.status(statusCodes_1.httpStatus.OK).json({ purchases: purchases, total, totalPages, currentPage: page });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ purchases: purchases, total, totalPages, currentPage: page });
             }
             catch (error) {
                 console.log(error);
@@ -464,11 +484,15 @@ class Authcontroller {
                 }
                 const { oldPassword, newPassword, confirmPassword } = req.body;
                 yield this._authService.changePassword(userId, oldPassword, newPassword, confirmPassword);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Password changed successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Password changed successfully" });
             }
             catch (error) {
                 console.log(error);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: error.message });
             }
         });
     }
@@ -481,7 +505,9 @@ class Authcontroller {
             }
             catch (err) {
                 console.log(err);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
             }
         });
     }
@@ -497,7 +523,9 @@ class Authcontroller {
                     return;
                 }
                 const { purchasedCourses, total, totalPages } = yield this._authService.purchasedCourses(userId, page, limit);
-                res.status(statusCodes_1.httpStatus.OK).json({ purchasedCourses, total, totalPages, currentPage: page });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ purchasedCourses, total, totalPages, currentPage: page });
             }
             catch (err) {
                 console.log(err);
@@ -509,15 +537,44 @@ class Authcontroller {
             var _a;
             try {
                 const user = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
                 if (!user) {
-                    res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "user not authorized" });
+                    res
+                        .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                        .json({ message: "user not authorized" });
                     return;
                 }
-                const certificates = yield this._authService.getCertificates(user);
+                const certificates = yield this._authService.getCertificates(user, page, limit);
                 res.status(statusCodes_1.httpStatus.OK).json(certificates);
             }
             catch (err) {
                 console.log(err);
+            }
+        });
+    }
+    markRead(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const chatId = req.params.chatId;
+                const { userId, userModel } = req.body;
+                yield this._messageService.markRead(chatId, userId, userModel);
+                res.sendStatus(200);
+            }
+            catch (err) {
+                res.status(500).json({ error: "Failed to mark messages as read" });
+            }
+        });
+    }
+    getUnreadCounts(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { userId, userModel } = req.query;
+                const counts = yield this._messageService.getUnreadCounts(userId, userModel);
+                res.json(counts);
+            }
+            catch (err) {
+                res.status(500).json({ error: "Failed to fetch unread counts" });
             }
         });
     }

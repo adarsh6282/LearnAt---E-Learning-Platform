@@ -76,11 +76,40 @@ class ReviewRepository {
             };
         });
     }
-    getAllReviews(page, limit) {
+    getAllReviews(page, limit, search, rating, sort) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
+            const query = {};
+            if (search) {
+                const matchedCourses = yield courseModel_1.default.find({
+                    title: { $regex: search, $options: "i" },
+                }).select("_id");
+                const courseIds = matchedCourses.map((c) => c._id);
+                query.$or = [
+                    { text: { $regex: search, $options: "i" } },
+                    { course: { $in: courseIds } },
+                ];
+            }
+            let sortOption = { createdAt: -1 };
+            switch (sort) {
+                case "oldest":
+                    sortOption = { createdAt: 1 };
+                    break;
+                case "ratingHigh":
+                    sortOption = { rating: -1 };
+                    break;
+                case "ratingLow":
+                    sortOption = { rating: 1 };
+                    break;
+                case "date":
+                default:
+                    sortOption = { createdAt: -1 };
+            }
+            if (rating !== null) {
+                query.rating = rating;
+            }
             const [reviews, total] = yield Promise.all([
-                reviewModel_1.default.find()
+                reviewModel_1.default.find(query)
                     .populate({
                     path: "user",
                     select: "name",
@@ -93,10 +122,10 @@ class ReviewRepository {
                         select: "name",
                     },
                 })
-                    .sort({ createdAt: -1 })
+                    .sort(sortOption)
                     .skip(skip)
                     .limit(limit),
-                reviewModel_1.default.countDocuments(),
+                reviewModel_1.default.countDocuments(query),
             ]);
             const totalPages = Math.ceil(total / limit);
             return { reviews, total, totalPages };

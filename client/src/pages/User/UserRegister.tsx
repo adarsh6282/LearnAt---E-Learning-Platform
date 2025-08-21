@@ -33,7 +33,7 @@ const UserRegister: React.FC = () => {
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
   useEffect(() => {
-    if (usertoken) navigate('/');
+    if (usertoken) navigate('/home');
   }, [usertoken, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -19,8 +19,9 @@ const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.con
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const jwt_1 = require("../../utils/jwt");
 class InstructorAuthController {
-    constructor(_instructorAuthService) {
+    constructor(_instructorAuthService, _messageService) {
         this._instructorAuthService = _instructorAuthService;
+        this._messageService = _messageService;
     }
     signup(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -255,7 +256,8 @@ class InstructorAuthController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 6;
-                const { courses, total, totalPages } = yield this._instructorAuthService.getCoursesByInstructor(instructorId, page, limit);
+                const search = req.query.search || "";
+                const { courses, total, totalPages } = yield this._instructorAuthService.getCoursesByInstructor(instructorId, page, limit, search);
                 res.status(statusCodes_1.httpStatus.OK).json({
                     courses,
                     total,
@@ -304,7 +306,9 @@ class InstructorAuthController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
-                const rating = req.query.rating ? parseInt(req.query.rating) : 0;
+                const rating = req.query.rating
+                    ? parseInt(req.query.rating)
+                    : 0;
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
                     res
@@ -329,6 +333,8 @@ class InstructorAuthController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
+                const search = req.query.search || "";
+                const status = req.query.status || "";
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
                     res
@@ -336,7 +342,7 @@ class InstructorAuthController {
                         .json({ message: "Instructor not found" });
                     return;
                 }
-                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId, page, limit);
+                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId, page, limit, search, status);
                 res.status(statusCodes_1.httpStatus.OK).json(enrollments);
             }
             catch (err) {
@@ -361,9 +367,13 @@ class InstructorAuthController {
                     return;
                 }
                 const { wallet, total, totalPages, transactions } = yield this._instructorAuthService.getWallet(instructorId, page, limit);
-                res
-                    .status(statusCodes_1.httpStatus.OK)
-                    .json({ balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance, transactions: transactions, total, totalPages, currentPage: page });
+                res.status(statusCodes_1.httpStatus.OK).json({
+                    balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance,
+                    transactions: transactions,
+                    total,
+                    totalPages,
+                    currentPage: page,
+                });
             }
             catch (err) {
                 res
@@ -415,7 +425,9 @@ class InstructorAuthController {
             try {
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
-                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "NO Instructors found" });
+                    res
+                        .status(statusCodes_1.httpStatus.NOT_FOUND)
+                        .json({ message: "NO Instructors found" });
                     return;
                 }
                 const users = yield this._instructorAuthService.getPurchasedUsers(instructorId);
@@ -451,7 +463,9 @@ class InstructorAuthController {
             try {
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
-                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "Instructor not found" });
+                    res
+                        .status(statusCodes_1.httpStatus.NOT_FOUND)
+                        .json({ message: "Instructor not found" });
                     return;
                 }
                 const data = yield this._instructorAuthService.getDashboard(instructorId);
@@ -492,7 +506,9 @@ class InstructorAuthController {
             try {
                 const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
                 if (!instructorId) {
-                    res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "Instructor not found" });
+                    res
+                        .status(statusCodes_1.httpStatus.NOT_FOUND)
+                        .json({ message: "Instructor not found" });
                     return;
                 }
                 const incomeStats = yield this._instructorAuthService.getIncomeStats(instructorId);
@@ -500,6 +516,31 @@ class InstructorAuthController {
             }
             catch (err) {
                 console.log(err);
+            }
+        });
+    }
+    getUnreadCounts(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { userId, userModel } = req.query;
+                const counts = yield this._messageService.getUnreadCounts(userId, userModel);
+                res.status(statusCodes_1.httpStatus.OK).json(counts);
+            }
+            catch (err) {
+                res.status(500).json({ error: "Failed to fetch unread counts" });
+            }
+        });
+    }
+    markRead(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const chatId = req.params.chatId;
+                const { userId, userModel } = req.body;
+                yield this._messageService.markRead(chatId, userId, userModel);
+                res.sendStatus(statusCodes_1.httpStatus.OK);
+            }
+            catch (err) {
+                res.status(500).json({ error: "Failed to mark messages as read" });
             }
         });
     }

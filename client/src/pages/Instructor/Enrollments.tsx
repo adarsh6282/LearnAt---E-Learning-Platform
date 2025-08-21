@@ -17,6 +17,8 @@ const Enrollments = () => {
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 7;
+  const [searchQuery,setSearchQuery]=useState("")
+  const [selectedStatus,setSelectedStatus]=useState("")
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
@@ -31,18 +33,39 @@ const Enrollments = () => {
 
   useEffect(() => {
     const fetchEnrollments = async () => {
-      const res=await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${currentPage}&limit=${itemsPerPage}`)
+      const res=await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&status=${selectedStatus}`)
         setEnrollments(res.data.enrollments)
         setTotalPages(res.data.totalPages)
     };
     fetchEnrollments();
-  }, [currentPage,itemsPerPage]);
+  }, [currentPage,itemsPerPage,searchQuery,selectedStatus]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       <h1 className="text-3xl font-bold mb-6 text-gray-900">
         Course Enrollments
       </h1>
+
+      <div className=" flex gap-2 mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search by course title"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-2"
+          >
+            <option value="">All Status</option>
+            <option value="complete">Complete</option>
+            <option value="incomplete">Incomplete</option>
+          </select>
+
+        </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">

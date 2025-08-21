@@ -49,17 +49,35 @@ class CourseRepository extends base_repository_1.BaseRepository {
             return { course, total, totalPage };
         });
     }
-    findCourses() {
+    findCourses(page, limit, search, category, minPrice, maxPrice) {
         return __awaiter(this, void 0, void 0, function* () {
-            const courses = yield this.model
-                .find({})
-                .populate("instructor", "name email")
-                .populate({
-                path: "category",
-                match: { isDeleted: false },
-                select: "name",
-            });
-            return courses;
+            const skip = (page - 1) * limit;
+            let query = {};
+            if (search) {
+                query.title = { $regex: search, $options: "i" };
+            }
+            if (category) {
+                query.category = category;
+            }
+            if (minPrice !== undefined && maxPrice !== undefined) {
+                query.price = { $gte: minPrice, $lte: maxPrice };
+            }
+            else if (minPrice !== undefined) {
+                query.price = { $gte: minPrice };
+            }
+            else if (maxPrice !== undefined) {
+                query.price = { $lte: maxPrice };
+            }
+            const [courses, total] = yield Promise.all([
+                this.model
+                    .find(query)
+                    .skip(skip)
+                    .limit(limit)
+                    .populate("instructor", "name email"),
+                this.model.countDocuments(query),
+            ]);
+            const totalPages = Math.ceil(total / limit);
+            return { courses, total, totalPages };
         });
     }
     findCourseById(courseId) {
@@ -70,12 +88,16 @@ class CourseRepository extends base_repository_1.BaseRepository {
             return course;
         });
     }
-    findCoursesByInstructor(instructorId, page, limit) {
+    findCoursesByInstructor(instructorId, page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
+            let query = { instructor: instructorId };
+            if (search) {
+                query.title = { $regex: search, $options: "i" };
+            }
             const [courses, total] = yield Promise.all([
-                this.model.find({ instructor: instructorId }).skip(skip).limit(limit),
-                this.model.countDocuments({ instructor: instructorId }),
+                this.model.find(query).skip(skip).limit(limit),
+                this.model.countDocuments(query),
             ]);
             const totalPages = Math.ceil(total / limit);
             return { courses, total, totalPages };

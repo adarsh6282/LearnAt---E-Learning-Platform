@@ -225,9 +225,9 @@ class InstructorAuthSerivce {
             return instructor;
         });
     }
-    getCoursesByInstructor(instructorId, page, limit) {
+    getCoursesByInstructor(instructorId, page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit);
+            return yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit, search);
         });
     }
     getCourseById(courseId) {
@@ -253,9 +253,9 @@ class InstructorAuthSerivce {
             return this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
         });
     }
-    getEnrollments(instructorId, page, limit) {
+    getEnrollments(instructorId, page, limit, search, status) {
         return __awaiter(this, void 0, void 0, function* () {
-            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId, page, limit);
+            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId, page, limit, search, status);
             return enrollments;
         });
     }

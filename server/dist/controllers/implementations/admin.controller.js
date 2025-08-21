@@ -197,8 +197,10 @@ class AdminController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const page = parseInt(req.query.page) || 1;
-                const limit = parseInt(req.query.limit) || 1;
-                const category = yield this._adminService.getCategories(page, limit);
+                const limit = parseInt(req.query.limit) || 10;
+                const search = req.query.search || "";
+                const status = req.query.status || "";
+                const category = yield this._adminService.getCategories(page, limit, search, status);
                 res.status(statusCodes_1.httpStatus.OK).json(category);
             }
             catch (err) {
@@ -241,9 +243,11 @@ class AdminController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
-                const search = req.query.search || '';
+                const search = req.query.search || "";
                 const { course, total, totalPage } = yield this._adminService.getCoursesService(page, limit, search);
-                res.status(statusCodes_1.httpStatus.OK).json({ course: course, total, totalPage, currentPage: page });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ course: course, total, totalPage, currentPage: page });
             }
             catch (err) {
                 console.log(err);
@@ -290,7 +294,16 @@ class AdminController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 6;
-                const { reviews, total, totalPages } = yield this._adminService.getAllReviews(page, limit);
+                const search = typeof req.query.search === "string" ? req.query.search : "";
+                let rating = null;
+                if (req.query.rating && req.query.rating !== "null") {
+                    const parsed = parseInt(req.query.rating, 10);
+                    if (!isNaN(parsed)) {
+                        rating = parsed;
+                    }
+                }
+                const sort = typeof req.query.sort === "string" ? req.query.sort : "desc";
+                const { reviews, total, totalPages } = yield this._adminService.getAllReviews(page, limit, search, rating, sort);
                 res
                     .status(statusCodes_1.httpStatus.OK)
                     .json({ reviews, total, totalPages, currentPage: page });
@@ -401,8 +414,12 @@ class AdminController {
             try {
                 const page = parseInt(req.query.page) || 1;
                 const limit = parseInt(req.query.limit) || 10;
-                const { complaints, total, totalPages } = yield this._adminService.getComplaints(page, limit);
-                res.status(statusCodes_1.httpStatus.OK).json({ complaints: complaints, total, totalPages, currentPage: page });
+                const search = req.query.search || "";
+                const filter = req.query.status || "";
+                const { complaints, total, totalPages } = yield this._adminService.getComplaints(page, limit, search, filter);
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ complaints: complaints, total, totalPages, currentPage: page });
             }
             catch (err) {
                 console.log(err);
@@ -415,11 +432,15 @@ class AdminController {
                 const { status, response } = req.body;
                 const { id } = req.params;
                 const complaint = yield this._adminService.responseComplaint(id, status, response);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Response Submitted successfully" });
+                res
+                    .status(statusCodes_1.httpStatus.OK)
+                    .json({ message: "Response Submitted successfully" });
             }
             catch (err) {
                 console.log(err);
-                res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: err.message });
+                res
+                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                    .json({ message: err.message });
             }
         });
     }

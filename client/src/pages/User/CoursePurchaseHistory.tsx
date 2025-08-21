@@ -22,7 +22,7 @@ export default function PurchaseHistory() {
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -81,13 +81,13 @@ export default function PurchaseHistory() {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchases.map((purchase) => (
+                  {purchases.map((purchase,index) => (
                     <tr
                       key={purchase._id}
                       className="hover:bg-cyan-400/10 transition"
                     >
                       <td className="px-4 py-2 border-b border-cyan-400/10">
-                        {purchase._id}
+                        {`ORD${String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, "0")}`}
                       </td>
                       <td className="px-4 py-2 border-b border-cyan-400/10">
                         {purchase.course.title}
@@ -123,8 +123,7 @@ export default function PurchaseHistory() {
           onPageChange={handlePageChange}
           totalPages={totalPages}
         />
-
-        {/* Animations */}
+        
         <style>
           {`
         @keyframes blob1 {

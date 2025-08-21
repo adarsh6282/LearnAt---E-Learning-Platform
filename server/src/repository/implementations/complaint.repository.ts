@@ -9,17 +9,31 @@ export class ComplaintRepository implements IComplaintRepository {
 
   async getComplaints(
     page: number,
-    limit: number
+    limit: number,
+    search: string,
+    filter: string
   ): Promise<{ complaints: IComplaint[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
+    const query: any = {};
+
+    if (search) {
+      query.$or = [
+        { subject: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (filter) {
+      query.status = filter;
+    }
+
     const [complaints, total] = await Promise.all([
-      Complaint.find({})
-        .populate("userId")
-        .populate("targetId")
+      Complaint.find(query)
+        .populate("userId", "name email")
+        .populate("targetId", "title")
         .skip(skip)
         .limit(limit),
-      Complaint.countDocuments(),
+      Complaint.countDocuments(query),
     ]);
 
     const totalPages = Math.ceil(total / limit);

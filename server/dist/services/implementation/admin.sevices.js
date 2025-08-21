@@ -104,9 +104,9 @@ class AdminService {
             return yield this._categoryRepository.createCategory(name);
         });
     }
-    getCategories(page, limit) {
+    getCategories(page, limit, search, status) {
         return __awaiter(this, void 0, void 0, function* () {
-            const categories = yield this._categoryRepository.getCatgeories(page, limit);
+            const categories = yield this._categoryRepository.getCatgeories(page, limit, search, status);
             if (!categories) {
                 throw new Error("No categories found");
             }
@@ -146,9 +146,9 @@ class AdminService {
             return yield this._courseRepository.updateCourseStatus(courseId, true);
         });
     }
-    getAllReviews(page, limit) {
+    getAllReviews(page, limit, search, rating, sort) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._reviewRepository.getAllReviews(page, limit);
+            return yield this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
         });
     }
     hideReview(id) {
@@ -184,9 +184,9 @@ class AdminService {
             return { wallet, total, totalPages, transactions };
         });
     }
-    getComplaints(page, limit) {
+    getComplaints(page, limit, search, filter) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._complaintRepository.getComplaints(page, limit);
+            return yield this._complaintRepository.getComplaints(page, limit, search, filter);
         });
     }
     responseComplaint(id, status, response) {

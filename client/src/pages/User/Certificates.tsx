@@ -2,20 +2,38 @@ import { useEffect, useState } from "react";
 import { errorToast } from "../../components/Toast";
 import { useAuth } from "../../hooks/useAuth";
 import userApi from "../../services/userApiService";
+import Pagination from "../../components/Pagination";
+import { useSearchParams } from "react-router-dom";
 
 interface Certificate {
   _id: string;
-  user:string;
-  course:string
+  user: string;
+  course: string;
   courseTitle: string;
   certificateUrl: string;
   issuedDate: string;
 }
 
 const UserCertificates = () => {
-  const { authUser } = useAuth()
+  const { authUser } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [currentPage, setCurrentPage] = useState(pageParam);
+  const itemsPerPage = 3;
+  const [totalPages, setTotalPages] = useState<number>(1);
+
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   useEffect(() => {
     if (!authUser) return;
@@ -23,7 +41,9 @@ const UserCertificates = () => {
     const fetchCertificates = async () => {
       setLoading(true);
       try {
-        const res = await userApi.get<Certificate[]>(`/users/certificates/${authUser._id}`);
+        const res = await userApi.get<Certificate[]>(
+          `/users/certificates/${authUser._id}`
+        );
         setCertificates(res.data);
       } catch (err: any) {
         errorToast(err.message || "Something went wrong");
@@ -57,15 +77,6 @@ const UserCertificates = () => {
             >
               View Certificate
             </a>
-            {/* <a
-              href={cert.certificateUrl}
-              download={`${cert.user}_${cert.course}_certificate.jpg`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-400 pl-5 hover:underline"
-            >
-              Download Certificate
-            </a> */}
           </li>
         ))}
       </ul>

@@ -298,12 +298,14 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   async getCoursesByInstructor(
     instructorId: string,
     page: number,
-    limit: number
+    limit: number,
+    search:string
   ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
     return await this._courseRepository.findCoursesByInstructor(
       instructorId,
       page,
-      limit
+      limit,
+      search
     );
   }
 
@@ -327,11 +329,13 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return this._reviewRepository.getReviewsByInstructor(instructorId,page,limit,rating);
   }
 
-  async getEnrollments(instructorId:string,page:number,limit:number):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}> {
+  async getEnrollments(instructorId:string,page:number,limit:number,search:string,status:string):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}> {
     const enrollments = await this._orderRepository.getEnrollmentsByInstructor(
       instructorId,
       page,
-      limit
+      limit,
+      search,
+      status
     );
     return enrollments;
   }

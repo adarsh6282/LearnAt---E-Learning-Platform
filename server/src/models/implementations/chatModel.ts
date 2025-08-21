@@ -16,6 +16,9 @@ const chatSchema:Schema<IChat> = new Schema(
     lastMessage:{
       type:Date,
       default:Date.now
+    },
+    lastMessageContent:{
+      type:String
     }
   },
   {

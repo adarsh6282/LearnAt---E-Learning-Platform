@@ -28,28 +28,53 @@ const UserChatWindow = () => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!chatId) return;
+
     socket.emit("joinChat", chatId);
-    console.log("User Socket", socket.id);
-    socket.on("receiveMessage", (msg: Message) => {
+
+    const handleMessage = (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
-    });
+    };
+
+    socket.on("receiveMessage", handleMessage);
 
     return () => {
-      socket.off("receiveMessage");
+      socket.off("receiveMessage", handleMessage);
     };
   }, [chatId]);
 
   useEffect(() => {
+    const markMessagesRead = async () => {
+      if (!chatId || !authUser) return;
+
+      try {
+        await userApi.post(`/users/messages/mark-as-read/${chatId}`, {
+          userId: authUser._id,
+          userModel: authUser.role === "user" ? "User" : "Instructor",
+        });
+      } catch (err) {
+        console.error("Failed to mark messages as read", err);
+      }
+    };
+
+    if (chatId && authUser) {
+      markMessagesRead();
+    }
+  }, [chatId, authUser]);
+
+  useEffect(() => {
     const fetchMessages = async () => {
-      const res = await userApi.get<Message[]>(`/messages/${chatId}`);
+      const res = await userApi.get<Message[]>(
+        `/messages/${chatId}?userId=${authUser?._id}&role=${authUser?.role}`
+      );
       const normalized = res.data.map((msg: any) => ({
         ...msg,
         sender: msg.senderId,
       }));
       setMessages(normalized);
     };
-    if (chatId) fetchMessages();
-  }, [chatId]);
+    if (chatId && authUser) fetchMessages();
+  }, [chatId, authUser]);
 
   const sendMessage = async () => {
     if ((!text.trim() && !file) || !authUser || !authUser._id || !chatId)

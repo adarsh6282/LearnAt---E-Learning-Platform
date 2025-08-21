@@ -4,6 +4,7 @@ import { reapplyS } from "../../services/instructor.services";
 import { errorToast, successToast } from "../../components/Toast";
 import InstructorChart from "../../components/InstructorChart";
 import instructorApi from "../../services/instructorApiService";
+import { useLocation } from "react-router-dom";
 
 interface Dashboard {
   totalUsers: number;
@@ -18,6 +19,7 @@ const InstructorDashboard = () => {
   const { instructor, getInstructorProfile } = context;
   const [dashboardData, setDashboardData] = useState<Dashboard | null>(null);
   const [resume, setResume] = useState<File | null>(null);
+  const location=useLocation()
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const InstructorDashboard = () => {
       setDashboardData(res.data);
     };
     fetchDashboard();
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchInstructor = async () => {

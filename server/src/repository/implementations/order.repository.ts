@@ -66,61 +66,89 @@ export class OrderRepository implements IOrderRepository {
 
     return !!order;
   }
-
+  
   async getEnrollmentsByInstructor(
     instructorId: string,
     page: number,
-    limit: number
+    limit: number,
+    search: string,
+    status: string
   ): Promise<{
     enrollments: IEnrollment[];
     total: number;
     totalPages: number;
   }> {
+    const searchRegex = search ? new RegExp(search, "i") : null;
+
     const orders = await Order.find({ status: "paid" })
       .populate({
         path: "courseId",
         match: { instructor: instructorId },
         select: "_id title",
       })
-      .populate("userId", "_id name email");
+      .populate({
+        path: "userId",
+        select: "_id name email",
+      });
 
-    const filteredOrders = orders.filter((order) => order.courseId !== null);
+    let filteredOrders = orders.filter((order) => {
+      if (!order.courseId || !order.userId) return false;
+
+      const course = order.courseId as any;
+      const user = order.userId as any;
+
+      if (!searchRegex) return true;
+
+      return (
+        course.title.match(searchRegex) ||
+        user.name.match(searchRegex) ||
+        user.email.match(searchRegex)
+      );
+    });
 
     const total = filteredOrders.length;
     const totalPages = Math.ceil(total / limit);
+
     const paginatedOrders = filteredOrders.slice(
       (page - 1) * limit,
       page * limit
     );
 
-    const enrollments = await Promise.all(
+    let enrollments = await Promise.all(
       paginatedOrders.map(async (order) => {
-        const courseId = (order.courseId as any)._id;
-        const userId = (order.userId as any)._id;
+        const course = order.courseId as any;
+        const user = order.userId as any;
 
         const progress = await Progress.findOne({
-          courseId,
-          userId,
+          courseId: course._id,
+          userId: user._id,
         });
 
         return {
           _id: order._id.toString(),
           course: {
-            _id: courseId.toString(),
-            title: (order.courseId as any).title,
+            _id: course._id.toString(),
+            title: course.title,
           },
           user: {
-            _id: userId.toString(),
-            name: (order.userId as any).name,
-            email: (order.userId as any).email,
+            _id: user._id.toString(),
+            name: user.name,
+            email: user.email,
           },
           isCompleted: progress?.isCompleted || false,
           createdAt: order.createdAt.toISOString(),
         };
       })
     );
+    if (status) {
+      enrollments = enrollments.filter((enroll) =>
+        status === "complete" ? enroll.isCompleted : !enroll.isCompleted
+      );
+    }
+    const finalTotal = enrollments.length;
+    const finalTotalPages = Math.ceil(finalTotal / limit);
 
-    return { enrollments, total, totalPages };
+    return { enrollments, total: finalTotal, totalPages: finalTotalPages };
   }
 
   async findExistingOrder(filter: {

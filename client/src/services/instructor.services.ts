@@ -22,8 +22,8 @@ interface InstructorRegisterResponse {
   };
 }
 
-export const getInstructorCoursesS = async (page:number,limit:number) => {
-  return await instructorApi.get<{courses:ICourse[],total:number,totalPages:number}>(`/instructors/courses?page=${page}&limit=${limit}`);
+export const getInstructorCoursesS = async (page:number,limit:number,search:string) => {
+  return await instructorApi.get<{courses:ICourse[],total:number,totalPages:number}>(`/instructors/courses?page=${page}&limit=${limit}&search=${search}`);
 };
 
 export const getProfileS = async () => {

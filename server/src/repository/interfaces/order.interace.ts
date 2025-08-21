@@ -14,7 +14,9 @@ export interface IOrderRepository {
   getEnrollmentsByInstructor(
     instructorId: string,
     page: number,
-    limit: number
+    limit: number,
+    search:string,
+    status:string
   ): Promise<{ enrollments: IEnrollment[]; total: number; totalPages: number }>;
   findExistingOrder(filter: {
     userId: string;

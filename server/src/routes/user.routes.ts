@@ -14,9 +14,11 @@ import { ProgressRepository } from "../repository/implementations/progress.repos
 import { WalletRepository } from "../repository/implementations/wallet.repository";
 import { ComplaintRepository } from "../repository/implementations/complaint.repository";
 import { NotificationRepository } from "../repository/implementations/notification.repository";
-import { auth } from "google-auth-library";
 import { CertificateRepository } from "../repository/implementations/certificate.repository";
 import { CertificateService } from "../services/implementation/certificate.service";
+import { CategoryRepository } from "../repository/implementations/category.repository";
+import { MessageService } from "../services/implementation/message.service";
+import { MessageRepository } from "../repository/implementations/message.repository";
 
 const authRepository = new AuthRepository();
 const instructorRepository = new InstructorAuth();
@@ -29,6 +31,9 @@ const walletRepository = new WalletRepository();
 const complaintRepository = new ComplaintRepository();
 const notificationRepository = new NotificationRepository();
 const certificateRepository=new CertificateRepository()
+const categoryRepository=new CategoryRepository()
+const messageRepository=new MessageRepository()
+const messageService=new MessageService(messageRepository)
 const certificateService=new CertificateService(certificateRepository)
 const authService = new AuthService(
   authRepository,
@@ -42,9 +47,10 @@ const authService = new AuthService(
   complaintRepository,
   notificationRepository,
   certificateRepository,
-  certificateService
+  certificateService,
+  categoryRepository
 );
-const authController = new Authcontroller(authService);
+const authController = new Authcontroller(authService,messageService);
 
 const router = Router();
 
@@ -75,6 +81,7 @@ router.patch(
   authController.updateProfile.bind(authController)
 );
 router.get("/courses", authController.getCourses.bind(authController));
+router.get("/category",authController.getCategory.bind(authController))
 router.post(
   "/orders",
   authRole(["user"]),
@@ -148,6 +155,8 @@ router.get("/purchased-courses",authRole(["user"]),authController.purchasedCours
 router.post("/change-password",authRole(["user"]),authController.changePassword.bind(authController))
 router.get("/courseinstructor/:instructorId",authRole(["user"]),authController.courseInstructorView.bind(authController))
 router.get("/certificates/:id",authRole(["user"]),authController.getCertificates.bind(authController))
+router.get("/chats/unread-counts",authRole(["user"]),authController.getUnreadCounts.bind(authController))
+router.post("/messages/mark-as-read/:chatId",authRole(["user"]),authController.markRead.bind(authController))
 router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

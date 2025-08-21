@@ -81,14 +81,14 @@ const InstructorRoutes = () => {
         path={INSTRUCTOR_ROUTES.BASE}
         element={
           <InstructorProvider>
-            <NotificationProvider>
-              <CallProvider>
-                <ProtectedRoute>
-                  <InstructorNavbar />
-                  <CallModal />
-                </ProtectedRoute>
-              </CallProvider>
-            </NotificationProvider>
+              <NotificationProvider>
+                <CallProvider>
+                  <ProtectedRoute>
+                    <InstructorNavbar />
+                    <CallModal />
+                  </ProtectedRoute>
+                </CallProvider>
+              </NotificationProvider>
           </InstructorProvider>
         }
       >

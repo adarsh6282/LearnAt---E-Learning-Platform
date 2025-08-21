@@ -54,7 +54,21 @@ const messageSchema = new mongoose_1.Schema({
     },
     image: {
         type: String
-    }
+    },
+    readBy: [
+        {
+            readerId: {
+                type: mongoose_1.Schema.Types.ObjectId,
+                required: true,
+                refPath: "readBy.readerModel"
+            },
+            readerModel: {
+                type: String,
+                required: true,
+                enum: ["User", "Instructor"]
+            }
+        }
+    ]
 }, {
     timestamps: true,
 });

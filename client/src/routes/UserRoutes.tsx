@@ -1,7 +1,7 @@
 import { Route } from "react-router-dom";
 import UserRegister from "../pages/User/UserRegister";
 import UserLogin from "../pages/User/UserLogin";
-import LandingPage from "../pages/User/UserLandingPage";
+import LandingPage from "../pages/User/UserHomePage";
 import OtpPage from "../components/OtpPage";
 import ForgotPassword from "../components/ForgotPassword";
 import ForgotOtpPage from "../components/ForgotOtpPage";
@@ -26,12 +26,14 @@ import { NotificationProvider } from "../context/NotificationContext";
 import PurchasedCourses from "../pages/User/PurchasedCourses";
 import ChangePassword from "../pages/User/ChangePassword";
 import UserCertificates from "../pages/User/Certificates";
+import PublicLandingPage from "../pages/User/UserLandingPage";
 
 const UserRoutes = () => {
   return (
     <>
-      <Route path={USER_ROUTES.ROOT} element={<LandingPage />} />
+      <Route path={USER_ROUTES.ROOT} element={<PublicLandingPage />} />
       <Route element={<UserProviderWrapper />}>
+        <Route path={USER_ROUTES.HOME} element={<LandingPage />} />
         <Route path={USER_ROUTES.REGISTER} element={<UserRegister />} />
         <Route path="/users/course-view/:courseId" element={<CourseView />} />
         <Route path="/users/notifications" element={<UserNotification />} />
@@ -49,10 +51,10 @@ const UserRoutes = () => {
           <Route path=":chatId" element={<ChatWindow />} />
         </Route>
         <Route path="/users/video/:chatId" element={<VideoCall />} />
-        <Route path="/users/purchase-history" element={<PurchaseHistory/>}/>
-        <Route path="/users/purchase-courses" element={<PurchasedCourses/>}/>
-        <Route path="/users/change-password" element={<ChangePassword/>}/>
-        <Route path="/users/certificates" element={<UserCertificates/>}/>
+        <Route path="/users/purchase-history" element={<PurchaseHistory />} />
+        <Route path="/users/purchase-courses" element={<PurchasedCourses />} />
+        <Route path="/users/change-password" element={<ChangePassword />} />
+        <Route path="/users/certificates" element={<UserCertificates />} />
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}
@@ -94,12 +96,12 @@ const UserRoutes = () => {
 const UserProviderWrapper = () => {
   return (
     <UserProvider>
-      <NotificationProvider>
-        <CallProvider>
-          <Outlet />
-          <CallModal />
-        </CallProvider>
-      </NotificationProvider>
+        <NotificationProvider>
+          <CallProvider>
+            <Outlet />
+            <CallModal />
+          </CallProvider>
+        </NotificationProvider>
     </UserProvider>
   );
 };

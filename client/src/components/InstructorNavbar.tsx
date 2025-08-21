@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Plus,
@@ -15,15 +15,51 @@ import { InstructorContext } from "../context/InstructorContext";
 import { INSTRUCTOR_ROUTES } from "../constants/routes.constants";
 import instructorApi from "../services/instructorApiService";
 import { NotificationContext } from "../context/NotificationContext";
+import { useAuth } from "../hooks/useAuth";
+import { socket } from "../services/socket.service";
 
 const InstructorNavbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const context = useContext(InstructorContext);
-  const {unreadCount}=useContext(NotificationContext)
+  const { authUser } = useAuth();
+  const [readCount, setUnreadCount] = useState(0);
+  const notificationContext = useContext(NotificationContext);
   if (!context) {
     return <div>Loading...</div>;
   }
+
+  if (!notificationContext) {
+    return <div>Loading...</div>;
+  }
+
+  const { unreadCount } = notificationContext;
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      if (!authUser?._id) return;
+
+      const userModel = authUser.role === "user" ? "User" : "Instructor";
+
+      try {
+        const res = await instructorApi.get<{ count: number; chat: string }[]>(
+          `/instructors/chats/unread-counts?userId=${authUser._id}&userModel=${userModel}`
+        );
+        const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
+        setUnreadCount(totalCount);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchUnread();
+
+    socket.on("receiveMessage", fetchUnread);
+
+    return () => {
+      socket.off("receiveMessage", fetchUnread);
+    };
+  }, [authUser?._id, authUser?.role]);
 
   const { instructor } = context;
 
@@ -88,6 +124,9 @@ const InstructorNavbar = () => {
                   >
                     <Icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
                     <span>{item.name}</span>
+                    {item.name === "Chat" && readCount > 0 && (
+                      <span className="absolute w-5 h-5 ml-38 bg-green-500 rounded-full animate-pulse"></span>
+                    )}
                   </Link>
                 );
               })}

@@ -1,5 +1,6 @@
 export const USER_ROUTES = {
   ROOT: "/",
+  HOME: "/home",
   REGISTER: "/users/register",
   LOGIN: "/users/login",
   VERIFY_OTP: "/users/verify-otp",

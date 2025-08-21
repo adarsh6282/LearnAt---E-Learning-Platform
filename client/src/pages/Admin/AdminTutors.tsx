@@ -16,7 +16,6 @@ const AdminTutors = () => {
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 6;
-  const [filteredTutor, setFilteredTutor] = useState<Tutor[]>([]);
   const navigate = useNavigate();
   const [tutors, setTutors] = useState<Tutor[]>([]);
 
@@ -25,7 +24,6 @@ const AdminTutors = () => {
       try {
         const res = await getTutorsS(currentPage, itemsPerPage, searchQuery);
         setTutors(res.tutors);
-        setFilteredTutor(res.tutors);
         setTotalPages(res.totalPages);
       } catch (err: any) {
         console.log(err);
@@ -120,7 +118,7 @@ const AdminTutors = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredTutor.map((tutor) => (
+              {tutors.map((tutor) => (
                 <tr
                   key={tutor.email}
                   className="hover:bg-gray-50 transition-colors"

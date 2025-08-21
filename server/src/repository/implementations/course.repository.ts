@@ -47,18 +47,46 @@ export class CourseRepository
     return { course, total, totalPage };
   }
 
-  async findCourses():Promise<ICourse[]|null> {
+  async findCourses(
+    page: number,
+    limit: number,
+    search: string,
+    category: string,
+    minPrice: number,
+    maxPrice: number
+  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
+    const skip = (page - 1) * limit;
 
-    const courses = await this.model
-      .find({})
-      .populate("instructor", "name email")
-      .populate({
-        path: "category",
-        match: { isDeleted: false },
-        select: "name",
-      });
+    let query: any = {};
 
-    return courses;
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (minPrice !== undefined && maxPrice !== undefined) {
+      query.price = { $gte: minPrice, $lte: maxPrice };
+    } else if (minPrice !== undefined) {
+      query.price = { $gte: minPrice };
+    } else if (maxPrice !== undefined) {
+      query.price = { $lte: maxPrice };
+    }
+
+    const [courses, total] = await Promise.all([
+      this.model
+        .find(query)
+        .skip(skip)
+        .limit(limit)
+        .populate("instructor", "name email"),
+      this.model.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return { courses, total, totalPages };
   }
 
   async findCourseById(courseId: string): Promise<ICourse | null> {
@@ -72,12 +100,20 @@ export class CourseRepository
   async findCoursesByInstructor(
     instructorId: string,
     page: number,
-    limit: number
+    limit: number,
+    search: string
   ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
+
+    let query: any = { instructor: instructorId };
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
     const [courses, total] = await Promise.all([
-      this.model.find({ instructor: instructorId }).skip(skip).limit(limit),
-      this.model.countDocuments({ instructor: instructorId }),
+      this.model.find(query).skip(skip).limit(limit),
+      this.model.countDocuments(query),
     ]);
     const totalPages = Math.ceil(total / limit);
     return { courses, total, totalPages };

@@ -20,16 +20,25 @@ class ComplaintRepository {
             return yield complaintSchema_1.default.create(data);
         });
     }
-    getComplaints(page, limit) {
+    getComplaints(page, limit, search, filter) {
         return __awaiter(this, void 0, void 0, function* () {
             const skip = (page - 1) * limit;
+            const query = {};
+            if (search) {
+                query.$or = [
+                    { subject: { $regex: search, $options: "i" } },
+                ];
+            }
+            if (filter) {
+                query.status = filter;
+            }
             const [complaints, total] = yield Promise.all([
-                complaintSchema_1.default.find({})
-                    .populate("userId")
-                    .populate("targetId")
+                complaintSchema_1.default.find(query)
+                    .populate("userId", "name email")
+                    .populate("targetId", "title")
                     .skip(skip)
                     .limit(limit),
-                complaintSchema_1.default.countDocuments(),
+                complaintSchema_1.default.countDocuments(query),
             ]);
             const totalPages = Math.ceil(total / limit);
             return {

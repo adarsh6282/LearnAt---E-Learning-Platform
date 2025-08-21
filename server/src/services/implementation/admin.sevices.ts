@@ -145,8 +145,18 @@ export class AdminService implements IAdminService {
     return await this._categoryRepository.createCategory(name);
   }
 
-  async getCategories(page:number,limit:number):Promise<{category:ICategory[],total:number,totalPages:number}> {
-    const categories = await this._categoryRepository.getCatgeories(page,limit);
+  async getCategories(
+    page: number,
+    limit: number,
+    search: string,
+    status: string
+  ): Promise<{ category: ICategory[]; total: number; totalPages: number }> {
+    const categories = await this._categoryRepository.getCatgeories(
+      page,
+      limit,
+      search,
+      status
+    );
     if (!categories) {
       throw new Error("No categories found");
     }
@@ -169,8 +179,12 @@ export class AdminService implements IAdminService {
     return await this._categoryRepository.restoreCategory(id);
   }
 
-  async getCoursesService(page:number,limit:number,search:string): Promise<{course:ICourse[],total:number,totalPage:number}> {
-    return await this._courseRepository.findAllCourse(page,limit,search);
+  async getCoursesService(
+    page: number,
+    limit: number,
+    search: string
+  ): Promise<{ course: ICourse[]; total: number; totalPage: number }> {
+    return await this._courseRepository.findAllCourse(page, limit, search);
   }
 
   async softDeleteCourseS(courseId: string): Promise<ICourse | null> {
@@ -183,9 +197,18 @@ export class AdminService implements IAdminService {
 
   async getAllReviews(
     page: number,
-    limit: number
+    limit: number,
+    search: string,
+    rating: number|null,
+    sort: string
   ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
-    return await this._reviewRepository.getAllReviews(page, limit);
+    return await this._reviewRepository.getAllReviews(
+      page,
+      limit,
+      search,
+      rating,
+      sort
+    );
   }
 
   async hideReview(id: string): Promise<IReview | null> {
@@ -231,8 +254,18 @@ export class AdminService implements IAdminService {
     return { wallet, total, totalPages, transactions };
   }
 
-  async getComplaints(page:number,limit:number):Promise<{complaints:IComplaint[],total:number,totalPages:number}> {
-    return await this._complaintRepository.getComplaints(page,limit);
+  async getComplaints(
+    page: number,
+    limit: number,
+    search: string,
+    filter: string
+  ): Promise<{ complaints: IComplaint[]; total: number; totalPages: number }> {
+    return await this._complaintRepository.getComplaints(
+      page,
+      limit,
+      search,
+      filter
+    );
   }
 
   async responseComplaint(

@@ -8,6 +8,7 @@ import {
   MdVideocamOff,
   MdCallEnd,
 } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const VideoCall = () => {
   const { chatId } = useParams();
@@ -15,6 +16,9 @@ const VideoCall = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const targetId = searchParams.get("target");
+  const calleName=searchParams.get("calleName")
+
+  console.log(calleName)
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -49,28 +53,6 @@ const VideoCall = () => {
         remoteVideoRef.current.srcObject = event.streams[0];
       }
     };
-
-    socket.on("incoming-call", async ({ chatId: incomingChatId }) => {
-      if (incomingChatId !== chatId) return;
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        localStreamRef.current = stream;
-
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-
-        stream.getTracks().forEach((track) => {
-          peerConnectionRef.current?.addTrack(track, stream);
-        });
-      } catch (err) {
-        console.error("Failed to prepare for incoming call:", err);
-      }
-    });
 
     socket.on("webrtc-offer", async ({ offer }) => {
       if (!peerConnectionRef.current) return;
@@ -110,6 +92,7 @@ const VideoCall = () => {
 
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      toast.info("the other user missed or ended the call")
       navigate(-1);
     });
 
@@ -128,7 +111,7 @@ const VideoCall = () => {
         remoteVideoRef.current.srcObject = null;
       }
       socket.off("end-call");
-      socket.off("incoming-call")
+      socket.off("incoming-call");
     };
   }, [chatId]);
 
@@ -150,6 +133,14 @@ const VideoCall = () => {
 
       const offer = await peerConnectionRef.current?.createOffer();
       await peerConnectionRef.current?.setLocalDescription(offer);
+
+      socket.emit("incoming-call", {
+        callerId: socket.id,
+        calleName:calleName,
+        chatId,
+        receiverId: targetId,
+      });
+
       socket.emit("webrtc-offer", {
         chatId,
         offer,
@@ -186,7 +177,7 @@ const VideoCall = () => {
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
-      localStreamRef.current=null
+      localStreamRef.current = null;
     }
 
     if (localVideoRef.current) localVideoRef.current.srcObject = null;

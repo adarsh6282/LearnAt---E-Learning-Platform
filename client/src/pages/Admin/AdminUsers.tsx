@@ -13,7 +13,6 @@ const AdminUsers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [filteredUser, setFilteredUser] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 5;
   const [users, setUsers] = useState<User[]>([]);
@@ -23,7 +22,6 @@ const AdminUsers = () => {
       try {
         const res = await getUsersS(currentPage, itemsPerPage, searchQuery);
         setUsers(res.data.users);
-        setFilteredUser(res.data.users);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
         console.log(err);
@@ -107,7 +105,7 @@ const AdminUsers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredUser.map((user) => (
+              {users.map((user) => (
                 <tr
                   key={user.email}
                   className="hover:bg-gray-50 transition-colors"

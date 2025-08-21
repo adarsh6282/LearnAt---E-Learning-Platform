@@ -34,10 +34,10 @@ export interface IInstructorAuthService{
         profilePicture,
       }: { name?: string; phone?: string; profilePicture?: Express.Multer.File ;title?:string;yearsOfExperience?:number,education?:string}
     ): Promise<IInstructor | null>
-    getCoursesByInstructor(instructorId:string,page:number,limit:number):Promise<{courses:ICourse[],total:number,totalPages:number}>
+    getCoursesByInstructor(instructorId:string,page:number,limit:number,search:string):Promise<{courses:ICourse[],total:number,totalPages:number}>
     getCategory():Promise<ICategory[]|null>
     getCourseById(courseId:string):Promise<ICourse|null>
-    getEnrollments(instructorId:string,page:number,limit:number):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}>
+    getEnrollments(instructorId:string,page:number,limit:number,search:string,status:string):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}>
     getWallet(instructorId:string,page:number,limit:number):Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}>
     getCouresStats(instructorId:string):Promise<{title:string,enrolledCount:number}[]>
     getIncomeStats(instructorId:string):Promise<{month:string,revenue:number}[]>

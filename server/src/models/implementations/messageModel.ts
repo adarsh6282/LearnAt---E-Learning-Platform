@@ -22,7 +22,21 @@ const messageSchema: Schema<IMessage> = new Schema(
     },
     image:{
       type:String
-    }
+    },
+    readBy: [
+      {
+        readerId: {
+          type: Schema.Types.ObjectId,
+          required: true,
+          refPath: "readBy.readerModel"
+        },
+        readerModel: {
+          type: String,
+          required: true,
+          enum: ["User", "Instructor"]
+        }
+      }
+    ]
   },
   {
     timestamps: true,

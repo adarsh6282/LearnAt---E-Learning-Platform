@@ -8,6 +8,7 @@ import {
   MdVideocamOff,
   MdCallEnd,
 } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const InstructorVideoCall = () => {
   const { chatId } = useParams();
@@ -50,28 +51,6 @@ const InstructorVideoCall = () => {
       }
     };
 
-    socket.on("incoming-call", async ({ chatId: incomingChatId }) => {
-      if (incomingChatId !== chatId) return;
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        localStreamRef.current = stream;
-
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-
-        stream.getTracks().forEach((track) => {
-          peerConnectionRef.current?.addTrack(track, stream);
-        });
-      } catch (err) {
-        console.error("Failed to prepare for incoming call:", err);
-      }
-    });
-
     socket.on("webrtc-offer", async ({ offer }) => {
       if (!peerConnectionRef.current) return;
       await peerConnectionRef.current.setRemoteDescription(
@@ -110,7 +89,7 @@ const InstructorVideoCall = () => {
 
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-      alert("The other user has ended the call.");
+      toast.info("the other user missed or ended the call")
       navigate(-1);
     });
 
@@ -150,6 +129,13 @@ const InstructorVideoCall = () => {
 
       const offer = await peerConnectionRef.current?.createOffer();
       await peerConnectionRef.current?.setLocalDescription(offer);
+
+      socket.emit("incoming-call", {
+        callerId: socket.id,
+        chatId,
+        receiverId: targetUserId,
+      });
+
       socket.emit("webrtc-offer", { chatId, offer, senderId: socket.id,receiverId:targetUserId });
 
       setCallStarted(true);

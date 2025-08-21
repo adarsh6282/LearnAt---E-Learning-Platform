@@ -1,29 +1,53 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, Star, Users, Clock, BookOpen } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import type { Course, SortOption } from "../../types/user.types";
 import { getCoursesS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
 import Pagination from "../../components/Pagination";
+import userApi from "../../services/userApiService";
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchParams,setSearchParams]=useSearchParams()
+  const [categories,setCategories]=useState<string[]>([])
+  const pageParam=parseInt(searchParams.get("page")||"1")
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const [totalPages,setTotalPages]=useState(1)
   const itemsPerPage = 2;
+  const [total,setTotal]=useState(0)
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [debounce, setDebounce] = useState({
+  search: "",
+  minPrice: 0,
+  maxPrice: 10000,
+});
   const [sortBy, setSortBy] = useState<SortOption>("title");
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(()=>{
+      const timeout=setTimeout(() => {
+        setDebounce({
+          search:debounce.search,
+          minPrice:debounce.minPrice,
+          maxPrice:debounce.maxPrice
+        })
+      }, 300);
+      return ()=> clearTimeout(timeout)
+    },[searchTerm,priceRange])
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await getCoursesS();
-        setCourses(res.data);
+        const res = await getCoursesS(currentPage,itemsPerPage,searchTerm,selectedCategory,priceRange[0],priceRange[1]);
+        setCourses(res.data.courses);
+        setTotalPages(res.data.totalPages)
+        setTotal(res.data.total)
       } catch (err) {
         console.error("Error fetching courses:", err);
       } finally {
@@ -31,58 +55,29 @@ const Courses: React.FC = () => {
       }
     };
     fetchCourses();
-  }, []);
+  }, [currentPage,itemsPerPage,debounce,selectedCategory]);
 
-  const categories = useMemo(() => {
-    const allCategories = courses.map((course) => course.category);
-    const validCategories = allCategories.filter(Boolean);
-    return Array.from(new Set(validCategories));
-  }, [courses]);
-
-  const filteredAndSortedCourses = useMemo(() => {
-    let filtered = courses.filter((course) => {
-      if (course.isActive === false) return false;
-      const matchesSearch = course.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || course.category === selectedCategory;
-      const matchesPrice =
-        course.price >= priceRange[0] && course.price <= priceRange[1];
-      return matchesSearch && matchesCategory && matchesPrice;
-    });
-
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "title":
-          return a.title.localeCompare(b.title);
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "rating":
-          return (b.rating || 0) - (a.rating || 0);
-        default:
-          return 0;
+  useEffect(()=>{
+    const fetchCategories=async()=>{
+      try{
+        const res=await userApi.get<string[]>("/users/category")
+        setCategories(res.data)
+      }catch(err){
+        console.log(err)
       }
-    });
+    }
+    fetchCategories()
+  },[])
 
-    return filtered;
-  }, [courses, searchTerm, selectedCategory, priceRange, sortBy]);
-
-  const paginatedCourses = useMemo(() => {
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    return filteredAndSortedCourses.slice(indexOfFirstItem, indexOfLastItem);
-  }, [filteredAndSortedCourses, currentPage]);
-
-  const totalPages = useMemo(() => {
-    return Math.ceil(filteredAndSortedCourses.length / itemsPerPage);
-  }, [filteredAndSortedCourses]);
-
-  const maxPrice = useMemo(() => {
-    return Math.max(...courses.map((course) => course.price), 10000);
-  }, [courses]);
+  useEffect(() => {
+      const pageParam = parseInt(searchParams.get("page") || "1");
+      setCurrentPage(pageParam);
+    }, [searchParams]);
+  
+    const handlePageChange = (page: number) => {
+      setCurrentPage(page);
+      setSearchParams({ page: page.toString() });
+    };
 
   if (loading) {
     return (
@@ -109,7 +104,7 @@ const Courses: React.FC = () => {
               Explore Courses
             </h1>
             <p className="text-slate-400 text-sm">
-              {filteredAndSortedCourses.length} courses available
+              {total} courses available
             </p>
           </div>
           <button
@@ -147,7 +142,7 @@ const Courses: React.FC = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-900/80 text-slate-100 border border-cyan-400/10 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="">All Categories</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -163,7 +158,7 @@ const Courses: React.FC = () => {
                   <input
                     type="range"
                     min="0"
-                    max={maxPrice}
+                    max={10000}
                     value={priceRange[0]}
                     onChange={(e) =>
                       setPriceRange([parseInt(e.target.value), priceRange[1]])
@@ -173,7 +168,7 @@ const Courses: React.FC = () => {
                   <input
                     type="range"
                     min="0"
-                    max={maxPrice}
+                    max="10000"
                     value={priceRange[1]}
                     onChange={(e) =>
                       setPriceRange([priceRange[0], parseInt(e.target.value)])
@@ -200,8 +195,8 @@ const Courses: React.FC = () => {
               <button
                 onClick={() => {
                   setSearchTerm("");
-                  setSelectedCategory("all");
-                  setPriceRange([0, maxPrice]);
+                  setSelectedCategory("");
+                  setPriceRange([0, 10000]);
                   setSortBy("title");
                 }}
                 className="w-full py-2 mt-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white rounded-full font-semibold hover:scale-105 transition-all duration-300"
@@ -212,7 +207,7 @@ const Courses: React.FC = () => {
           </div>
 
           <div className="md:w-2/3">
-            {filteredAndSortedCourses.length === 0 ? (
+            {courses.length === 0 ? (
               <div className="text-center py-12">
                 <BookOpen className="mx-auto h-12 w-12 text-cyan-400" />
                 <h3 className="mt-2 text-lg font-bold text-slate-200">
@@ -224,7 +219,7 @@ const Courses: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {paginatedCourses.map((course) => (
+                {courses.map((course) => (
                   <div
                     key={course._id}
                     className="bg-white/5 backdrop-blur-md rounded-2xl shadow hover:shadow-lg transition-shadow duration-300 flex flex-col md:flex-row border border-cyan-400/10"
@@ -291,7 +286,7 @@ const Courses: React.FC = () => {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={(page) => setCurrentPage(page)}
+                onPageChange={handlePageChange}
               />
             </div>
           </div>

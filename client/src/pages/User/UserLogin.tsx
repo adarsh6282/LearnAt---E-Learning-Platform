@@ -1,39 +1,42 @@
-import { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import type { FormEvent } from 'react';
-import image from "../../assets/learnAt-removebg-preview.png"
+import { useContext, useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import type { FormEvent } from "react";
+import image from "../../assets/learnAt-removebg-preview.png";
 import { errorToast, successToast } from "../../components/Toast";
-import { useNavigate, Link } from 'react-router-dom';
-import { userLoginS } from '../../services/user.services';
-import { USER_ROUTES } from '../../constants/routes.constants';
+import { useNavigate, Link } from "react-router-dom";
+import { userLoginS } from "../../services/user.services";
+import { USER_ROUTES } from "../../constants/routes.constants";
+import { UserContext } from "../../context/UserContext";
 
 export default function UserLogin() {
-  const [email, setEmail] = useState('')
-  const [canSubmit, setCanSubmit] = useState(false)
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)  
-  const usertoken=localStorage.getItem("usersToken")
-  const [errors, setErrors] = useState<{email?: string; password?: string}>({});
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [canSubmit, setCanSubmit] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const usertoken = localStorage.getItem("usersToken");
+  const { getUserProfile } = useContext(UserContext) ?? {};
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (usertoken) navigate('/');
-  }, [usertoken,navigate]);
+    if (usertoken) navigate("/home");
+  }, [usertoken, navigate]);
 
   useEffect(() => {
-    const filled = email.trim() &&
-      password.trim()
+    const filled = email.trim() && password.trim();
 
-    setCanSubmit(Boolean(filled))
-  })
+    setCanSubmit(Boolean(filled));
+  });
 
   const validateForm = () => {
     const newErrors: { email?: string } = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email.trim())) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     setErrors(newErrors);
@@ -41,33 +44,36 @@ export default function UserLogin() {
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setErrors({})
+    e.preventDefault();
+    setErrors({});
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await userLoginS(email, password)
-      setIsLoading(false)
+      const response = await userLoginS(email, password);
+      setIsLoading(false);
       if (response && response.status === 200) {
-        const token = response.data.token
-        const email = response.data.user?.email
-        localStorage.setItem("usersEmail", email)
-        localStorage.setItem("usersToken", token)
-        successToast("User Registered Successfully")
+        const token = response.data.token;
+        const email = response.data.user?.email;
+        localStorage.setItem("usersEmail", email);
+        localStorage.setItem("usersToken", token);
+        if (getUserProfile) {
+          await getUserProfile();
+        }
+        successToast("User Registered Successfully");
         setTimeout(() => {
-          navigate("/")
+          navigate("/home");
         }, 2000);
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message
-      errorToast(msg)
-      setIsLoading(false)
+      const msg = err.response?.data?.message;
+      errorToast(msg);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -77,10 +83,15 @@ export default function UserLogin() {
           <div className="lg:w-1/2 bg-gradient-to-br from-gray-700 via-gray-600 to-gray-800 p-8 flex items-center justify-center">
             <div className="text-center text-gray-100">
               <div className="mb-8 ml-20">
-                <img src={image} alt=""/>
+                <img src={image} alt="" />
               </div>
-              <h3 className="text-3xl font-bold mb-4">Welcome Back to LearnAt!</h3>
-              <p className="text-lg opacity-90">Sign in to access your account and continue your journey with us.</p>
+              <h3 className="text-3xl font-bold mb-4">
+                Welcome Back to LearnAt!
+              </h3>
+              <p className="text-lg opacity-90">
+                Sign in to access your account and continue your journey with
+                us.
+              </p>
             </div>
           </div>
 
@@ -88,13 +99,18 @@ export default function UserLogin() {
           <div className="lg:w-1/2 p-8 lg:p-12 bg-gray-800">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-100">Sign In</h2>
-              <p className="text-gray-300 mt-2">Enter your credentials to access your account</p>
+              <p className="text-gray-300 mt-2">
+                Enter your credentials to access your account
+              </p>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-300"
+                  >
                     Email address
                   </label>
                   <div className="relative">
@@ -108,13 +124,18 @@ export default function UserLogin() {
                       placeholder="you@example.com"
                     />
                     {errors.email && (
-                      <p className="text-sm text-red-400 mt-1">{errors.email}</p>
+                      <p className="text-sm text-red-400 mt-1">
+                        {errors.email}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-300"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -128,7 +149,9 @@ export default function UserLogin() {
                       placeholder="••••••••"
                     />
                     {errors.password && (
-                      <p className="text-sm text-red-400 mt-1">{errors.password}</p>
+                      <p className="text-sm text-red-400 mt-1">
+                        {errors.password}
+                      </p>
                     )}
                     <button
                       type="button"
@@ -143,7 +166,10 @@ export default function UserLogin() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center"></div>
                   <div className="text-sm">
-                    <Link to={USER_ROUTES.FORGOT_PASSWORD} className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                    <Link
+                      to={USER_ROUTES.FORGOT_PASSWORD}
+                      className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                    >
                       Forgot password?
                     </Link>
                   </div>
@@ -151,7 +177,7 @@ export default function UserLogin() {
 
                 <div>
                   <button
-                    type='submit'
+                    type="submit"
                     disabled={!canSubmit || isLoading}
                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
@@ -164,7 +190,10 @@ export default function UserLogin() {
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-400">
                 Don't have an account?{" "}
-                <Link to={USER_ROUTES.REGISTER} className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                <Link
+                  to={USER_ROUTES.REGISTER}
+                  className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
                   Sign up
                 </Link>
               </p>

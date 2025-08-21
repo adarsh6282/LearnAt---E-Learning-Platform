@@ -29,7 +29,7 @@ function generateCertificate(_a) {
             doc.save();
             doc.lineWidth(6);
             doc.strokeColor("#333366");
-            doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).stroke();
+            doc.rect(37, 37, doc.page.width - 60, doc.page.height - 60).stroke();
             doc.restore();
             doc
                 .fontSize(40)

@@ -33,6 +33,8 @@ const AdminComplaint: React.FC = () => {
   );
   const [response, setResponse] = useState("");
   const [status, setStatus] = useState("resolved");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -40,7 +42,7 @@ const AdminComplaint: React.FC = () => {
         const res = await adminApi.get<{
           complaints: Complaint[];
           totalPages: number;
-        }>(`/admin/complaints?page=${currentPage}&limit=${itemsPerPage}`);
+        }>(`/admin/complaints?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}&status=${selectedStatus}`);
         setComplaints(res.data.complaints);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
@@ -49,7 +51,7 @@ const AdminComplaint: React.FC = () => {
       }
     };
     fetchReports();
-  }, [currentPage,itemsPerPage]);
+  }, [currentPage, itemsPerPage,searchTerm,selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -89,6 +91,28 @@ const AdminComplaint: React.FC = () => {
           <p className="text-slate-600">
             Manage and respond to user complaints and reports
           </p>
+        </div>
+
+        <div className="flex flex-wrap gap-4 mb-6">
+
+          <input
+            type="text"
+            placeholder="Search complaints..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-2 w-64"
+          />
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-2"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="resolved">Resolved</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
 
         {complaints.length === 0 ? (

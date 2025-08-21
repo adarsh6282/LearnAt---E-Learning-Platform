@@ -55,42 +55,61 @@ class OrderRepository {
             return !!order;
         });
     }
-    getEnrollmentsByInstructor(instructorId, page, limit) {
+    getEnrollmentsByInstructor(instructorId, page, limit, search, status) {
         return __awaiter(this, void 0, void 0, function* () {
+            const searchRegex = search ? new RegExp(search, "i") : null;
             const orders = yield orderModel_1.default.find({ status: "paid" })
                 .populate({
                 path: "courseId",
                 match: { instructor: instructorId },
                 select: "_id title",
             })
-                .populate("userId", "_id name email");
-            const filteredOrders = orders.filter((order) => order.courseId !== null);
+                .populate({
+                path: "userId",
+                select: "_id name email",
+            });
+            let filteredOrders = orders.filter((order) => {
+                if (!order.courseId || !order.userId)
+                    return false;
+                const course = order.courseId;
+                const user = order.userId;
+                if (!searchRegex)
+                    return true;
+                return (course.title.match(searchRegex) ||
+                    user.name.match(searchRegex) ||
+                    user.email.match(searchRegex));
+            });
             const total = filteredOrders.length;
             const totalPages = Math.ceil(total / limit);
             const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
-            const enrollments = yield Promise.all(paginatedOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
-                const courseId = order.courseId._id;
-                const userId = order.userId._id;
+            let enrollments = yield Promise.all(paginatedOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
+                const course = order.courseId;
+                const user = order.userId;
                 const progress = yield progressModel_1.default.findOne({
-                    courseId,
-                    userId,
+                    courseId: course._id,
+                    userId: user._id,
                 });
                 return {
                     _id: order._id.toString(),
                     course: {
-                        _id: courseId.toString(),
-                        title: order.courseId.title,
+                        _id: course._id.toString(),
+                        title: course.title,
                     },
                     user: {
-                        _id: userId.toString(),
-                        name: order.userId.name,
-                        email: order.userId.email,
+                        _id: user._id.toString(),
+                        name: user.name,
+                        email: user.email,
                     },
                     isCompleted: (progress === null || progress === void 0 ? void 0 : progress.isCompleted) || false,
                     createdAt: order.createdAt.toISOString(),
                 };
             })));
-            return { enrollments, total, totalPages };
+            if (status) {
+                enrollments = enrollments.filter((enroll) => status === "complete" ? enroll.isCompleted : !enroll.isCompleted);
+            }
+            const finalTotal = enrollments.length;
+            const finalTotalPages = Math.ceil(finalTotal / limit);
+            return { enrollments, total: finalTotal, totalPages: finalTotalPages };
         });
     }
     findExistingOrder(filter) {

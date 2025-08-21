@@ -9,13 +9,23 @@ import PurchasedCourses from "./PurchasedCourses";
 import ChangePassword from "./ChangePassword";
 import Navbar from "../../components/Navbar";
 import UserCertificates from "./Certificates";
+import { useLocation } from "react-router-dom";
 
-const tabs = ["Profile", "Course History", "Our Courses", "Certificates", "Change Password"];
+const tabs = [
+  "Profile",
+  "Course History",
+  "Our Courses",
+  "Certificates",
+  "Change Password",
+];
 
 const UserProfile = () => {
   const context = useContext(UserContext);
   const { user, setUser } = context || {};
-  const [activeTab, setActiveTab] = useState("Profile");
+  const location=useLocation()
+  const [activeTab, setActiveTab] = useState(
+    location.state?.activeTab || "Profile"
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +56,7 @@ const UserProfile = () => {
       formPayload.append("name", formData.name);
       formPayload.append("phone", formData.phone);
       if (selectedFile) formPayload.append("profilePicture", selectedFile);
-      console.log(selectedFile)
+      console.log(selectedFile);
 
       const res = await editProfileS(formPayload);
       setUser?.(res.data);
@@ -64,13 +74,14 @@ const UserProfile = () => {
     setIsEditing(false);
   };
 
-  if (!user) return <div className="text-slate-100 text-center">Loading...</div>;
+  if (!user)
+    return <div className="text-slate-100 text-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 relative overflow-x-hidden">
       <div className="fixed top-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-blob1 pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl animate-blob2 pointer-events-none" />
-      <Navbar/>
+      <Navbar />
       <div className="max-w-4xl mx-auto pt-16 px-6 relative z-10">
         <div className="flex flex-wrap justify-center gap-3 mb-8">
           {tabs.map((tab) => (
@@ -111,13 +122,17 @@ const UserProfile = () => {
                         type="file"
                         id="profile-upload"
                         accept="image/*"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          setSelectedFile(e.target.files?.[0] || null)
+                        }
                         className="hidden"
                       />
                     </>
                   )}
                 </div>
-                <h2 className="mt-4 text-slate-100 text-2xl font-bold">{user.name}</h2>
+                <h2 className="mt-4 text-slate-100 text-2xl font-bold">
+                  {user.name}
+                </h2>
                 <p className="text-slate-400">@{user.username}</p>
                 <ReportForm type="complaint" />
               </div>
@@ -137,7 +152,9 @@ const UserProfile = () => {
                     <Mail className="w-4 h-4 mr-2" />
                     Email
                   </label>
-                  <p className="bg-white/10 px-3 py-2 rounded-md">{user.email}</p>
+                  <p className="bg-white/10 px-3 py-2 rounded-md">
+                    {user.email}
+                  </p>
                 </div>
 
                 <div>
@@ -145,7 +162,9 @@ const UserProfile = () => {
                     <User className="w-4 h-4 mr-2" />
                     Username
                   </label>
-                  <p className="bg-white/10 px-3 py-2 rounded-md">{user.username}</p>
+                  <p className="bg-white/10 px-3 py-2 rounded-md">
+                    {user.username}
+                  </p>
                 </div>
 
                 <div>
@@ -158,7 +177,9 @@ const UserProfile = () => {
                       className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
                     />
                   ) : (
-                    <p className="bg-white/10 px-3 py-2 rounded-md">{user.name}</p>
+                    <p className="bg-white/10 px-3 py-2 rounded-md">
+                      {user.name}
+                    </p>
                   )}
                 </div>
 
@@ -175,7 +196,9 @@ const UserProfile = () => {
                       className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
                     />
                   ) : (
-                    <p className="bg-white/10 px-3 py-2 rounded-md">{user.phone}</p>
+                    <p className="bg-white/10 px-3 py-2 rounded-md">
+                      {user.phone}
+                    </p>
                   )}
                 </div>
               </div>

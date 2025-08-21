@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axiosInstance from "../../services/apiService";
 import adminApi from "../../services/adminApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
@@ -22,7 +21,6 @@ const AdminReviews = () => {
   const pageParam = parseInt(searchParams.get("page") || "1");
   const itemsPerPage = 6;
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const [filteredReview, setFilteredReview] = useState<Review[]>([]);
   const [sortOption, setSortOption] = useState("date");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
@@ -33,16 +31,17 @@ const AdminReviews = () => {
           reviews: Review[];
           total: number;
           totalPages: number;
-        }>(`/admin/reviews?page=${currentPage}&limit=${itemsPerPage}`);
+        }>(
+          `/admin/reviews?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&rating=${ratingFilter}&sort=${sortOption}`
+        );
         setReviews(res.data.reviews);
-        setFilteredReview(res.data.reviews);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
         console.log(err);
       }
     };
     fetchReviews();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, searchQuery, sortOption, ratingFilter]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -55,76 +54,23 @@ const AdminReviews = () => {
   };
 
   const handleHide = async (id: string) => {
-    const token = localStorage.getItem("adminToken");
-    await axiosInstance.put(
-      `/admin/reviews/${id}/hide`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    await adminApi.put(`/admin/reviews/${id}/hide`, {});
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: true } : r))
     );
   };
 
   const handleUnhide = async (id: string) => {
-    const token = localStorage.getItem("adminToken");
-    await axiosInstance.put(
-      `/admin/reviews/${id}/unhide`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    await adminApi.put(`/admin/reviews/${id}/unhide`, {});
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: false } : r))
     );
   };
 
   const handleDelete = async (id: string) => {
-    const token = localStorage.getItem("adminToken");
-    await axiosInstance.delete(`/admin/reviews/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await adminApi.delete(`/admin/reviews/${id}`);
     setReviews((prev) => prev.filter((r) => r._id !== id));
   };
-
-  useEffect(() => {
-    const filtered = reviews.filter(
-      (review) =>
-        review.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        review.course.instructor.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        review.text.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (ratingFilter !== null) {
-      filtered.filter((r) => r.rating == ratingFilter);
-    }
-
-    switch (sortOption) {
-      case "oldest":
-        filtered.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        break;
-      case "ratingHigh":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case "ratingLow":
-        filtered.sort((a, b) => a.rating - b.rating);
-        break;
-      default:
-        filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-    }
-    setFilteredReview(filtered);
-  }, [searchQuery, reviews, sortOption, ratingFilter]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">
@@ -198,7 +144,7 @@ const AdminReviews = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredReview.map((r) => (
+              {reviews.map((r) => (
                 <tr key={r._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {r.course.title}
@@ -280,7 +226,7 @@ const AdminReviews = () => {
           </div>
         )}
       </div>
-      {reviews.length && itemsPerPage && (
+      {reviews.length > 0 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

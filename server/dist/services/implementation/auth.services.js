@@ -53,8 +53,9 @@ const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
 const crypto_1 = __importDefault(require("crypto"));
+const socket_1 = require("../../socket/socket");
 class AuthService {
-    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService) {
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService, _categoryRepository) {
         this._userRepository = _userRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -67,6 +68,7 @@ class AuthService {
         this._notificationRepository = _notificationRepository;
         this._certificateRepository = _certificateRepository;
         this._certificateService = _certificateService;
+        this._categoryRepository = _categoryRepository;
     }
     registerUser(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -206,9 +208,14 @@ class AuthService {
             return user;
         });
     }
-    getCoursesService() {
+    getCoursesService(page, limit, search, category, minPrice, maxPrice) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findCourses();
+            return yield this._courseRepository.findCourses(page, limit, search, category, minPrice, maxPrice);
+        });
+    }
+    getCategory() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this._categoryRepository.getCategory();
         });
     }
     findCourseByIdService(courseId, userId) {
@@ -301,6 +308,13 @@ class AuthService {
                 receiverModel: "Instructor",
                 message: `Your course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${instructorAmount.toFixed(2)} has been credited to your wallet.`,
             });
+            (0, socket_1.sendNotificationToUser)(course.instructor.id.toString(), "you have new notification");
+            yield this._notificationRepository.createNotification({
+                receiverId: user === null || user === void 0 ? void 0 : user.id.toString(),
+                receiverModel: "User",
+                message: `Your Purchased course "${course.title}" of rupees ${course.price}`,
+            });
+            (0, socket_1.sendNotificationToUser)(user === null || user === void 0 ? void 0 : user.id.toString(), "you have new notification");
             const admin = yield this._adminRepository.findOneAdmin();
             if (admin) {
                 yield this._notificationRepository.createNotification({
@@ -308,6 +322,7 @@ class AuthService {
                     receiverModel: "Admin",
                     message: `The course "${course.title}" was purchased by ${user === null || user === void 0 ? void 0 : user.name}. ₹${adminCommission.toFixed(2)} credited to the Admin wallet.`,
                 });
+                (0, socket_1.sendNotificationToUser)(admin.id.toString(), "you have new notification");
             }
             return { success: true };
         });

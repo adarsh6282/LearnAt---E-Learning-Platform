@@ -17,14 +17,16 @@ const AdminCategory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const itemsPerPage = 5;
+  const itemsPerPage = 1;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm,setSearchTerm]=useState("")
+  const [selectedStatus,setSelectedStatus]=useState("")
   const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     fetchCategories();
-  }, [currentPage,itemsPerPage]);
+  }, [currentPage,itemsPerPage,searchTerm,selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -54,7 +56,7 @@ const AdminCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const all = await getAllCategoriesS(currentPage,itemsPerPage);
+      const all = await getAllCategoriesS(currentPage,itemsPerPage,searchTerm,selectedStatus);
       setCategories(all.category);
       setTotalPages(all.totalPages)
     } catch (err: any) {
@@ -97,14 +99,33 @@ const AdminCategory = () => {
             Category Management
           </h2>
 
-          <div className="mb-6 flex justify-end">
-            <button
+          <div className="flex flex-wrap gap-4 mb-6">
+
+          <input
+            type="text"
+            placeholder="Search complaints..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-2 w-64"
+          />
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border border-slate-300 rounded-md px-3 py-2"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+
+          <button
               onClick={() => setShowModal(true)}
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
             >
               + Add Category
             </button>
-          </div>
+        </div>
         </div>
 
         <div className="flex-1 px-6 pb-6 flex flex-col">
