@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useParams } from "react-router-dom";
 import userApi from "../services/userApiService";
 import { FiArrowLeft } from "react-icons/fi";
+import { socket } from "../services/socket.service";
 
 interface ChatPartner {
   chatId: string;
@@ -69,6 +70,38 @@ const ChatList = () => {
 
     fetchChats();
   }, [authUser?._id]);
+
+  useEffect(() => {
+    const handleUpdate = (update: {
+      chatId: string;
+      lastMessage: string;
+      lastMessageContent: string;
+    }) => {
+      setChats((prev) => {
+        const updated = prev.map((chat) =>
+          chat.chatId === update.chatId
+            ? {
+                ...chat,
+                lastMessage: update.lastMessage,
+                lastMessageContent: update.lastMessageContent,
+              }
+            : chat
+        );
+
+        return updated.sort(
+          (a, b) =>
+            new Date(b.lastMessage).getTime() -
+            new Date(a.lastMessage).getTime()
+        );
+      });
+    };
+
+    socket.on("updateChatList", handleUpdate);
+
+    return () => {
+      socket.off("updateChatList", handleUpdate);
+    };
+  }, []);
 
   const fetchInstructors = async () => {
     try {

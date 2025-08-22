@@ -45,10 +45,23 @@ export const initSocket = (server: HTTPServer): void => {
           receiverId = chat?.user.toString();
         }
 
-        console.log(receiverId);
-
         if (receiverId) {
           io.to(receiverId.toString()).emit("receiveMessage", saved);
+        }
+
+        const chatListUpdate = {
+          chatId: chat?._id,
+          lastMessage: chat?.lastMessage,
+          lastMessageContent: chat?.lastMessageContent,
+        };
+
+        io.to(message.senderId.toString()).emit(
+          "updateChatList",
+          chatListUpdate
+        );
+        
+        if (receiverId) {
+          io.to(receiverId.toString()).emit("updateChatList", chatListUpdate);
         }
       } catch (error) {
         console.error("Socket Error Saving Message:", error);
@@ -67,8 +80,8 @@ export const initSocket = (server: HTTPServer): void => {
         receiverId,
       });
 
-      console.log("chatId",chatId)
-      console.log("receiver",receiverId)
+      console.log("chatId", chatId);
+      console.log("receiver", receiverId);
 
       socket.to(chatId).emit("webrtc-offer", { offer, senderId });
     });

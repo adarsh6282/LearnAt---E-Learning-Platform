@@ -51,9 +51,17 @@ const initSocket = (server) => {
                 else {
                     receiverId = chat === null || chat === void 0 ? void 0 : chat.user.toString();
                 }
-                console.log(receiverId);
                 if (receiverId) {
                     io.to(receiverId.toString()).emit("receiveMessage", saved);
+                }
+                const chatListUpdate = {
+                    chatId: chat === null || chat === void 0 ? void 0 : chat._id,
+                    lastMessage: chat === null || chat === void 0 ? void 0 : chat.lastMessage,
+                    lastMessageContent: chat === null || chat === void 0 ? void 0 : chat.lastMessageContent,
+                };
+                io.to(message.senderId.toString()).emit("updateChatList", chatListUpdate);
+                if (receiverId) {
+                    io.to(receiverId.toString()).emit("updateChatList", chatListUpdate);
                 }
             }
             catch (error) {
