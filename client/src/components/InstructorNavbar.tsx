@@ -54,10 +54,10 @@ const InstructorNavbar = () => {
 
     fetchUnread();
 
-    socket.on("receiveMessage", fetchUnread);
+    socket.on("newMessageForBadge", fetchUnread);
 
     return () => {
-      socket.off("receiveMessage", fetchUnread);
+      socket.off("newMessageForBadge", fetchUnread);
     };
   }, [authUser?._id, authUser?.role]);
 

@@ -46,11 +46,11 @@ export default function Navbar() {
 
     fetchUnread();
 
-    socket.on("receiveMessage", fetchUnread);
+    socket.on("newMessageForBadge", fetchUnread);
 
-    return () => {
-      socket.off("receiveMessage", fetchUnread);
-    };
+  return () => {
+    socket.off("newMessageForBadge", fetchUnread);
+  };
   }, [authUser?._id, authUser?.role]);
 
   const cta =
