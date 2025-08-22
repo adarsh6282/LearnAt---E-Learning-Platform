@@ -3,10 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import instructorApi from "../../services/instructorApiService";
 import { FiArrowLeft } from "react-icons/fi";
+import { socket } from "../../services/socket.service";
 interface ChatPartner {
   chatId: string;
   partnerId: string;
   partnerName: string;
+  lastMessage:string
 }
 
 interface User {
@@ -34,6 +36,7 @@ const InstructorChatList = () => {
           chatId: chat._id,
           partnerId: chat.user._id,
           partnerName: chat.user.name,
+          lastMessage:chat.lastMessage
         }));
         setChats(formattedChats)
       } catch (err) {
@@ -43,6 +46,38 @@ const InstructorChatList = () => {
 
     fetchChats();
   }, [authUser]);
+
+    useEffect(() => {
+      const handleUpdate = (update: {
+        chatId: string;
+        lastMessage: string;
+        lastMessageContent: string;
+      }) => {
+        setChats((prev) => {
+          const updated = prev.map((chat) =>
+            chat.chatId === update.chatId
+              ? {
+                  ...chat,
+                  lastMessage: update.lastMessage,
+                  lastMessageContent: update.lastMessageContent,
+                }
+              : chat
+          );
+  
+          return updated.sort(
+            (a, b) =>
+              new Date(b.lastMessage).getTime() -
+              new Date(a.lastMessage).getTime()
+          );
+        });
+      };
+  
+      socket.on("updateChatList", handleUpdate);
+  
+      return () => {
+        socket.off("updateChatList", handleUpdate);
+      };
+    }, []);
 
   const fetchUsers = async () => {
     try {
