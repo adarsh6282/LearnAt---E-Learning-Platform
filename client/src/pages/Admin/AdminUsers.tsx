@@ -11,8 +11,9 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam=parseInt(searchParams.get("page")||"1")
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 5;
   const [users, setUsers] = useState<User[]>([]);
 
