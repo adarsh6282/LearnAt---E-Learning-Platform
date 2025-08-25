@@ -46,7 +46,9 @@ export const initSocket = (server: HTTPServer): void => {
         }
 
         if (receiverId) {
-          io.to(receiverId.toString()).emit("receiveMessage", saved);
+          io.to(receiverId).emit("newMessageForBadge", {
+            chatId: message.chat,
+          });
         }
 
         const chatListUpdate = {
@@ -59,7 +61,7 @@ export const initSocket = (server: HTTPServer): void => {
           "updateChatList",
           chatListUpdate
         );
-        
+
         if (receiverId) {
           io.to(receiverId.toString()).emit("updateChatList", chatListUpdate);
         }
