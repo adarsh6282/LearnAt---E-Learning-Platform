@@ -52,7 +52,9 @@ const initSocket = (server) => {
                     receiverId = chat === null || chat === void 0 ? void 0 : chat.user.toString();
                 }
                 if (receiverId) {
-                    io.to(receiverId.toString()).emit("receiveMessage", saved);
+                    io.to(receiverId).emit("newMessageForBadge", {
+                        chatId: message.chat,
+                    });
                 }
                 const chatListUpdate = {
                     chatId: chat === null || chat === void 0 ? void 0 : chat._id,
