@@ -1,12 +1,6 @@
 import { Router } from "express";
-import { MessageController } from "../controllers/implementations/message.controller";
-import { MessageService } from "../services/implementation/message.service";
-import { MessageRepository } from "../repository/implementations/message.repository";
 import upload from "../utils/multer";
-
-const messageRepository=new MessageRepository()
-const messageService=new MessageService(messageRepository)
-const messageController=new MessageController(messageService)
+import { messageController } from "../dependencyHandlers/message.dependencyhandler";
 
 const router=Router()
 

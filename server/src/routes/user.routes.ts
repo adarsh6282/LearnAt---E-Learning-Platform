@@ -1,56 +1,8 @@
 import { Router } from "express";
-import { Authcontroller } from "../controllers/implementations/auth.controller";
-import { AuthRepository } from "../repository/implementations/auth.repository";
-import { OtpRepository } from "../repository/implementations/otp.repository";
-import { AuthService } from "../services/implementation/auth.services";
 import passport from "../config/passport.config";
-import { AdminRepository } from "../repository/implementations/admin.repository";
-import { InstructorAuth } from "../repository/implementations/instructorAuth.repository";
-import { CourseRepository } from "../repository/implementations/course.repository";
 import upload from "../utils/multer";
-import { OrderRepository } from "../repository/implementations/order.repository";
 import authRole from "../middlewares/authRole";
-import { ProgressRepository } from "../repository/implementations/progress.repository";
-import { WalletRepository } from "../repository/implementations/wallet.repository";
-import { ComplaintRepository } from "../repository/implementations/complaint.repository";
-import { NotificationRepository } from "../repository/implementations/notification.repository";
-import { CertificateRepository } from "../repository/implementations/certificate.repository";
-import { CertificateService } from "../services/implementation/certificate.service";
-import { CategoryRepository } from "../repository/implementations/category.repository";
-import { MessageService } from "../services/implementation/message.service";
-import { MessageRepository } from "../repository/implementations/message.repository";
-
-const authRepository = new AuthRepository();
-const instructorRepository = new InstructorAuth();
-const otpRepository = new OtpRepository();
-const adminRepository = new AdminRepository();
-const courseRepository = new CourseRepository();
-const orderRepository = new OrderRepository();
-const progressRepository = new ProgressRepository();
-const walletRepository = new WalletRepository();
-const complaintRepository = new ComplaintRepository();
-const notificationRepository = new NotificationRepository();
-const certificateRepository=new CertificateRepository()
-const categoryRepository=new CategoryRepository()
-const messageRepository=new MessageRepository()
-const messageService=new MessageService(messageRepository)
-const certificateService=new CertificateService(certificateRepository)
-const authService = new AuthService(
-  authRepository,
-  otpRepository,
-  adminRepository,
-  instructorRepository,
-  courseRepository,
-  orderRepository,
-  progressRepository,
-  walletRepository,
-  complaintRepository,
-  notificationRepository,
-  certificateRepository,
-  certificateService,
-  categoryRepository
-);
-const authController = new Authcontroller(authService,messageService);
+import { authController } from "../dependencyHandlers/user.dependencyhandler";
 
 const router = Router();
 
