@@ -1,38 +1,6 @@
 import { Router } from "express";
-import { AdminController } from "../controllers/implementations/admin.controller";
-import { AdminService } from "../services/implementation/admin.sevices";
-import { AdminRepository } from "../repository/implementations/admin.repository";
-import { InstructorAuth } from "../repository/implementations/instructorAuth.repository";
-import { AuthRepository } from "../repository/implementations/auth.repository";
-import { CategoryRepository } from "../repository/implementations/category.repository";
-import { CourseRepository } from "../repository/implementations/course.repository";
 import authRole from "../middlewares/authRole";
-import { ReviewRepository } from "../repository/implementations/review.repository";
-import { WalletRepository } from "../repository/implementations/wallet.repository";
-import { ComplaintRepository } from "../repository/implementations/complaint.repository";
-import { NotificationRepository } from "../repository/implementations/notification.repository";
-
-const adminRepository = new AdminRepository();
-const instructorRepository = new InstructorAuth();
-const categoryRepository = new CategoryRepository();
-const userRepository = new AuthRepository();
-const courseRepository = new CourseRepository();
-const reviewRepository = new ReviewRepository();
-const walletRepository = new WalletRepository();
-const complaintRepository = new ComplaintRepository();
-const notificationRepository = new NotificationRepository();
-const adminService = new AdminService(
-  adminRepository,
-  instructorRepository,
-  userRepository,
-  categoryRepository,
-  courseRepository,
-  reviewRepository,
-  walletRepository,
-  complaintRepository,
-  notificationRepository
-);
-const adminController = new AdminController(adminService);
+import { adminController } from "../dependencyHandlers/admin.dependencyhandler";
 
 const router = Router();
 

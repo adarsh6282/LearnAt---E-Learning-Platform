@@ -1,13 +1,7 @@
 import { Router } from "express";
-import { CourseController } from "../controllers/implementations/course.controller";
-import { CourseRepository } from "../repository/implementations/course.repository";
-import { CourseService } from "../services/implementation/course.services";
 import multer from "multer";
 import authRole from "../middlewares/authRole";
-
-const courseRepository = new CourseRepository();
-const courseService = new CourseService(courseRepository);
-const courseController = new CourseController(courseService);
+import { courseController } from "../dependencyHandlers/course.dependencyhandler";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });

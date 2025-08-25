@@ -4,14 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const review_controller_1 = require("../controllers/implementations/review.controller");
-const review_service_1 = require("../services/implementation/review.service");
-const review_repository_1 = require("../repository/implementations/review.repository");
 const authRole_1 = __importDefault(require("../middlewares/authRole"));
-const reviewRepository = new review_repository_1.ReviewRepository();
-const reviewService = new review_service_1.ReviewService(reviewRepository);
-const reviewController = new review_controller_1.ReviewController(reviewService);
+const review_dependencyhandler_1 = require("../dependencyHandlers/review.dependencyhandler");
 const router = (0, express_1.Router)();
-router.post("/courses/:courseId", (0, authRole_1.default)(["user"]), reviewController.submitReview.bind(reviewController));
-router.get("/courses/:courseId", (0, authRole_1.default)(["user"]), reviewController.getCourseReviews.bind(reviewController));
+router.post("/courses/:courseId", (0, authRole_1.default)(["user"]), review_dependencyhandler_1.reviewController.submitReview.bind(review_dependencyhandler_1.reviewController));
+router.get("/courses/:courseId", (0, authRole_1.default)(["user"]), review_dependencyhandler_1.reviewController.getCourseReviews.bind(review_dependencyhandler_1.reviewController));
 exports.default = router;
