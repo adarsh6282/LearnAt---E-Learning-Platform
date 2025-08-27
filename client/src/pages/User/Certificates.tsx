@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { errorToast } from "../../components/Toast";
 import { useAuth } from "../../hooks/useAuth";
-import userApi from "../../services/userApiService";
-import Pagination from "../../components/Pagination";
-import { useSearchParams } from "react-router-dom";
+import { getCertificatesS } from "../../services/user.services";
 
 interface Certificate {
   _id: string;
@@ -17,23 +15,8 @@ interface Certificate {
 const UserCertificates = () => {
   const { authUser } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const pageParam = parseInt(searchParams.get("page") || "1");
-  const [currentPage, setCurrentPage] = useState(pageParam);
-  const itemsPerPage = 3;
-  const [totalPages, setTotalPages] = useState<number>(1);
 
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const pageParam = parseInt(searchParams.get("page") || "1");
-    setCurrentPage(pageParam);
-  }, [searchParams]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    setSearchParams({ page: page.toString() });
-  };
 
   useEffect(() => {
     if (!authUser) return;
@@ -41,9 +24,7 @@ const UserCertificates = () => {
     const fetchCertificates = async () => {
       setLoading(true);
       try {
-        const res = await userApi.get<Certificate[]>(
-          `/users/certificates/${authUser._id}`
-        );
+        const res = await getCertificatesS(authUser._id!)
         setCertificates(res.data);
       } catch (err: any) {
         errorToast(err.message || "Something went wrong");

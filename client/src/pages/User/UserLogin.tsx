@@ -79,7 +79,6 @@ export default function UserLogin() {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
         <div className="flex flex-col lg:flex-row">
-          {/* Left side - Image */}
           <div className="lg:w-1/2 bg-gradient-to-br from-gray-700 via-gray-600 to-gray-800 p-8 flex items-center justify-center">
             <div className="text-center text-gray-100">
               <div className="mb-8 ml-20">
@@ -95,7 +94,6 @@ export default function UserLogin() {
             </div>
           </div>
 
-          {/* Right side - Form */}
           <div className="lg:w-1/2 p-8 lg:p-12 bg-gray-800">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-100">Sign In</h2>

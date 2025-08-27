@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { errorToast, successToast } from "../components/Toast";
 import { Link, useSearchParams } from "react-router-dom";
 import Pagination from "./Pagination";
+import { getComplaintsS } from "../services/admin.services";
 
 interface Complaint {
   _id: string;
@@ -39,10 +40,7 @@ const AdminComplaint: React.FC = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await adminApi.get<{
-          complaints: Complaint[];
-          totalPages: number;
-        }>(`/admin/complaints?page=${currentPage}&limit=${itemsPerPage}&search=${searchTerm}&status=${selectedStatus}`);
+        const res = await getComplaintsS(currentPage,itemsPerPage,searchTerm,selectedStatus)
         setComplaints(res.data.complaints);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
@@ -51,7 +49,7 @@ const AdminComplaint: React.FC = () => {
       }
     };
     fetchReports();
-  }, [currentPage, itemsPerPage,searchTerm,selectedStatus]);
+  }, [currentPage, itemsPerPage, searchTerm, selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -94,7 +92,6 @@ const AdminComplaint: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-4 mb-6">
-
           <input
             type="text"
             placeholder="Search complaints..."

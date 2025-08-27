@@ -9,6 +9,32 @@ import type { IOrder, VerifyResponse } from "../types/order.types";
 import type { Review } from "../types/review.types";
 import userApi from "./userApiService";
 
+interface Certificate {
+  _id: string;
+  user: string;
+  course: string;
+  courseTitle: string;
+  certificateUrl: string;
+  issuedDate: string;
+}
+
+interface Orders {
+  _id: string;
+  course: Course;
+  purchasedAt: string;
+  amount: number;
+  status: string;
+}
+
+interface PurchasedCourse {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  purchasedAt: string;
+  thumbnail: string;
+}
+
 export const userRegisterS = async (formData: { email: string }) => {
   return await userApi.post("/users/register", {
     email: formData.email,
@@ -27,7 +53,12 @@ export const getCoursesS = async (
   minPrice: number,
   maxPrice: number
 ) => {
-  return await userApi.get<{courses:Course[],total:number,totalPages:number,categories:string[]}>(
+  return await userApi.get<{
+    courses: Course[];
+    total: number;
+    totalPages: number;
+    categories: string[];
+  }>(
     `/users/courses?page=${page}&limit=${limit}&search=${search}&category=${category}&minPrice=${minPrice}&maxPrice=${maxPrice}`
   );
 };
@@ -81,4 +112,61 @@ export const editProfileS = async (formPayload: FormData) => {
       "Content-Type": "multipart/form-data",
     },
   });
+};
+
+export const giveComplaintS = async (
+  type: string,
+  subject: string,
+  message: string,
+  targetId?: string
+) => {
+  return await userApi.post("/users/complaints", {
+    type,
+    subject,
+    message,
+    targetId,
+  });
+};
+
+export const getCertificatesS = async (userId: string) => {
+  return await userApi.get<Certificate[]>(`/users/certificates/${userId}`);
+};
+
+export const changePasswordS = async (formData: {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}) => {
+  return await userApi.post("/users/change-password", formData);
+};
+
+export const purchaseHistoryS = async (page: number, limit: number) => {
+  return await userApi.get<{
+    purchases: Orders[];
+    total: number;
+    totalPages: number;
+  }>(`/users/purchase-history?page=${page}&limit=${limit}`);
+};
+
+export const getProgressS = async (courseId: string) => {
+  return await userApi.get<{ watchedLectures: string[] }>(
+    `/users/course-view/progress/${courseId}`
+  );
+};
+
+export const markLectureWatchedS = async (
+  courseId: string,
+  lectureId: string
+) => {
+  return await userApi.post(`/users/course-view/progress/${courseId}`, {
+    lectureId,
+  });
+};
+
+export const getPurchasedCoursesS = async (page: number, limit: number) => {
+  return await userApi.get<{
+    purchasedCourses: PurchasedCourse[];
+    total: number;
+    totalPages: number;
+  }>(`/users/purchased-courses?page=${page}&limit=${limit}`);
 };

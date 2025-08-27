@@ -1,6 +1,6 @@
 import { useState } from "react";
-import userApi from "../services/userApiService";
 import { successToast } from "./Toast";
+import { giveComplaintS } from "../services/user.services";
 
 const ReportForm = ({
   type,
@@ -22,12 +22,7 @@ const ReportForm = ({
 
   const handleSubmit = async () => {
     try {
-      await userApi.post("/users/complaints", {
-        type,
-        subject: form.subject,
-        message: form.message,
-        targetId,
-      });
+      await giveComplaintS(type,form.subject,form.message,targetId)
       successToast("Report Submitted");
       setIsOpen(false);
       setForm({ subject, message: "" });

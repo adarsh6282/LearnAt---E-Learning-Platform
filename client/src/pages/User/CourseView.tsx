@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getSpecificCourseS } from "../../services/user.services";
+import { getProgressS, getSpecificCourseS, markLectureWatchedS } from "../../services/user.services";
 import type { CourseViewType, Lecture } from "../../types/user.types";
 import { BookOpen, CheckCircle } from "lucide-react";
-import userApi from "../../services/userApiService";
 import ReportForm from "../../components/ReportForm";
 import Navbar from "../../components/Navbar";
 
@@ -25,9 +24,7 @@ const CoursePage = () => {
         setSelectedLesson(courseData.lectures[0]);
       }
 
-      const progressRes = await userApi.get<{ watchedLectures: string[] }>(
-        `/users/course-view/progress/${courseId}`
-      );
+      const progressRes = await getProgressS(courseId)
       setWatchedLectures(progressRes.data.watchedLectures);
     };
 
@@ -46,9 +43,7 @@ const CoursePage = () => {
       !watchedLectures.includes(selectedLesson._id)
     ) {
       try {
-        await userApi.post(`/users/course-view/progress/${courseId}`, {
-          lectureId: selectedLesson._id,
-        });
+        await markLectureWatchedS(courseId,selectedLesson._id)
         setWatchedLectures((prev) => [...prev, selectedLesson._id]);
       } catch (err: any) {
         console.log(err);

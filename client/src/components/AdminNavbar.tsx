@@ -12,18 +12,22 @@ import {
 } from "lucide-react";
 import { MdReport } from "react-icons/md";
 import { ADMIN_ROUTES } from "../constants/routes.constants";
-import adminApi from "../services/adminApiService";
 import { useContext } from "react";
 import { NotificationContext } from "../context/NotificationContext";
+import { adminLogoutS } from "../services/admin.services";
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
-  const{unreadCount}=useContext(NotificationContext)
+  const notificationContext=useContext(NotificationContext)
+  if(!notificationContext){
+    return
+  }
+  const {unreadCount}=notificationContext
   const location = useLocation();
 
   const handleLogout = async () => {
     try {
-      await adminApi.post("/admin/logout", {}, { withCredentials: true });
+      await adminLogoutS();
       localStorage.removeItem("adminEmail");
       localStorage.removeItem("adminToken");
       navigate(ADMIN_ROUTES.LOGIN);

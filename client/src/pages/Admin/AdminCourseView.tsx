@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, BookOpen } from "lucide-react";
 import { errorToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
-import adminApi from "../../services/adminApiService";
+import { AdminCourseViewS } from "../../services/admin.services";
 
 const AdminCourseView: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -16,9 +16,7 @@ const AdminCourseView: React.FC = () => {
     const fetchCourse = async () => {
       if (!courseId) return;
       try {
-        const res = await adminApi.get<CourseViewType>(
-          `/admin/courses/${courseId}`
-        );
+        const res = await AdminCourseViewS(courseId)
         setCourse(res.data);
       } catch (err) {
         console.error(err);

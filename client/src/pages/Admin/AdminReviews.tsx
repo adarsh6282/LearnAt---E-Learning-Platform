@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import adminApi from "../../services/adminApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import { deleteReviewS, getReviewForAdminS, hideReviewS, unHideReviewS } from "../../services/admin.services";
 
 interface Review {
   _id: string;
@@ -27,15 +27,17 @@ const AdminReviews = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await adminApi.get<{
-          reviews: Review[];
-          total: number;
-          totalPages: number;
-        }>(
-          `/admin/reviews?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&rating=${ratingFilter}&sort=${sortOption}`
-        );
-        setReviews(res.data.reviews);
-        setTotalPages(res.data.totalPages);
+        if (ratingFilter !== null) {
+          const res = await getReviewForAdminS(
+            currentPage,
+            itemsPerPage,
+            searchQuery,
+            ratingFilter,
+            sortOption
+          );
+          setReviews(res.data.reviews);
+          setTotalPages(res.data.totalPages);
+        }
       } catch (err: any) {
         console.log(err);
       }
@@ -54,21 +56,21 @@ const AdminReviews = () => {
   };
 
   const handleHide = async (id: string) => {
-    await adminApi.put(`/admin/reviews/${id}/hide`, {});
+    await hideReviewS(id)
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: true } : r))
     );
   };
 
   const handleUnhide = async (id: string) => {
-    await adminApi.put(`/admin/reviews/${id}/unhide`, {});
+    await unHideReviewS(id)
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: false } : r))
     );
   };
 
   const handleDelete = async (id: string) => {
-    await adminApi.delete(`/admin/reviews/${id}`);
+    await deleteReviewS(id)
     setReviews((prev) => prev.filter((r) => r._id !== id));
   };
 
