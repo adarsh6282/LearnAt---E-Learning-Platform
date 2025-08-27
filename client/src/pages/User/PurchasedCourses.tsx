@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import userApi from "../../services/userApiService";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import { getPurchasedCoursesS } from "../../services/user.services";
 
 interface PurchasedCourse {
   id: string;
@@ -29,9 +29,7 @@ export default function PurchasedCourses() {
   useEffect(() => {
     const fetchPurchasedCourses = async () => {
       try {
-        const res = await userApi.get<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>(
-          `/users/purchased-courses?page=${currentPage}&limit=${itemsPerPage}`
-        );
+        const res = await getPurchasedCoursesS(currentPage,itemsPerPage)
         setCourses(res.data.purchasedCourses);
         console.log(res.data.purchasedCourses)
         setTotalPages(res.data.totalPages)

@@ -22,6 +22,14 @@ interface InstructorRegisterResponse {
   };
 }
 
+interface Enrollment {
+  _id: string;
+  course: { title: string };
+  user: { name: string; email: string };
+  isCompleted: boolean;
+  createdAt: string;
+}
+
 export const getInstructorCoursesS = async (page:number,limit:number,search:string) => {
   return await instructorApi.get<{courses:ICourse[],total:number,totalPages:number}>(`/instructors/courses?page=${page}&limit=${limit}&search=${search}`);
 };
@@ -120,3 +128,7 @@ export const reapplyS = async (formData: FormData) => {
     },
   });
 };
+
+export const getEnrollments=async(page:number,limit:number,search:string,status:string)=>{
+  return await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${page}&limit=${limit}&search=${search}&status=${status}`)
+}

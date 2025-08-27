@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { errorToast, successToast } from '../../components/Toast';
-import userApi from '../../services/userApiService';
+import { changePasswordS } from '../../services/user.services';
 
 export default function ChangePassword() {
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ export default function ChangePassword() {
     }
 
     try {
-      await userApi.post("/users/change-password", formData);
+      await changePasswordS(formData)
       successToast("Password changed successfully");
     } catch (err: any) {
       const msg = err.response?.data?.message;

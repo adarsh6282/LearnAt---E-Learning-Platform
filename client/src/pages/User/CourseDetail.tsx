@@ -207,9 +207,7 @@ const CourseDetail: React.FC = () => {
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Course Header */}
             <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 mb-6">
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {course.category && (
@@ -251,7 +249,6 @@ const CourseDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Course Image or Video */}
             <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow overflow-hidden mb-6">
               {course.lectures && course.lectures.length > 0 ? (
                 <video
@@ -266,7 +263,6 @@ const CourseDetail: React.FC = () => {
               )}
             </div>
 
-            {/* Tabs */}
             <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow">
               <div className="border-b border-cyan-400/10">
                 <nav className="flex space-x-8 px-6 text-slate-100">
@@ -374,7 +370,6 @@ const CourseDetail: React.FC = () => {
                     <h3 className="text-lg text-cyan-300 font-semibold mb-6">
                       Ratings & Reviews
                     </h3>
-                    {/* Review Form - Only for enrolled users */}
                     {isCompleted && (
                       <div className="mb-8 p-4 bg-slate-900/60 rounded-lg">
                         <h4 className="text-slate-100 font-medium mb-4">
@@ -422,7 +417,6 @@ const CourseDetail: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    {/* Reviews List */}
                     <div className="space-y-4">
                       {reviews.length > 0 ? (
                         reviews

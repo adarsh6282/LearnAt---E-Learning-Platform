@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import userApi from "../../services/userApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import { purchaseHistoryS } from "../../services/user.services";
 
 interface Course {
   _id: string;
@@ -32,11 +32,7 @@ export default function PurchaseHistory() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await userApi.get<{
-          purchases: Orders[];
-          total: number;
-          totalPages: number;
-        }>(`/users/purchase-history?page=${currentPage}&limit=${itemsPerPage}`);
+        const res = await purchaseHistoryS(currentPage,itemsPerPage)
         setPurchases(res.data.purchases);
         setTotalPages(res.data.totalPages);
       } catch (err) {
@@ -44,7 +40,7 @@ export default function PurchaseHistory() {
       }
     };
     fetchOrders();
-  }, []);
+  }, [currentPage,itemsPerPage]);
 
   return (
     <div className="min-h-full bg-slate-950 text-slate-100 relative overflow-x-hidden">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import instructorApi from "../../services/instructorApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import { getEnrollments } from "../../services/instructor.services";
 
 interface Enrollment {
   _id: string;
@@ -33,7 +33,7 @@ const Enrollments = () => {
 
   useEffect(() => {
     const fetchEnrollments = async () => {
-      const res=await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&status=${selectedStatus}`)
+      const res=await getEnrollments(currentPage,itemsPerPage,searchQuery,selectedStatus)
         setEnrollments(res.data.enrollments)
         setTotalPages(res.data.totalPages)
     };

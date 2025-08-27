@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import adminApi from "../services/adminApiService";
+import { adminCourseChartS, adminIncomeChartS } from "../services/admin.services";
 
 ChartJS.register(
   CategoryScale,
@@ -39,15 +39,11 @@ const AdminChart = ({ type }: ChartProps) => {
         let data: number[] = [];
 
         if (type === "course") {
-          const res = await adminApi.get<
-            { title: string; enrolledCount: number }[]
-          >("/admin/course-status");
+          const res = await adminCourseChartS()
           labels = res.data.map((item: any) => item.title);
           data = res.data.map((item: any) => item.enrolledCount);
         } else if (type === "income") {
-          const res = await adminApi.get<{ month: string; revenue: number }[]>(
-            "/admin/income-status"
-          );
+          const res = await adminIncomeChartS()
           labels = res.data.map((item: any) => item.month);
           data = res.data.map((item: any) => Number(item.revenue));
         }
