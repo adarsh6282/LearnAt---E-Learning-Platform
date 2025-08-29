@@ -54,7 +54,7 @@ Built with the **MERN stack (MongoDB, Express.js, React.js, Node.js)**, Learn At
 
 ## Tech Stack
 
-- **Frontend:** React.js, Redux (optional), Bootstrap, Tailwind CSS
+- **Frontend:** React.js, Tailwind CSS
 - **Backend:** Node.js, Express.js, Passport.js (Google OAuth)
 - **Database:** MongoDB with Mongoose
 - **Authentication:** JWT, Google OAuth 2.0
