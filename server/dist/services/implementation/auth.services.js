@@ -54,6 +54,7 @@ const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.con
 const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"));
 const crypto_1 = __importDefault(require("crypto"));
 const socket_1 = require("../../socket/socket");
+const user_mapper_1 = require("../../Mappers/user.mapper");
 class AuthService {
     constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService, _categoryRepository) {
         this._userRepository = _userRepository;
@@ -188,7 +189,7 @@ class AuthService {
             if (!user) {
                 throw new Error("User not exist");
             }
-            return user;
+            return (0, user_mapper_1.toUserDTO)(user);
         });
     }
     updateProfileService(email_1, _a) {
@@ -205,7 +206,7 @@ class AuthService {
             const user = yield this._userRepository.updateUserByEmail(email, updateFields);
             if (!user)
                 throw new Error("User not found");
-            return user;
+            return (0, user_mapper_1.toUserDTO)(user);
         });
     }
     getCoursesService(page, limit, search, category, minPrice, maxPrice) {

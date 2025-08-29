@@ -51,6 +51,7 @@ const otpGenerator_1 = __importStar(require("../../utils/otpGenerator"));
 const sendMail_1 = require("../../utils/sendMail");
 const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
+const instructor_mapper_1 = require("../../Mappers/instructor.mapper");
 class InstructorAuthSerivce {
     constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
@@ -199,7 +200,7 @@ class InstructorAuthSerivce {
             if (!instructor) {
                 throw new Error("Inbstructor not exist");
             }
-            return instructor;
+            return (0, instructor_mapper_1.toInstructorDTO)(instructor);
         });
     }
     updateProfileService(email_1, _a) {
@@ -222,7 +223,7 @@ class InstructorAuthSerivce {
             const instructor = yield this._instructorAuthRepository.updateInstructorByEmail(email, updateFields);
             if (!instructor)
                 throw new Error("Instructor not found");
-            return instructor;
+            return (0, instructor_mapper_1.toInstructorDTO)(instructor);
         });
     }
     getCoursesByInstructor(instructorId, page, limit, search) {

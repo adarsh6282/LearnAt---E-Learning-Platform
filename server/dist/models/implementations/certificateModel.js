@@ -45,9 +45,6 @@ const certificateSchema = new mongoose_1.Schema({
         ref: "Course",
         required: true
     },
-    certificateId: {
-        type: String
-    },
     certificateUrl: {
         type: String,
         required: true

@@ -23,7 +23,7 @@ export class AuthRepository extends BaseRepository<IUser> implements IAuthReposi
   }
 
   async findForProfile(email: string): Promise<IUser | null> {
-    const user = await this.model.findOne({ email }).select("-password");
+    const user = await this.model.findOne({ email });
     return user;
   }
 

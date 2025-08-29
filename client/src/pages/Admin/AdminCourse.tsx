@@ -14,6 +14,7 @@ const AdminCourse: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounce, setDebounce] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
@@ -21,23 +22,30 @@ const AdminCourse: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-  const pageParam = parseInt(searchParams.get("page") || "1");
-  const search = searchParams.get("search") || "";
-  setCurrentPage(pageParam);
-  setSearchQuery(search);
-}, [searchParams]);
+    const timeout = setTimeout(() => {
+      setDebounce(searchQuery);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    const search = searchParams.get("search") || "";
+    setCurrentPage(pageParam);
+    setSearchQuery(search);
+  }, [searchParams]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setSearchParams({ page: page.toString(),search: searchQuery.trim(), });
+    setSearchParams({ page: page.toString(), search: searchQuery.trim() });
   };
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await getCoursesS(currentPage,itemsPerPage,searchQuery);
+      const res = await getCoursesS(currentPage, itemsPerPage, debounce);
       setCourses(res.data.course);
-      setTotalPages(res.data.totalPage)
+      setTotalPages(res.data.totalPage);
     } catch (err: any) {
       console.error("Failed to fetch courses:", err);
       errorToast(err.response?.data?.message);
@@ -68,7 +76,7 @@ const AdminCourse: React.FC = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [currentPage,itemsPerPage,searchQuery]);
+  }, [currentPage, itemsPerPage, debounce]);
 
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">

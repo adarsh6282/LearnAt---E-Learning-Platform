@@ -96,6 +96,7 @@ export class AdminController implements IAdminController {
         limit,
         search
       );
+      console.log(users)
       res
         .status(httpStatus.OK)
         .json({ users, total, totalPages, currentPage: page });

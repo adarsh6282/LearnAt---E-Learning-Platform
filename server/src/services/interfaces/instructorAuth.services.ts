@@ -1,3 +1,4 @@
+import { InstructorDTO } from "../../DTO/instructor.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
@@ -21,7 +22,7 @@ export interface IInstructorAuthService{
     verifyForgotOtp(data:{email:string,otp:string}):Promise<boolean>,
     handleResetPassword(data:{email:string,newPassword:string,confirmPassword:string}):Promise<boolean>,
     handleResendOtp(email:string):Promise<void>,
-    getProfileService(email:string):Promise<IInstructor|null>
+    getProfileService(email:string):Promise<InstructorDTO>
     getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:IReview[],total:number,totalPages:number}>
     updateProfileService(
       email: string,
@@ -33,7 +34,7 @@ export interface IInstructorAuthService{
         education,
         profilePicture,
       }: { name?: string; phone?: string; profilePicture?: Express.Multer.File ;title?:string;yearsOfExperience?:number,education?:string}
-    ): Promise<IInstructor | null>
+    ): Promise<InstructorDTO>
     getCoursesByInstructor(instructorId:string,page:number,limit:number,search:string):Promise<{courses:ICourse[],total:number,totalPages:number}>
     getCategory():Promise<ICategory[]|null>
     getCourseById(courseId:string):Promise<ICourse|null>

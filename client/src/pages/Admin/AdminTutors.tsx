@@ -11,6 +11,7 @@ const AdminTutors = () => {
   const [loading, setLoading] = useState(true);
   const [blockingTutorId, setBlockingTutorId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounce,setDebounce]=useState("")
   const [searchParams, setSearchParams] = useSearchParams();
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
@@ -19,10 +20,17 @@ const AdminTutors = () => {
   const navigate = useNavigate();
   const [tutors, setTutors] = useState<Tutor[]>([]);
 
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchQuery)
+    }, 300);
+    return ()=>clearTimeout(timeout)
+  },[searchQuery])
+
   useEffect(() => {
     const fetchTutors = async () => {
       try {
-        const res = await getTutorsS(currentPage, itemsPerPage, searchQuery);
+        const res = await getTutorsS(currentPage, itemsPerPage, debounce);
         setTutors(res.tutors);
         setTotalPages(res.totalPages);
       } catch (err: any) {
@@ -34,7 +42,7 @@ const AdminTutors = () => {
       }
     };
     fetchTutors();
-  }, [currentPage, itemsPerPage, searchQuery]);
+  }, [currentPage, itemsPerPage, debounce]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");

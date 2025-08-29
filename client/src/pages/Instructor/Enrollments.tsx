@@ -18,8 +18,16 @@ const Enrollments = () => {
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 7;
   const [searchQuery,setSearchQuery]=useState("")
+  const [debounce,setDebounce]=useState("")
   const [selectedStatus,setSelectedStatus]=useState("")
   const [totalPages, setTotalPages] = useState<number>(1);
+
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchQuery)
+    }, 300);
+    return ()=>clearTimeout(timeout)
+  },[searchQuery])
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -33,12 +41,12 @@ const Enrollments = () => {
 
   useEffect(() => {
     const fetchEnrollments = async () => {
-      const res=await getEnrollments(currentPage,itemsPerPage,searchQuery,selectedStatus)
+      const res=await getEnrollments(currentPage,itemsPerPage,debounce,selectedStatus)
         setEnrollments(res.data.enrollments)
         setTotalPages(res.data.totalPages)
     };
     fetchEnrollments();
-  }, [currentPage,itemsPerPage,searchQuery,selectedStatus]);
+  }, [currentPage,itemsPerPage,debounce,selectedStatus]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">

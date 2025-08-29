@@ -21,7 +21,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (usertoken) navigate('/');
+    if (usertoken) navigate('/home');
     if(instructortoken) navigate('/instructors/dashboard')
   }, [usertoken, instructortoken, navigate]);
 

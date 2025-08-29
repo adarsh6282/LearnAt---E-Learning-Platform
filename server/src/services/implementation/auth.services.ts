@@ -32,6 +32,8 @@ import { ICertificateReopsitory } from "../../repository/interfaces/certificate.
 import { ICertificateService } from "../interfaces/certificate.interface";
 import { ICategoryRepository } from "../../repository/interfaces/category.interface";
 import { sendNotificationToUser } from "../../socket/socket";
+import { UserDTO } from "../../DTO/user.dto";
+import { toUserDTO } from "../../Mappers/user.mapper";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -205,13 +207,13 @@ export class AuthService implements IAuthService {
     await sendMail(email, otp);
   }
 
-  async getProfileByEmail(email: string): Promise<IUser | null> {
+  async getProfileByEmail(email: string): Promise<UserDTO> {
     const user = await this._userRepository.findForProfile(email);
     if (!user) {
       throw new Error("User not exist");
     }
 
-    return user;
+    return toUserDTO(user);
   }
 
   async updateProfileService(
@@ -221,7 +223,7 @@ export class AuthService implements IAuthService {
       phone,
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
-  ): Promise<IUser | null> {
+  ): Promise<UserDTO> {
     const updateFields: any = { name, phone };
 
     if (profilePicture?.path) {
@@ -241,7 +243,7 @@ export class AuthService implements IAuthService {
 
     if (!user) throw new Error("User not found");
 
-    return user;
+    return toUserDTO(user)
   }
 
   async getCoursesService(

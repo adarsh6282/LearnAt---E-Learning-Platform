@@ -14,10 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CertificateRepository = void 0;
 const certificateModel_1 = __importDefault(require("../../models/implementations/certificateModel"));
+const mongoose_1 = __importDefault(require("mongoose"));
 class CertificateRepository {
     createCertificate(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield certificateModel_1.default.create(data);
+            const cert = yield certificateModel_1.default.create({
+                user: new mongoose_1.default.Types.ObjectId(data.user),
+                course: new mongoose_1.default.Types.ObjectId(data.course),
+                certificateUrl: data.certificateUrl,
+                issuedDate: new Date(),
+            });
+            console.log("Certificate saved:", cert);
+            return cert;
         });
     }
     getCertificates(userId) {
@@ -29,7 +37,7 @@ class CertificateRepository {
                 course: cert.course.toString(),
                 courseTitle: cert.course.title,
                 certificateUrl: cert.certificateUrl,
-                issuedDate: cert.issuedDate
+                issuedDate: cert.issuedDate,
             }));
         });
     }

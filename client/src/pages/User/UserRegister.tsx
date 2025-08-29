@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import image from "../../assets/learnAt-removebg-preview.png"
+import image from "../../assets/learnAt-removebg-preview.png";
 import { errorToast, successToast } from "../../components/Toast";
 import { FcGoogle } from "react-icons/fc";
 import { userRegisterS } from "../../services/user.services";
@@ -18,7 +18,7 @@ interface FormData {
 
 const UserRegister: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const usertoken=localStorage.getItem("usersToken")
+  const usertoken = localStorage.getItem("usersToken");
   const [formData, setFormData] = useState<FormData>({
     name: "",
     username: "",
@@ -33,7 +33,7 @@ const UserRegister: React.FC = () => {
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
   useEffect(() => {
-    if (usertoken) navigate('/home');
+    if (usertoken) navigate("/home");
   }, [usertoken, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +101,7 @@ const UserRegister: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await userRegisterS(formData)
+      const response = await userRegisterS(formData);
       setIsLoading(false);
       if (response && response.status === 200) {
         successToast((response.data as { message: string }).message);
@@ -125,20 +125,29 @@ const UserRegister: React.FC = () => {
                 <img src={image} alt="register logo" />
               </div>
               <h3 className="text-3xl font-bold mb-4">Join Us Today!</h3>
-              <p className="text-lg opacity-90">Create your account and become part of our amazing community.</p>
+              <p className="text-lg opacity-90">
+                Create your account and become part of our amazing community.
+              </p>
             </div>
           </div>
 
           <div className="lg:w-3/5 p-6 lg:p-8 bg-gray-800">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-100">Create Account</h2>
-              <p className="text-gray-300 mt-2">Fill in your details to get started</p>
+              <h2 className="text-2xl font-bold text-gray-100">
+                Create Account
+              </h2>
+              <p className="text-gray-300 mt-2">
+                Fill in your details to get started
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
                     Full Name
                   </label>
                   <input
@@ -156,7 +165,10 @@ const UserRegister: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
                     Username
                   </label>
                   <input
@@ -169,13 +181,18 @@ const UserRegister: React.FC = () => {
                     placeholder="johndoe123"
                   />
                   {errors.username && (
-                    <p className="text-sm text-red-400 mt-1">{errors.username}</p>
+                    <p className="text-sm text-red-400 mt-1">
+                      {errors.username}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
                   Email Address
                 </label>
                 <input
@@ -193,7 +210,10 @@ const UserRegister: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
                   Phone Number
                 </label>
                 <input
@@ -212,7 +232,10 @@ const UserRegister: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
                     Password
                   </label>
                   <input
@@ -225,12 +248,17 @@ const UserRegister: React.FC = () => {
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                   {errors.password && (
-                    <p className="text-sm text-red-400 mt-1">{errors.password}</p>
+                    <p className="text-sm text-red-400 mt-1">
+                      {errors.password}
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
                     Confirm Password
                   </label>
                   <input
@@ -260,7 +288,7 @@ const UserRegister: React.FC = () => {
                 </button>
 
                 <Link
-                  to={import.meta.env.GOOGLE_AUTH_URL}
+                  to={import.meta.env.VITE_GOOGLE_AUTH_URL}
                   className="w-full bg-gray-700 border border-gray-600 text-gray-100 py-3 px-4 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 focus:ring-offset-gray-800 transition-colors flex items-center justify-center gap-2"
                 >
                   <FcGoogle size={20} />
