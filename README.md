@@ -121,3 +121,6 @@ ii.Start the frontend Server
 cd client
 npm run dev
 ```
+
+npm run dev
+```
