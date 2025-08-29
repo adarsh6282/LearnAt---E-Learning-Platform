@@ -77,11 +77,47 @@ Built with the **MERN stack (MongoDB, Express.js, React.js, Node.js)**, Learn At
 ```bash
 git clone https://github.com/adarsh6282/LearnAt---E-Learning-Platform
 cd LearnAt
-**\`\`\`**
+```
 
 
 2. **Install backend Dependencies**
 
-cd backend
+```bash
+cd server
 npm install
+```
 
+
+3.**Install frontend Dependencies**
+
+```bash
+cd client
+npm install
+```
+
+
+4.**Configure Environment Variables**
+
+```bash
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+FRONTEND_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+JWT_SECRET=your_jwt_secret
+```
+
+
+5.**Start the Application**
+
+i.Start backend server
+```bash
+cd server
+npm start
+```
+
+ii.Start the frontend Server
+```bash
+cd client
+npm run dev
+```
