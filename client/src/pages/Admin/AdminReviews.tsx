@@ -16,6 +16,7 @@ interface Review {
 const AdminReviews = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounce,setDebounce]=useState("")
   const [searchParams, setSearchParams] = useSearchParams();
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
@@ -23,6 +24,13 @@ const AdminReviews = () => {
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const [sortOption, setSortOption] = useState("date");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchQuery)
+    }, 300);
+    return ()=>clearTimeout(timeout)
+  },[searchQuery])
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -43,7 +51,7 @@ const AdminReviews = () => {
       }
     };
     fetchReviews();
-  }, [currentPage, itemsPerPage, searchQuery, sortOption, ratingFilter]);
+  }, [currentPage, itemsPerPage, debounce, sortOption, ratingFilter]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");

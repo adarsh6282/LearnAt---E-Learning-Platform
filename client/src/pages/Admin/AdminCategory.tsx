@@ -17,16 +17,25 @@ const AdminCategory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const itemsPerPage = 1;
+  const itemsPerPage = 4;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm,setSearchTerm]=useState("")
+  const [debounce,setDebounce]=useState("")
   const [selectedStatus,setSelectedStatus]=useState("")
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchTerm)
+    }, 300);
+
+    return ()=>clearTimeout(timeout)
+  },[searchTerm])
+
   useEffect(() => {
     fetchCategories();
-  }, [currentPage,itemsPerPage,searchTerm,selectedStatus]);
+  }, [currentPage,itemsPerPage,debounce,selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -56,7 +65,7 @@ const AdminCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const all = await getAllCategoriesS(currentPage,itemsPerPage,searchTerm,selectedStatus);
+      const all = await getAllCategoriesS(currentPage,itemsPerPage,debounce,selectedStatus);
       setCategories(all.category);
       setTotalPages(all.totalPages)
     } catch (err: any) {

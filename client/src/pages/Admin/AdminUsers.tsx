@@ -10,6 +10,7 @@ const AdminUsers = () => {
   const [blockingUserId, setBlockingUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounce,setDebounce]=useState("")
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam=parseInt(searchParams.get("page")||"1")
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -17,10 +18,17 @@ const AdminUsers = () => {
   const itemsPerPage = 5;
   const [users, setUsers] = useState<User[]>([]);
 
+  useEffect(()=>{
+    const timeout=setTimeout(() => {
+      setDebounce(searchQuery)
+    }, 300);
+    return ()=>clearTimeout(timeout)
+  },[searchQuery])
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await getUsersS(currentPage, itemsPerPage, searchQuery);
+        const res = await getUsersS(currentPage, itemsPerPage, debounce);
         setUsers(res.data.users);
         setTotalPages(res.data.totalPages);
       } catch (err: any) {
@@ -32,7 +40,7 @@ const AdminUsers = () => {
       }
     };
     fetchUsers();
-  }, [currentPage, itemsPerPage, searchQuery]);
+  }, [currentPage, itemsPerPage, debounce]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");

@@ -1,4 +1,3 @@
-import { IAdmin } from "../../models/interfaces/admin.interface";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
@@ -10,10 +9,11 @@ import { DashboardData } from "../../types/admin.types";
 import { ITransaction } from "../../models/interfaces/wallet.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
+import { UserDTO } from "../../DTO/user.dto";
 
 export interface IAdminService {
   login(email: string, password: string): Promise<AdminLoginResponse>;
-  blockUnblockUser(email: string, blocked: boolean): Promise<IUser | null>;
+  blockUnblockUser(email: string, blocked: boolean): Promise<UserDTO>;
   blockUnblockTutor(
     email: string,
     blocked: boolean
@@ -23,7 +23,7 @@ export interface IAdminService {
     page: number,
     limit: number,
     search: string
-  ): Promise<{ users: IUser[]; total: number; totalPages: number }>;
+  ): Promise<{ users: UserDTO[]; total: number; totalPages: number }>;
   getAllTutors(
     page: number,
     limit: number,

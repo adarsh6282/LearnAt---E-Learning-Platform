@@ -23,6 +23,8 @@ import { IEnrollment } from "../../types/enrollment.types";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
+import { InstructorDTO } from "../../DTO/instructor.dto";
+import { toInstructorDTO } from "../../Mappers/instructor.mapper";
 
 interface Dashboard {
   totalUsers: number;
@@ -237,7 +239,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     await sendMail(email, otp);
   }
 
-  async getProfileService(email: string): Promise<IInstructor | null> {
+  async getProfileService(email: string): Promise<InstructorDTO> {
     const instructor = await this._instructorAuthRepository.findForProfile(
       email
     );
@@ -245,7 +247,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       throw new Error("Inbstructor not exist");
     }
 
-    return instructor;
+    return toInstructorDTO(instructor);
   }
 
   async updateProfileService(
@@ -265,7 +267,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       yearsOfExperience?: number;
       education?: string;
     }
-  ): Promise<IInstructor | null> {
+  ): Promise<InstructorDTO> {
     const updateFields: any = {
       name,
       phone,
@@ -292,7 +294,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
 
     if (!instructor) throw new Error("Instructor not found");
 
-    return instructor;
+    return toInstructorDTO(instructor);
   }
 
   async getCoursesByInstructor(

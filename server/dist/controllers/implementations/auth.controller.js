@@ -300,6 +300,7 @@ class Authcontroller {
                     .json({ watchedLectures: progress === null || progress === void 0 ? void 0 : progress.watchedLectures });
             }
             catch (err) {
+                console.log(err);
                 res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: err.message });
             }
         });

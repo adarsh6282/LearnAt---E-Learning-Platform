@@ -22,7 +22,8 @@ import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
-import { stringify } from "querystring";
+import { UserDTO } from "../../DTO/user.dto";
+import { toUserDTO, toUserDTOList } from "../../Mappers/user.mapper";
 
 export class AdminService implements IAdminService {
   constructor(
@@ -61,14 +62,19 @@ export class AdminService implements IAdminService {
   async blockUnblockUser(
     email: string,
     blocked: boolean
-  ): Promise<IUser | null> {
+  ): Promise<UserDTO> {
     const user = await this._userRepository.findByEmail(email);
     console.log(user);
     if (!user) {
       throw new Error("User not found");
     }
 
-    return await this._adminRepository.updateUserBlockStatus(email, blocked);
+    const updateUser= await this._adminRepository.updateUserBlockStatus(email, blocked);
+
+    if (!updateUser) {
+    throw new Error("Failed to update user");
+  }
+    return toUserDTO(updateUser)
   }
 
   async blockUnblockTutor(
@@ -88,9 +94,9 @@ export class AdminService implements IAdminService {
     page: number,
     limit: number,
     search: string
-  ): Promise<{ users: IUser[]; total: number; totalPages: number }> {
-    const users = await this._adminRepository.getAllUsers(page, limit, search);
-    return users;
+  ): Promise<{ users: UserDTO[]; total: number; totalPages: number }> {
+    const {users,total,totalPages} = await this._adminRepository.getAllUsers(page, limit, search);
+    return {users:toUserDTOList(users),total,totalPages};
   }
 
   async getAllTutors(
@@ -128,11 +134,7 @@ export class AdminService implements IAdminService {
   }
 
   async getDashboardData(): Promise<DashboardData> {
-    const totalUsers = await this._adminRepository.getTotalUsers();
-    const totalTutors = await this._adminRepository.getTotalTutors();
-    const totalCourses = await this._adminRepository.getTotalCourses();
-
-    return { totalUsers, totalTutors, totalCourses };
+    return await this._adminRepository.getDashboardData()
   }
 
   async addCategory(name: string): Promise<ICategory | null> {

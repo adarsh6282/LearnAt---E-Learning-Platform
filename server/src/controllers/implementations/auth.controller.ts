@@ -4,7 +4,6 @@ import { IAuthService } from "../../services/interfaces/auth.services";
 import { httpStatus } from "../../constants/statusCodes";
 import { generateToken } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
-import Instructor from "../../models/implementations/instructorModel";
 import { IMessageService } from "../../services/interfaces/message.interface";
 
 export class Authcontroller implements IAuthController {
@@ -288,6 +287,7 @@ export class Authcontroller implements IAuthController {
         .status(httpStatus.OK)
         .json({ watchedLectures: progress?.watchedLectures });
     } catch (err: any) {
+      console.log(err)
       res.status(httpStatus.BAD_REQUEST).json({ message: err.message });
     }
   }

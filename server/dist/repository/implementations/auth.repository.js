@@ -39,7 +39,7 @@ class AuthRepository extends base_repository_1.BaseRepository {
     }
     findForProfile(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.model.findOne({ email }).select("-password");
+            const user = yield this.model.findOne({ email });
             return user;
         });
     }

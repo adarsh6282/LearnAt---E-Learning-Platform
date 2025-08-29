@@ -1,3 +1,4 @@
+import { UserDTO } from "../../DTO/user.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
@@ -24,7 +25,7 @@ export interface IAuthService {
     confirmPassword: string;
   }): Promise<boolean>;
   handleResendOtp(email: string): Promise<void>;
-  getProfileByEmail(email: string): Promise<IUser | null>;
+  getProfileByEmail(email: string): Promise<UserDTO>;
   updateProfileService(
     email: string,
     {
@@ -32,7 +33,7 @@ export interface IAuthService {
       phone,
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
-  ): Promise<IUser | null>;
+  ): Promise<UserDTO>;
   getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:ICourse[],total:number,totalPages:number}>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: ICourse; isEnrolled: boolean }>;
   createOrder(courseId: string, userId: string): Promise<IOrder | null>;

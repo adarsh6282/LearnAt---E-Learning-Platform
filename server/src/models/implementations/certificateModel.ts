@@ -1,4 +1,4 @@
-import mongoose,{mongo, Schema} from "mongoose";
+import mongoose,{Schema} from "mongoose";
 import { ICertificate } from "../interfaces/certificate.interface";
 
 const certificateSchema:Schema<ICertificate>=new Schema({
@@ -11,9 +11,6 @@ const certificateSchema:Schema<ICertificate>=new Schema({
         type:Schema.Types.ObjectId,
         ref:"Course",
         required:true
-    },
-    certificateId:{
-        type:String
     },
     certificateUrl:{
         type:String,

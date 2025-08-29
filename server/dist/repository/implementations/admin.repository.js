@@ -69,19 +69,14 @@ class AdminRepository extends base_repository_1.BaseRepository {
             return yield instructorModel_1.default.findOneAndUpdate({ email }, { isBlocked: blocked }, { new: true });
         });
     }
-    getTotalUsers() {
+    getDashboardData() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield userModel_1.default.countDocuments({});
-        });
-    }
-    getTotalTutors() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield instructorModel_1.default.countDocuments({});
-        });
-    }
-    getTotalCourses() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield courseModel_1.default.countDocuments({});
+            const [totalUsers, totalTutors, totalCourses] = yield Promise.all([
+                userModel_1.default.countDocuments(),
+                instructorModel_1.default.countDocuments(),
+                courseModel_1.default.countDocuments()
+            ]);
+            return { totalUsers, totalTutors, totalCourses };
         });
     }
 }

@@ -8,6 +8,7 @@ import Admin from "../../models/implementations/adminModel";
 import { BaseRepository } from "../base.repository";
 import Course from "../../models/implementations/courseModel";
 import { FilterQuery } from "mongoose";
+import { DashboardData } from "../../types/admin.types";
 
 export class AdminRepository
   extends BaseRepository<IAdmin>
@@ -82,15 +83,13 @@ export class AdminRepository
     );
   }
 
-  async getTotalUsers(): Promise<number> {
-    return await User.countDocuments({});
-  }
+  async getDashboardData(): Promise<DashboardData> {
+    const [totalUsers,totalTutors,totalCourses]=await Promise.all([
+      User.countDocuments(),
+      Instructor.countDocuments(),
+      Course.countDocuments()
+    ])
 
-  async getTotalTutors(): Promise<number> {
-    return await Instructor.countDocuments({});
-  }
-
-  async getTotalCourses(): Promise<number> {
-    return await Course.countDocuments({})
+    return {totalUsers,totalTutors,totalCourses}
   }
 }

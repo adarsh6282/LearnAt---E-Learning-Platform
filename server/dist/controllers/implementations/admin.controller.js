@@ -101,6 +101,7 @@ class AdminController {
                 const limit = parseInt(req.query.limit) || 10;
                 const search = req.query.search || "";
                 const { users, total, totalPages } = yield this._adminService.getAllUsers(page, limit, search);
+                console.log(users);
                 res
                     .status(statusCodes_1.httpStatus.OK)
                     .json({ users, total, totalPages, currentPage: page });

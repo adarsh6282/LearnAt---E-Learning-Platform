@@ -1,6 +1,7 @@
 import { IAdmin } from "../../models/interfaces/admin.interface";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
+import { DashboardData } from "../../types/admin.types";
 
 export interface IAdminRepository {
   findAdminByEmail(email: string): Promise<IAdmin | null>;
@@ -20,7 +21,5 @@ export interface IAdminRepository {
     limit: number,
     filter: any
   ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }>;
-  getTotalUsers(): Promise<number>;
-  getTotalTutors(): Promise<number>;
-  getTotalCourses(): Promise<number>;
+  getDashboardData():Promise<DashboardData>
 }

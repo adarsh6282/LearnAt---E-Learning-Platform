@@ -1,7 +1,8 @@
 import axios from "axios";
+import { instructorRefreshTokenS } from "./instructor.services";
 
 const instructorApi = axios.create({
-  baseURL: "http://localhost:3000/api/",
+  baseURL: import.meta.env.VITE_BASE_LINK,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -29,10 +30,7 @@ instructorApi.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const res = await instructorApi.post<{ token: string }>(
-          "/instructors/refresh-token",
-          {}
-        );
+        const res = await instructorRefreshTokenS()
 
         const newToken = res.data.token;
         localStorage.setItem("instructorsToken", newToken);

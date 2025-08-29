@@ -30,8 +30,16 @@ interface Enrollment {
   createdAt: string;
 }
 
-export const getInstructorCoursesS = async (page:number,limit:number,search:string) => {
-  return await instructorApi.get<{courses:ICourse[],total:number,totalPages:number}>(`/instructors/courses?page=${page}&limit=${limit}&search=${search}`);
+export const getInstructorCoursesS = async (
+  page: number,
+  limit: number,
+  search: string
+) => {
+  return await instructorApi.get<{
+    courses: ICourse[];
+    total: number;
+    totalPages: number;
+  }>(`/instructors/courses?page=${page}&limit=${limit}&search=${search}`);
 };
 
 export const getProfileS = async () => {
@@ -58,10 +66,7 @@ export const createCourseS = async (formData: FormData) => {
   });
 };
 
-export const editCourseS = async (
-  courseId: string,
-  formData: FormData,
-) => {
+export const editCourseS = async (courseId: string, formData: FormData) => {
   return await instructorApi.put(
     `/instructors/courses/editcourse/${courseId}`,
     formData,
@@ -118,7 +123,8 @@ export const instructorRegisterS = async (formPayload: {
 
 export const getCourseById = async (courseId: string) => {
   return await instructorApi.get<CourseData>(
-    `/instructors/courses/${courseId}`);
+    `/instructors/courses/${courseId}`
+  );
 };
 
 export const reapplyS = async (formData: FormData) => {
@@ -129,6 +135,23 @@ export const reapplyS = async (formData: FormData) => {
   });
 };
 
-export const getEnrollments=async(page:number,limit:number,search:string,status:string)=>{
-  return await instructorApi.get<{enrollments:Enrollment[],totalPages:number}>(`/instructors/enrollments?page=${page}&limit=${limit}&search=${search}&status=${status}`)
-}
+export const getEnrollments = async (
+  page: number,
+  limit: number,
+  search: string,
+  status: string
+) => {
+  return await instructorApi.get<{
+    enrollments: Enrollment[];
+    totalPages: number;
+  }>(
+    `/instructors/enrollments?page=${page}&limit=${limit}&search=${search}&status=${status}`
+  );
+};
+
+export const instructorRefreshTokenS = async () => {
+  return await instructorApi.post<{ token: string }>(
+    "/instructors/refresh-token",
+    {}
+  );
+};

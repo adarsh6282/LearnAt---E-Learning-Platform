@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = void 0;
 const jwt_1 = require("../../utils/jwt");
 const sendMail_1 = require("../../utils/sendMail");
+const user_mapper_1 = require("../../Mappers/user.mapper");
 class AdminService {
     constructor(_adminRepository, _instructorRepository, _userRepository, _categoryRepository, _courseRepository, _reviewRepository, _walletRepository, _complaintRepository, _notificationRepository) {
         this._adminRepository = _adminRepository;
@@ -45,7 +46,11 @@ class AdminService {
             if (!user) {
                 throw new Error("User not found");
             }
-            return yield this._adminRepository.updateUserBlockStatus(email, blocked);
+            const updateUser = yield this._adminRepository.updateUserBlockStatus(email, blocked);
+            if (!updateUser) {
+                throw new Error("Failed to update user");
+            }
+            return (0, user_mapper_1.toUserDTO)(updateUser);
         });
     }
     blockUnblockTutor(email, blocked) {
@@ -60,8 +65,8 @@ class AdminService {
     }
     getAllUsers(page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            const users = yield this._adminRepository.getAllUsers(page, limit, search);
-            return users;
+            const { users, total, totalPages } = yield this._adminRepository.getAllUsers(page, limit, search);
+            return { users: (0, user_mapper_1.toUserDTOList)(users), total, totalPages };
         });
     }
     getAllTutors(page, limit, filter) {
@@ -89,10 +94,7 @@ class AdminService {
     }
     getDashboardData() {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalUsers = yield this._adminRepository.getTotalUsers();
-            const totalTutors = yield this._adminRepository.getTotalTutors();
-            const totalCourses = yield this._adminRepository.getTotalCourses();
-            return { totalUsers, totalTutors, totalCourses };
+            return yield this._adminRepository.getDashboardData();
         });
     }
     addCategory(name) {
