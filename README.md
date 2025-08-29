@@ -75,5 +75,5 @@ Built with the **MERN stack (MongoDB, Express.js, React.js, Node.js)**, Learn At
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/learn-at.git
-cd learn-at
+git clone https://github.com/adarsh6282/LearnAt---E-Learning-Platform
+cd LearnAt
