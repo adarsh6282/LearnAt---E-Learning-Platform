@@ -1,6 +1,6 @@
-import { Document, Types } from "mongoose";
+import { Types } from "mongoose";
 
-export interface ICourse extends Document {
+export interface CourseDTO {
     _id:string
     title: string;
     description: string;
@@ -10,13 +10,11 @@ export interface ICourse extends Document {
     lectures: ILecture[];
     instructor?: Types.ObjectId;
     thumbnail:string,
-    enrolledStudents:Types.ObjectId[]
 }
 
-export interface ILecture {
+interface ILecture {
     title: string;
     description: string;
     videoUrl: string;
     duration: string;
-    order: number;
 } 

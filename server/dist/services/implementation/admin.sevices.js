@@ -13,6 +13,12 @@ exports.AdminService = void 0;
 const jwt_1 = require("../../utils/jwt");
 const sendMail_1 = require("../../utils/sendMail");
 const user_mapper_1 = require("../../Mappers/user.mapper");
+const instructor_mapper_1 = require("../../Mappers/instructor.mapper");
+const course_mapper_1 = require("../../Mappers/course.mapper");
+const category_mapper_1 = require("../../Mappers/category.mapper");
+const review_mapper_1 = require("../../Mappers/review.mapper");
+const complaint_mapper_1 = require("../../Mappers/complaint.mapper");
+const notification_mapper_1 = require("../../Mappers/notification.mapper");
 class AdminService {
     constructor(_adminRepository, _instructorRepository, _userRepository, _categoryRepository, _courseRepository, _reviewRepository, _walletRepository, _complaintRepository, _notificationRepository) {
         this._adminRepository = _adminRepository;
@@ -60,7 +66,11 @@ class AdminService {
             if (!tutor) {
                 throw new Error("Tutor not found");
             }
-            return yield this._adminRepository.updateTutorBlockStatus(email, blocked);
+            const updateTutor = yield this._adminRepository.updateTutorBlockStatus(email, blocked);
+            if (!updateTutor) {
+                throw new Error("Failed to update tutor");
+            }
+            return (0, instructor_mapper_1.toInstructorDTO)(updateTutor);
         });
     }
     getAllUsers(page, limit, search) {
@@ -71,7 +81,8 @@ class AdminService {
     }
     getAllTutors(page, limit, filter) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._adminRepository.getAllTutors(page, limit, filter);
+            const { tutors, total, totalPages } = yield this._adminRepository.getAllTutors(page, limit, filter);
+            return { tutors: (0, instructor_mapper_1.toInstructorDTOList)(tutors), total, totalPages };
         });
     }
     verifyTutor(email) {
@@ -108,11 +119,11 @@ class AdminService {
     }
     getCategories(page, limit, search, status) {
         return __awaiter(this, void 0, void 0, function* () {
-            const categories = yield this._categoryRepository.getCatgeories(page, limit, search, status);
-            if (!categories) {
+            const { category, total, totalPages } = yield this._categoryRepository.getCatgeories(page, limit, search, status);
+            if (!category) {
                 throw new Error("No categories found");
             }
-            return categories;
+            return { category: (0, category_mapper_1.toCategoryDTOList)(category), total, totalPages };
         });
     }
     deleteCategory(id) {
@@ -135,7 +146,8 @@ class AdminService {
     }
     getCoursesService(page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findAllCourse(page, limit, search);
+            const { course, total, totalPage } = yield this._courseRepository.findAllCourse(page, limit, search);
+            return { course: (0, course_mapper_1.toCourseDTOList)(course), total, totalPage };
         });
     }
     softDeleteCourseS(courseId) {
@@ -150,7 +162,8 @@ class AdminService {
     }
     getAllReviews(page, limit, search, rating, sort) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
+            const { reviews, total, totalPages } = yield this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
+            return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
         });
     }
     hideReview(id) {
@@ -188,7 +201,8 @@ class AdminService {
     }
     getComplaints(page, limit, search, filter) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._complaintRepository.getComplaints(page, limit, search, filter);
+            const { complaints, total, totalPages } = yield this._complaintRepository.getComplaints(page, limit, search, filter);
+            return { complaints: (0, complaint_mapper_1.toComplaintDTOList)(complaints), total, totalPages };
         });
     }
     responseComplaint(id, status, response) {
@@ -216,12 +230,13 @@ class AdminService {
             if (!course) {
                 throw new Error("Course not found");
             }
-            return course;
+            return (0, course_mapper_1.toCourseDTO)(course);
         });
     }
     getNotifications(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._notificationRepository.getAllNotifications(userId);
+            const notification = yield this._notificationRepository.getAllNotifications(userId);
+            return (0, notification_mapper_1.toNotificationDTOList)(notification);
         });
     }
     markAsRead(notificationId) {
@@ -236,7 +251,7 @@ class AdminService {
             if (!tutor) {
                 throw new Error("Tutor not found");
             }
-            return tutor;
+            return (0, instructor_mapper_1.toInstructorDTO)(tutor);
         });
     }
 }

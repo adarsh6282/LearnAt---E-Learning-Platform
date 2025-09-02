@@ -30,7 +30,6 @@ export class ReviewController implements IReviewController{
 
     async getCourseReviews(req: Request, res: Response):Promise<void> {
     const {courseId} = req.params
-    console.log(courseId)
 
     try {
       const reviews = await this._reviewService.getReviewsByCourse(courseId);

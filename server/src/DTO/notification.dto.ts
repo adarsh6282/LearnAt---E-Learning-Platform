@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 
-export interface INotification{
-    _id:Types.ObjectId
+export interface NotificationDTO{
+    _id:string,
     receiverId:Types.ObjectId,
     receiverModel:string,
-    message:string,
+    message:string
     isRead:boolean
 }

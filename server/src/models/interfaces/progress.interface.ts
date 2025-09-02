@@ -1,8 +1,9 @@
 import { Types } from "mongoose";
 
 export interface IProgress {
-  userId: Types.ObjectId;
-  courseId: Types.ObjectId;
+  _id:Types.ObjectId|string
+  userId: Types.ObjectId|string;
+  courseId: Types.ObjectId|string;
   watchedLectures: string[];
   isCompleted:boolean;
   createdAt?: Date;

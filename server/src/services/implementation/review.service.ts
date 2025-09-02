@@ -1,3 +1,5 @@
+import { ReviewDTO } from "../../DTO/review.dto";
+import { toReviewDTO, toReviewDTOList } from "../../Mappers/review.mapper";
 import { IReview } from "../../models/interfaces/review.interface";
 import { IReviewRepository } from "../../repository/interfaces/review.interface";
 import { IReviewService } from "../interfaces/review.interface";
@@ -18,7 +20,8 @@ export class ReviewService implements IReviewService{
         return review
     }
 
-    async getReviewsByCourse(courseId: string):Promise<IReview[]> {
-    return await this._reviewRepository.getCourseReviews(courseId);
+    async getReviewsByCourse(courseId: string):Promise<ReviewDTO[]> {
+    const review = await this._reviewRepository.getCourseReviews(courseId);
+    return toReviewDTOList(review)
   }
 }

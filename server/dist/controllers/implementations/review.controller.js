@@ -40,7 +40,6 @@ class ReviewController {
     getCourseReviews(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { courseId } = req.params;
-            console.log(courseId);
             try {
                 const reviews = yield this._reviewService.getReviewsByCourse(courseId);
                 res.status(statusCodes_1.httpStatus.OK).json({ reviews });
