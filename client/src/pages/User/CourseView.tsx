@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getProgressS, getSpecificCourseS, markLectureWatchedS } from "../../services/user.services";
+import {
+  getProgressS,
+  getSpecificCourseS,
+  markLectureWatchedS,
+} from "../../services/user.services";
 import type { CourseViewType, Lecture } from "../../types/user.types";
 import { BookOpen, CheckCircle } from "lucide-react";
 import ReportForm from "../../components/ReportForm";
@@ -24,8 +28,12 @@ const CoursePage = () => {
         setSelectedLesson(courseData.lectures[0]);
       }
 
-      const progressRes = await getProgressS(courseId)
-      setWatchedLectures(progressRes.data.watchedLectures);
+      const progressRes = await getProgressS(courseId);
+      setWatchedLectures(
+        Array.isArray(progressRes.data.watchedLectures)
+          ? progressRes.data.watchedLectures
+          : []
+      );
     };
 
     fetchCourse();
@@ -43,7 +51,7 @@ const CoursePage = () => {
       !watchedLectures.includes(selectedLesson._id)
     ) {
       try {
-        await markLectureWatchedS(courseId,selectedLesson._id)
+        await markLectureWatchedS(courseId, selectedLesson._id);
         setWatchedLectures((prev) => [...prev, selectedLesson._id]);
       } catch (err: any) {
         console.log(err);
