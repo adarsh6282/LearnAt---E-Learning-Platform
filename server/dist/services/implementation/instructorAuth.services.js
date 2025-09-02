@@ -52,6 +52,9 @@ const sendMail_1 = require("../../utils/sendMail");
 const jwt_1 = require("../../utils/jwt");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 const instructor_mapper_1 = require("../../Mappers/instructor.mapper");
+const course_mapper_1 = require("../../Mappers/course.mapper");
+const review_mapper_1 = require("../../Mappers/review.mapper");
+const notification_mapper_1 = require("../../Mappers/notification.mapper");
 class InstructorAuthSerivce {
     constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
@@ -228,7 +231,8 @@ class InstructorAuthSerivce {
     }
     getCoursesByInstructor(instructorId, page, limit, search) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit, search);
+            const { courses, total, totalPages } = yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit, search);
+            return { courses: (0, course_mapper_1.toCourseDTOList)(courses), total, totalPages };
         });
     }
     getCourseById(courseId) {
@@ -237,7 +241,7 @@ class InstructorAuthSerivce {
             if (!course) {
                 throw new Error("No Course Found");
             }
-            return course;
+            return (0, course_mapper_1.toCourseDTO)(course);
         });
     }
     getCategory() {
@@ -251,7 +255,8 @@ class InstructorAuthSerivce {
     }
     getReviewsByInstructor(instructorId, page, limit, rating) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
+            const { reviews, total, totalPages } = yield this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
+            return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
         });
     }
     getEnrollments(instructorId, page, limit, search, status) {
@@ -286,7 +291,8 @@ class InstructorAuthSerivce {
     }
     getNotifications(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._notificationRepository.getAllNotifications(userId);
+            const notification = yield this._notificationRepository.getAllNotifications(userId);
+            return (0, notification_mapper_1.toNotificationDTOList)(notification);
         });
     }
     markAsRead(notificationId) {

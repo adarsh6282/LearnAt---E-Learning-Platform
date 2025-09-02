@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toInstructorDTO = void 0;
+exports.toInstructorDTOList = exports.toInstructorDTO = void 0;
 const toInstructorDTO = (instructor) => ({
-    _id: instructor.id.toString(),
+    _id: instructor._id.toString(),
     name: instructor.name,
     email: instructor.email,
     username: instructor.username,
@@ -19,3 +19,5 @@ const toInstructorDTO = (instructor) => ({
     isVerified: instructor.isVerified,
 });
 exports.toInstructorDTO = toInstructorDTO;
+const toInstructorDTOList = (instructors) => (instructors.map(exports.toInstructorDTO));
+exports.toInstructorDTOList = toInstructorDTOList;

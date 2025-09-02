@@ -9,7 +9,6 @@ import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
 import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
-import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import razorpay from "../../config/razorpay.config";
@@ -34,6 +33,16 @@ import { ICategoryRepository } from "../../repository/interfaces/category.interf
 import { sendNotificationToUser } from "../../socket/socket";
 import { UserDTO } from "../../DTO/user.dto";
 import { toUserDTO } from "../../Mappers/user.mapper";
+import { InstructorDTO } from "../../DTO/instructor.dto";
+import { toInstructorDTO } from "../../Mappers/instructor.mapper";
+import { CourseDTO } from "../../DTO/course.dto";
+import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
+import { OrderDTO } from "../../DTO/order.dto";
+import { toOrderDTO } from "../../Mappers/order.mapper";
+import { ProgressDTO } from "../../DTO/progress.dto";
+import { toProgressDTO } from "../../Mappers/progress.mapper";
+import { NotificationDTO } from "../../DTO/notification.dto";
+import { toNotificationDTOList } from "../../Mappers/notification.mapper";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -49,7 +58,7 @@ export class AuthService implements IAuthService {
     private _notificationRepository: INotificationRepository,
     private _certificateRepository: ICertificateReopsitory,
     private _certificateService: ICertificateService,
-    private _categoryRepository:ICategoryRepository
+    private _categoryRepository: ICategoryRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -243,7 +252,7 @@ export class AuthService implements IAuthService {
 
     if (!user) throw new Error("User not found");
 
-    return toUserDTO(user)
+    return toUserDTO(user);
   }
 
   async getCoursesService(
@@ -253,18 +262,27 @@ export class AuthService implements IAuthService {
     category: string,
     minPrice: number,
     maxPrice: number
-  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
-    return await this._courseRepository.findCourses(page,limit,search,category,minPrice,maxPrice);
+  ): Promise<{ courses: CourseDTO[]; total: number; totalPages: number }> {
+    const {courses,total,totalPages} = await this._courseRepository.findCourses(
+      page,
+      limit,
+      search,
+      category,
+      minPrice,
+      maxPrice
+    );
+
+    return {courses:toCourseDTOList(courses),total,totalPages}
   }
 
   async getCategory(): Promise<string[] | null> {
-    return await this._categoryRepository.getCategory()
+    return await this._categoryRepository.getCategory();
   }
 
   async findCourseByIdService(
     courseId: string,
     userId: string
-  ): Promise<{ course: ICourse; isEnrolled: boolean }> {
+  ): Promise<{ course: CourseDTO; isEnrolled: boolean }> {
     const course = await this._courseRepository.findCourseById(courseId);
 
     if (!course) {
@@ -276,12 +294,12 @@ export class AuthService implements IAuthService {
       userId
     );
     return {
-      course: course.toObject(),
+      course: toCourseDTO(course),
       isEnrolled,
     };
   }
 
-  async createOrder(courseId: string, userId: string): Promise<IOrder | null> {
+  async createOrder(courseId: string, userId: string): Promise<OrderDTO> {
     const course = await this._courseRepository.findCourseById(courseId);
     if (!course) {
       throw new Error("Course dont't exist");
@@ -316,7 +334,11 @@ export class AuthService implements IAuthService {
       status: "created",
     });
 
-    return order;
+    if(!order){
+      throw new Error("failed to create order")
+    }
+
+    return toOrderDTO(order);
   }
 
   async verifyPayment({
@@ -470,17 +492,20 @@ export class AuthService implements IAuthService {
   async getUserCourseProgress(
     userId: string,
     courseId: string
-  ): Promise<string[]> {
+  ): Promise<ProgressDTO> {
     const progress = await this._progressRepository.findProgress(
       userId,
       courseId
     );
-    return progress?.watchedLectures || [];
+    if(!progress){
+      throw new Error("failed to fetch progress")
+    }
+    return toProgressDTO(progress);
   }
 
   async fetchPurchasedInstructors(
     userId: string
-  ): Promise<IInstructor[] | null> {
+  ): Promise<InstructorDTO[]> {
     const instructorIds = await this._courseRepository.findByPurchasedUser(
       userId
     );
@@ -490,8 +515,9 @@ export class AuthService implements IAuthService {
     return this._instructorRepository.findInstructorsByIds(instructorIds);
   }
 
-  async getNotifications(userId: string): Promise<INotification[]> {
-    return await this._notificationRepository.getAllNotifications(userId);
+  async getNotifications(userId: string): Promise<NotificationDTO[]> {
+    const notification = await this._notificationRepository.getAllNotifications(userId);
+    return toNotificationDTOList(notification)
   }
 
   async markAsRead(notificationId: string): Promise<INotification | null> {
@@ -556,14 +582,13 @@ export class AuthService implements IAuthService {
     await this._userRepository.updatePassword(userId, hashedPassword);
   }
 
-  async getSpecificInstructor(
-    instructorId: string
-  ): Promise<IInstructor | null> {
+  async getSpecificInstructor(instructorId: string): Promise<InstructorDTO> {
     const instructor = await this._instructorRepository.findById(instructorId);
     if (!instructor) {
       throw new Error("No Instructor Found");
     }
-    return instructor;
+
+    return toInstructorDTO(instructor);
   }
 
   async purchasedCourses(

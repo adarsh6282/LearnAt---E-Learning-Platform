@@ -1,6 +1,7 @@
+import { IOrder } from "../models/interfaces/order.interface";
 import { Types } from "mongoose";
 
-export interface IOrder {
+export interface OrderDTO {
   _id?: string;
   courseId: Types.ObjectId | string;
   userId: Types.ObjectId | string;
@@ -9,6 +10,5 @@ export interface IOrder {
   razorpaySignature?: string;
   amount: number;
   status: "created" | "paid" | "failed";
-  currency?:string
-  createdAt?: Date;
+  currency?: string;
 }

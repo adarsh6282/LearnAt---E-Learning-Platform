@@ -2,7 +2,7 @@ import { InstructorDTO } from "../DTO/instructor.dto";
 import { IInstructor } from "../models/interfaces/instructorAuth.interface";
 
 export const toInstructorDTO=(instructor:IInstructor):InstructorDTO=>({
-    _id:instructor.id.toString(),
+    _id:instructor._id.toString(),
     name:instructor.name,
     email:instructor.email,
     username:instructor.username,
@@ -18,3 +18,7 @@ export const toInstructorDTO=(instructor:IInstructor):InstructorDTO=>({
     accountStatus:instructor.accountStatus,
     isVerified:instructor.isVerified,
 })
+
+export const toInstructorDTOList=(instructors:IInstructor[]):InstructorDTO[]=>(
+    instructors.map(toInstructorDTO)
+)

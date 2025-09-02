@@ -55,6 +55,11 @@ const razorpay_config_1 = __importDefault(require("../../config/razorpay.config"
 const crypto_1 = __importDefault(require("crypto"));
 const socket_1 = require("../../socket/socket");
 const user_mapper_1 = require("../../Mappers/user.mapper");
+const instructor_mapper_1 = require("../../Mappers/instructor.mapper");
+const course_mapper_1 = require("../../Mappers/course.mapper");
+const order_mapper_1 = require("../../Mappers/order.mapper");
+const progress_mapper_1 = require("../../Mappers/progress.mapper");
+const notification_mapper_1 = require("../../Mappers/notification.mapper");
 class AuthService {
     constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService, _categoryRepository) {
         this._userRepository = _userRepository;
@@ -211,7 +216,8 @@ class AuthService {
     }
     getCoursesService(page, limit, search, category, minPrice, maxPrice) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.findCourses(page, limit, search, category, minPrice, maxPrice);
+            const { courses, total, totalPages } = yield this._courseRepository.findCourses(page, limit, search, category, minPrice, maxPrice);
+            return { courses: (0, course_mapper_1.toCourseDTOList)(courses), total, totalPages };
         });
     }
     getCategory() {
@@ -227,7 +233,7 @@ class AuthService {
             }
             const isEnrolled = yield this._orderRepsitory.isUserEnrolled(courseId, userId);
             return {
-                course: course.toObject(),
+                course: (0, course_mapper_1.toCourseDTO)(course),
                 isEnrolled,
             };
         });
@@ -261,7 +267,10 @@ class AuthService {
                 razorpayOrderId: razorpayOrder.id,
                 status: "created",
             });
-            return order;
+            if (!order) {
+                throw new Error("failed to create order");
+            }
+            return (0, order_mapper_1.toOrderDTO)(order);
         });
     }
     verifyPayment(_a) {
@@ -355,7 +364,10 @@ class AuthService {
     getUserCourseProgress(userId, courseId) {
         return __awaiter(this, void 0, void 0, function* () {
             const progress = yield this._progressRepository.findProgress(userId, courseId);
-            return (progress === null || progress === void 0 ? void 0 : progress.watchedLectures) || [];
+            if (!progress) {
+                throw new Error("failed to fetch progress");
+            }
+            return (0, progress_mapper_1.toProgressDTO)(progress);
         });
     }
     fetchPurchasedInstructors(userId) {
@@ -368,7 +380,8 @@ class AuthService {
     }
     getNotifications(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this._notificationRepository.getAllNotifications(userId);
+            const notification = yield this._notificationRepository.getAllNotifications(userId);
+            return (0, notification_mapper_1.toNotificationDTOList)(notification);
         });
     }
     markAsRead(notificationId) {
@@ -423,7 +436,7 @@ class AuthService {
             if (!instructor) {
                 throw new Error("No Instructor Found");
             }
-            return instructor;
+            return (0, instructor_mapper_1.toInstructorDTO)(instructor);
         });
     }
     purchasedCourses(userId, page, limit) {

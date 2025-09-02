@@ -24,6 +24,18 @@ import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 import { UserDTO } from "../../DTO/user.dto";
 import { toUserDTO, toUserDTOList } from "../../Mappers/user.mapper";
+import { InstructorDTO } from "../../DTO/instructor.dto";
+import { toInstructorDTO, toInstructorDTOList } from "../../Mappers/instructor.mapper";
+import { CourseDTO } from "../../DTO/course.dto";
+import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
+import { CategoryDTO } from "../../DTO/category.dto";
+import { toCategoryDTOList } from "../../Mappers/category.mapper";
+import { ReviewDTO } from "../../DTO/review.dto";
+import { toReviewDTOList } from "../../Mappers/review.mapper";
+import { ComplaintDTO } from "../../DTO/complaint.dto";
+import { toComplaintDTOList } from "../../Mappers/complaint.mapper";
+import { NotificationDTO } from "../../DTO/notification.dto";
+import { toNotificationDTOList } from "../../Mappers/notification.mapper";
 
 export class AdminService implements IAdminService {
   constructor(
@@ -80,14 +92,18 @@ export class AdminService implements IAdminService {
   async blockUnblockTutor(
     email: string,
     blocked: boolean
-  ): Promise<IInstructor | null> {
+  ): Promise<InstructorDTO> {
     const tutor = await this._instructorRepository.findByEmail(email);
     console.log(tutor);
     if (!tutor) {
       throw new Error("Tutor not found");
     }
 
-    return await this._adminRepository.updateTutorBlockStatus(email, blocked);
+    const updateTutor = await this._adminRepository.updateTutorBlockStatus(email, blocked);
+    if(!updateTutor){
+      throw new Error("Failed to update tutor")
+    }
+    return toInstructorDTO(updateTutor)
   }
 
   async getAllUsers(
@@ -103,8 +119,9 @@ export class AdminService implements IAdminService {
     page: number,
     limit: number,
     filter: any
-  ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }> {
-    return await this._adminRepository.getAllTutors(page, limit, filter);
+  ): Promise<{ tutors: InstructorDTO[]; total: number; totalPages: number }> {
+    const {tutors,total,totalPages} = await this._adminRepository.getAllTutors(page, limit, filter);
+    return {tutors:toInstructorDTOList(tutors),total,totalPages}
   }
 
   async verifyTutor(email: string): Promise<IInstructor | null> {
@@ -152,17 +169,17 @@ export class AdminService implements IAdminService {
     limit: number,
     search: string,
     status: string
-  ): Promise<{ category: ICategory[]; total: number; totalPages: number }> {
-    const categories = await this._categoryRepository.getCatgeories(
+  ): Promise<{ category: CategoryDTO[]; total: number; totalPages: number }> {
+    const {category,total,totalPages} = await this._categoryRepository.getCatgeories(
       page,
       limit,
       search,
       status
     );
-    if (!categories) {
+    if (!category) {
       throw new Error("No categories found");
     }
-    return categories;
+    return {category:toCategoryDTOList(category),total,totalPages}
   }
 
   async deleteCategory(id: string): Promise<ICategory | null> {
@@ -185,8 +202,9 @@ export class AdminService implements IAdminService {
     page: number,
     limit: number,
     search: string
-  ): Promise<{ course: ICourse[]; total: number; totalPage: number }> {
-    return await this._courseRepository.findAllCourse(page, limit, search);
+  ): Promise<{ course: CourseDTO[]; total: number; totalPage: number }> {
+    const {course,total,totalPage} = await this._courseRepository.findAllCourse(page, limit, search);
+    return {course:toCourseDTOList(course),total,totalPage}
   }
 
   async softDeleteCourseS(courseId: string): Promise<ICourse | null> {
@@ -203,14 +221,17 @@ export class AdminService implements IAdminService {
     search: string,
     rating: number|null,
     sort: string
-  ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
-    return await this._reviewRepository.getAllReviews(
+  ): Promise<{ reviews: ReviewDTO[]; total: number; totalPages: number }> {
+    const {reviews,total,totalPages} = await this._reviewRepository.getAllReviews(
       page,
       limit,
       search,
       rating,
       sort
     );
+    
+
+    return {reviews:toReviewDTOList(reviews),total,totalPages}
   }
 
   async hideReview(id: string): Promise<IReview | null> {
@@ -261,13 +282,14 @@ export class AdminService implements IAdminService {
     limit: number,
     search: string,
     filter: string
-  ): Promise<{ complaints: IComplaint[]; total: number; totalPages: number }> {
-    return await this._complaintRepository.getComplaints(
+  ): Promise<{ complaints: ComplaintDTO[]; total: number; totalPages: number }> {
+    const {complaints,total,totalPages} = await this._complaintRepository.getComplaints(
       page,
       limit,
       search,
       filter
     );
+    return {complaints:toComplaintDTOList(complaints),total,totalPages}
   }
 
   async responseComplaint(
@@ -295,18 +317,19 @@ export class AdminService implements IAdminService {
     return await this._walletRepository.getIncomeStats();
   }
 
-  async getSpecificCourseForAdmin(courseId: string): Promise<ICourse | null> {
+  async getSpecificCourseForAdmin(courseId: string): Promise<CourseDTO> {
     const course = await this._courseRepository.findCourseById(courseId);
 
     if (!course) {
       throw new Error("Course not found");
     }
 
-    return course;
+    return toCourseDTO(course);
   }
 
-  async getNotifications(userId: string): Promise<INotification[]> {
-    return await this._notificationRepository.getAllNotifications(userId);
+  async getNotifications(userId: string): Promise<NotificationDTO[]> {
+    const notification = await this._notificationRepository.getAllNotifications(userId);
+    return toNotificationDTOList(notification)
   }
 
   async markAsRead(notificationId: string): Promise<INotification | null> {
@@ -316,13 +339,13 @@ export class AdminService implements IAdminService {
     return notification;
   }
 
-  async getSpecificTutor(id: string): Promise<IInstructor | null> {
+  async getSpecificTutor(id: string): Promise<InstructorDTO> {
     const tutor = await this._instructorRepository.findById(id);
 
     if (!tutor) {
       throw new Error("Tutor not found");
     }
 
-    return tutor;
+    return toInstructorDTO(tutor);
   }
 }

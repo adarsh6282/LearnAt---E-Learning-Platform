@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
-export interface IComplaint{
-    _id:Types.ObjectId|string
+export interface ComplaintDTO{
+    _id:string
     userId:Types.ObjectId|string,
     type:string,
     subject:string,

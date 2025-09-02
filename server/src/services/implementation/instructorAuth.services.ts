@@ -25,6 +25,12 @@ import { INotificationRepository } from "../../repository/interfaces/notificatio
 import { INotification } from "../../models/interfaces/notification.interface";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { toInstructorDTO } from "../../Mappers/instructor.mapper";
+import { CourseDTO } from "../../DTO/course.dto";
+import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
+import { ReviewDTO } from "../../DTO/review.dto";
+import { toReviewDTOList } from "../../Mappers/review.mapper";
+import { NotificationDTO } from "../../DTO/notification.dto";
+import { toNotificationDTOList } from "../../Mappers/notification.mapper";
 
 interface Dashboard {
   totalUsers: number;
@@ -302,21 +308,22 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     page: number,
     limit: number,
     search:string
-  ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
-    return await this._courseRepository.findCoursesByInstructor(
+  ): Promise<{ courses: CourseDTO[]; total: number; totalPages: number }> {
+    const {courses,total,totalPages} = await this._courseRepository.findCoursesByInstructor(
       instructorId,
       page,
       limit,
       search
     );
+    return {courses:toCourseDTOList(courses),total,totalPages}
   }
 
-  async getCourseById(courseId: string): Promise<ICourse | null> {
+  async getCourseById(courseId: string): Promise<CourseDTO> {
     const course = await this._courseRepository.findCourseById(courseId);
     if (!course) {
       throw new Error("No Course Found");
     }
-    return course;
+    return toCourseDTO(course);
   }
 
   async getCategory(): Promise<ICategory[] | null> {
@@ -327,8 +334,9 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return categories;
   }
 
-  async getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:IReview[],total:number,totalPages:number}> {
-    return this._reviewRepository.getReviewsByInstructor(instructorId,page,limit,rating);
+  async getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:ReviewDTO[],total:number,totalPages:number}> {
+    const {reviews,total,totalPages} = await this._reviewRepository.getReviewsByInstructor(instructorId,page,limit,rating);
+    return {reviews:toReviewDTOList(reviews),total,totalPages}
   }
 
   async getEnrollments(instructorId:string,page:number,limit:number,search:string,status:string):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}> {
@@ -374,8 +382,9 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return await this._walletRepository.getIncome(instructorId);
   }
 
-  async getNotifications(userId: string): Promise<INotification[]> {
-    return await this._notificationRepository.getAllNotifications(userId);
+  async getNotifications(userId: string): Promise<NotificationDTO[]> {
+    const notification = await this._notificationRepository.getAllNotifications(userId);
+    return toNotificationDTOList(notification)
   }
 
   async markAsRead(notificationId: string): Promise<INotification | null> {

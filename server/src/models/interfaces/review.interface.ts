@@ -7,6 +7,6 @@ export interface IReview {
   rating: number;
   text: string;
   isHidden:boolean;
-  createdAt?: Date;
+  createdAt: Date;
   updatedAt?: Date;
 }

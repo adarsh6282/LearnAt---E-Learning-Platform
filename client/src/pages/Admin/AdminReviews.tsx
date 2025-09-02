@@ -35,18 +35,16 @@ const AdminReviews = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        if (ratingFilter !== null) {
           const res = await getReviewForAdminS(
             currentPage,
             itemsPerPage,
-            searchQuery,
+            debounce,
             ratingFilter,
             sortOption
           );
           setReviews(res.data.reviews);
           setTotalPages(res.data.totalPages);
-        }
-      } catch (err: any) {
+        } catch (err: any) {
         console.log(err);
       }
     };

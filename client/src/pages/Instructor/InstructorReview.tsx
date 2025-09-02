@@ -33,7 +33,7 @@ const InstructorReview = () => {
     };
 
     fetchReviews();
-  }, [currentPage,itemsPerPage]);
+  }, [currentPage,itemsPerPage,ratingFilter]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -94,9 +94,6 @@ const InstructorReview = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {reviews
-                .filter((r) =>
-                  ratingFilter ? r.rating === ratingFilter : true
-                )
                 .map((r) => (
                   <tr
                     key={r._id}
