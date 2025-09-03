@@ -11,7 +11,7 @@ import {
   Title,
   PointElement,
 } from "chart.js";
-import instructorApi from "../services/instructorApiService";
+import { instructorCourseChart, instructorIncomeChart } from "../services/instructor.services";
 
 ChartJS.register({
   CategoryScale,
@@ -39,15 +39,11 @@ const InstructorChart = ({ type }: ChartProps) => {
         let data: number[] = [];
 
         if (type === "course") {
-          const res = await instructorApi.get<
-            { title: string; enrolledCount: number }[]
-          >("/instructors/course-stats");
+          const res = await instructorCourseChart()
           labels = res.data.map((item: any) => item.title);
           data = res.data.map((item: any) => item.enrolledCount);
         } else if (type === "income") {
-          const res = await instructorApi.get<
-            { month: string; revenue: number }[]
-          >("/instructors/income-stats");
+          const res = await instructorIncomeChart()
           labels = res.data.map((item: any) => item.month);
           data = res.data.map((item: any) => item.revenue);
         }

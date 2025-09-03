@@ -13,10 +13,10 @@ import { BiChat } from "react-icons/bi";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { InstructorContext } from "../context/InstructorContext";
 import { INSTRUCTOR_ROUTES } from "../constants/routes.constants";
-import instructorApi from "../services/instructorApiService";
 import { NotificationContext } from "../context/NotificationContext";
 import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
+import { instructorLogout, unreadCountS } from "../services/instructor.services";
 
 const InstructorNavbar = () => {
   const location = useLocation();
@@ -42,11 +42,8 @@ const InstructorNavbar = () => {
       const userModel = authUser.role === "user" ? "User" : "Instructor";
 
       try {
-        const res = await instructorApi.get<{ count: number; chat: string }[]>(
-          `/instructors/chats/unread-counts?userId=${authUser._id}&userModel=${userModel}`
-        );
-        const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
-        setUnreadCount(totalCount);
+        const count=await unreadCountS(authUser._id,userModel)
+        setUnreadCount(count);
       } catch (err) {
         console.error(err);
       }
@@ -65,11 +62,7 @@ const InstructorNavbar = () => {
 
   const handleLogout = async () => {
     try {
-      await instructorApi.post(
-        "/instructors/logout",
-        {},
-        { withCredentials: true }
-      );
+      await instructorLogout()
       localStorage.removeItem("instructorsToken");
       localStorage.removeItem("instructorsEmail");
       navigate(INSTRUCTOR_ROUTES.LOGIN);

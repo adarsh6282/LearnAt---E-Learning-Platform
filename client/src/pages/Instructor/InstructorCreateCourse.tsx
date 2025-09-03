@@ -200,7 +200,6 @@ const InstructorCreateCourse: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Course Details Section */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -310,7 +309,6 @@ const InstructorCreateCourse: React.FC = () => {
           </div>
         </div>
 
-        {/* Lecture Section */}
         <div className="border-t border-gray-200 pt-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Add Lectures
@@ -398,7 +396,6 @@ const InstructorCreateCourse: React.FC = () => {
             </div>
           </div>
 
-          {/* List of Added Lectures */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">
               Added Lectures ({courseData.lectures.length})
@@ -444,7 +441,6 @@ const InstructorCreateCourse: React.FC = () => {
           </div>
         </div>
 
-        {/* Submit Buttons */}
         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
             onClick={() => navigate(INSTRUCTOR_ROUTES.COURSES)}

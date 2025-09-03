@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useParams } from "react-router-dom";
-import userApi from "../services/userApiService";
 import { FiArrowLeft } from "react-icons/fi";
 import { socket } from "../services/socket.service";
+import { filteredInstructor, getChatList, initiateChat } from "../services/user.services";
 
 interface ChatPartner {
   chatId: string;
@@ -31,20 +31,8 @@ const ChatList = () => {
 
     const fetchChats = async () => {
       try {
-        const res = await userApi.get<any[]>(
-          `/chats/list/${authUser._id}?role=user`
-        );
-
-        const formattedChats: ChatPartner[] = res.data
-          .filter((chat: any) => chat.instructor)
-          .map((chat: any) => ({
-            chatId: chat._id,
-            partnerId: chat.instructor._id,
-            partnerName: chat.instructor.name,
-            lastMessage:chat.lastMessage
-          }));
-
-        setChats(formattedChats);
+        const chat = await getChatList(authUser._id!)
+        setChats(chat);
       } catch (err) {
         console.error("Error fetching user chats:", err);
       }
@@ -87,14 +75,8 @@ const ChatList = () => {
 
   const fetchInstructors = async () => {
     try {
-      const res = await userApi.get<Instructor[]>(
-        "/users/instructors/purchased"
-      );
-      const filtered = res.data.filter(
-        (inst: any) => !chats.some((chat) => chat.partnerId === inst._id)
-      );
+      const filtered = await filteredInstructor(chats)
       setInstructors(filtered);
-      console.log(filtered);
       setShowInstructors(true);
     } catch (err) {
       console.error("Error fetching instructors:", err);
@@ -103,12 +85,9 @@ const ChatList = () => {
 
   const handleStartChat = async (instructor: Instructor) => {
     try {
-      const res = await userApi.post("/chats/initiate", {
-        userId: authUser?._id,
-        instructorId: instructor?._id,
-      });
+      const chat = await initiateChat(authUser?._id!,instructor._id)
 
-      navigate(`/users/chat/${res.data._id}`, {
+      navigate(`/users/chat/${chat._id}`, {
         state: {
           partnerName: instructor.name,
         },

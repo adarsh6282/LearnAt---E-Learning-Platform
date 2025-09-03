@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { User, Bell, Menu, X } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import logo from "../assets/learnAt-removebg-preview.png";
 import { USER_ROUTES } from "../constants/routes.constants";
-import userApi from "../services/userApiService";
 import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
+import { unreadCountS, userLogout } from "../services/user.services";
 
 export default function Navbar() {
   const token = localStorage.getItem("usersToken");
+  const location=useLocation()
+  const currentPath=location.pathname
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
   const { authUser } = useAuth();
@@ -18,7 +20,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await userApi.post("/users/logout", {}, { withCredentials: true });
+      await userLogout()
       localStorage.removeItem("usersEmail");
       localStorage.removeItem("usersToken");
       navigate(USER_ROUTES.LOGIN);
@@ -34,11 +36,8 @@ export default function Navbar() {
       const userModel = authUser.role === "user" ? "User" : "Instructor";
 
       try {
-        const res = await userApi.get<{ count: number; chat: string }[]>(
-          `/users/chats/unread-counts?userId=${authUser._id}&userModel=${userModel}`
-        );
-        const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
-        setUnreadCount(totalCount);
+        const total=await unreadCountS(authUser._id,userModel)
+        setUnreadCount(total);
       } catch (err) {
         console.error(err);
       }
@@ -59,7 +58,6 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md border-b border-cyan-400/10">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-8 py-3">
-        {/* Logo */}
         <div className="flex items-center gap-2">
           <img
             src={logo}
@@ -72,11 +70,10 @@ export default function Navbar() {
           />
         </div>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-7 text-slate-200 text-base font-medium">
           <Link
             to={USER_ROUTES.COURSES}
-            className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded"
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath==USER_ROUTES.COURSES?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
           >
             Courses
           </Link>
@@ -94,7 +91,7 @@ export default function Navbar() {
           </a>
           <Link
             to="/users/chat"
-            className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded relative"
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/chat"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
           >
             Chats
             {unreadCount > 0 && (

@@ -8,6 +8,7 @@ import type {
 import type { IOrder, VerifyResponse } from "../types/order.types";
 import type { Review } from "../types/review.types";
 import userApi from "./userApiService";
+import type { INotification } from "../context/NotificationContext";
 
 interface Certificate {
   _id: string;
@@ -16,6 +17,31 @@ interface Certificate {
   courseTitle: string;
   certificateUrl: string;
   issuedDate: string;
+}
+
+interface ChatResponse {
+  _id: string;
+}
+
+interface Message {
+  _id?: string;
+  chatId: string;
+  sender: string;
+  content?: string;
+  image?: string;
+  createdAt: string;
+}
+
+interface Instructor {
+  _id: string;
+  name: string;
+}
+
+interface ChatPartner {
+  chatId: string;
+  partnerId: string;
+  partnerName: string;
+  lastMessage: string;
 }
 
 interface Orders {
@@ -169,4 +195,108 @@ export const getPurchasedCoursesS = async (page: number, limit: number) => {
     total: number;
     totalPages: number;
   }>(`/users/purchased-courses?page=${page}&limit=${limit}`);
+};
+
+export const getChatList = async (userId: string) => {
+  const res = await userApi.get<any[]>(`/chats/list/${userId}?role=user`);
+
+  const formattedChats: ChatPartner[] = res.data
+    .filter((chat: any) => chat.instructor)
+    .map((chat: any) => ({
+      chatId: chat._id,
+      partnerId: chat.instructor._id,
+      partnerName: chat.instructor.name,
+      lastMessage: chat.lastMessage,
+    }));
+
+  return formattedChats;
+};
+
+export const filteredInstructor = async (chats: ChatPartner[]) => {
+  const res = await userApi.get<Instructor[]>("/users/instructors/purchased");
+  const filtered = res.data.filter(
+    (inst: any) => !chats.some((chat) => chat.partnerId === inst._id)
+  );
+
+  return filtered;
+};
+
+export const initiateChat = async (
+  userId: string,
+  instructorId: string
+): Promise<ChatResponse> => {
+  const res = await userApi.post<ChatResponse>("/chats/initiate", {
+    userId,
+    instructorId,
+  });
+  return res.data;
+};
+
+export const markMessagesReadS = async (
+  chatId: string,
+  userId: string,
+  userModel: "User" | "Instructor"
+) => {
+  return await userApi.post(`/users/messages/mark-as-read/${chatId}`, {
+    userId: userId,
+    userModel: userModel,
+  });
+};
+
+export const getMessageS = async (
+  chatId: string,
+  userId: string,
+  userRole: string
+) => {
+  const res = await userApi.get<Message[]>(
+    `/messages/${chatId}?userId=${userId}&role=${userRole}`
+  );
+  const normalized = res.data.map((msg: any) => ({
+    ...msg,
+    sender: msg.senderId,
+  }));
+  return normalized;
+};
+
+export const userLogout = async () => {
+  return await userApi.post("/users/logout", {}, { withCredentials: true });
+};
+
+export const unreadCountS = async (
+  userId: string,
+  userModel: "User" | "Instructor"
+) => {
+  const res = await userApi.get<{ count: number; chat: string }[]>(
+    `/instructors/chats/unread-counts?userId=${userId}&userModel=${userModel}`
+  );
+  const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
+  return totalCount;
+};
+
+export const userNotification = async (userId: string) => {
+  return await userApi.get<INotification[]>(`/users/notifications/${userId}`);
+};
+
+export const markAsReadS = async (notificationId: string) => {
+  return await userApi.put(`/users/notifications/read/${notificationId}`);
+};
+
+export const sentImageinMessage = async (formData: FormData) => {
+  return await userApi.post<{ message: string; url: string }>(
+    "/messages/upload-image",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+};
+
+export const userResetPassword = async (
+  email: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  return await userApi.put(`/users/resetpassword`, {
+    email,
+    newPassword,
+    confirmPassword,
+  });
 };

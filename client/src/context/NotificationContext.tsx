@@ -8,12 +8,15 @@ import {
 } from "react";
 import { useAuth } from "../hooks/useAuth";
 import useAdmin from "../hooks/useAdmin";
-import userApi from "../services/userApiService";
-import instructorApi from "../services/instructorApiService";
-import adminApi from "../services/adminApiService";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
+import {
+  instructorNotification,
+  markAsReadInstructor,
+} from "../services/instructor.services";
+import { adminNotification, markAsReadAdmin } from "../services/admin.services";
+import { markAsReadS, userNotification } from "../services/user.services";
 
 export interface INotification {
   _id: string;
@@ -65,20 +68,24 @@ export const NotificationProvider = ({
   const fetchNotifications = async () => {
     if (!userId || !role) return;
     setLoading(true);
-    const selectedApi =
-      role === "users"
-        ? userApi
-        : role === "instructors"
-        ? instructorApi
-        : adminApi;
 
     try {
-      const res = await selectedApi.get<INotification[]>(
-        `/${role}/notifications/${userId}`
-      );
-      setNotifications(res.data);
-      const unread = res.data.filter((n) => !n.isRead).length;
-      setUnreadCount(unread);
+      if (role == "users") {
+        const res = await userNotification(userId);
+        setNotifications(res.data);
+        const unread = res.data.filter((n) => !n.isRead).length;
+        setUnreadCount(unread);
+      } else if (role === "instructors") {
+        const res = await instructorNotification(userId);
+        setNotifications(res.data);
+        const unread = res.data.filter((n) => !n.isRead).length;
+        setUnreadCount(unread);
+      } else {
+        const res = await adminNotification(userId);
+        setNotifications(res.data);
+        const unread = res.data.filter((n) => !n.isRead).length;
+        setUnreadCount(unread);
+      }
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     } finally {
@@ -88,19 +95,33 @@ export const NotificationProvider = ({
 
   const markAsRead = async (notificationId: string) => {
     if (!userId || !role) return;
-    const selectedApi =
-      role === "users"
-        ? userApi
-        : role === "instructors"
-        ? instructorApi
-        : adminApi;
 
     try {
-      await selectedApi.put(`/${role}/notifications/read/${notificationId}`);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notificationId ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(prev - 1, 0));
+      if (role == "users") {
+        await markAsReadS(notificationId);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      } else if (role == "instructors") {
+        await markAsReadInstructor(notificationId);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      } else {
+        await markAsReadAdmin(notificationId);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+      }
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }

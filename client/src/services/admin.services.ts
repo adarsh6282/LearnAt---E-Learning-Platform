@@ -5,6 +5,7 @@ import type { ICourse } from "../types/course.types";
 import type { DashboardData } from "../types/admin.types";
 import type { AdminLoginResponse } from "../types/admin.types";
 import type { CourseViewType } from "../types/user.types";
+import type { INotification } from "../context/NotificationContext";
 
 interface Message {
   message: string;
@@ -197,3 +198,38 @@ export const unHideReviewS = async (id: string) => {
 export const deleteReviewS = async (id: string) => {
   return await adminApi.delete(`/admin/reviews/${id}`);
 };
+
+export const getWalletS = async (page: number, limit: number) => {
+  return await adminApi.get<{
+    transactions: [];
+    balance: number;
+    totalPages: number;
+  }>(`/admin/wallet?page=${page}&limit=${limit}`);
+};
+
+export const adminNotification = async (userId: string) => {
+  return await adminApi.get<INotification[]>(`/admin/notifications/${userId}`);
+};
+
+export const markAsReadAdmin = async (notificationId: string) => {
+  return await adminApi.put(`/admin/notifications/read/${notificationId}`);
+};
+
+export const adminTutorView = async (tutorId: string) => {
+  return await adminApi.get<Tutor>(`/admin/tutor-view/${tutorId}`);
+};
+
+export const updateComplaint = async (
+  selectedComplaint: string,
+  status: string,
+  response: string
+) => {
+  return await adminApi.put(`/admin/complaints/${selectedComplaint}`, {
+    status,
+    response,
+  });
+};
+
+export const refreshedComplaint=async()=>{
+  return await adminApi.get<Complaint[]>("/admin/complaints");
+}

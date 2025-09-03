@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Tutor } from "../../types/instructor.types";
-import adminApi from "../../services/adminApiService";
+import { adminTutorView } from "../../services/admin.services";
 
 const TutorDetail = () => {
   const { tutorId } = useParams();
@@ -11,7 +11,7 @@ const TutorDetail = () => {
   useEffect(() => {
     const fetchTutorDetails = async () => {
       try {
-        const res = await adminApi.get<Tutor>(`/admin/tutor-view/${tutorId}`);
+        const res = await adminTutorView(tutorId!)
         setTutor(res.data);
       } catch (err) {
         console.log(err);

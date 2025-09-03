@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import instructorApi from "../../services/instructorApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
+import { instructorReviews } from "../../services/instructor.services";
 
 interface Review {
   _id: string;
@@ -24,7 +24,7 @@ const InstructorReview = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await instructorApi.get<{reviews:Review[],total:number,totalPages:number}>(`/instructors/reviews?page=${currentPage}&limit=${itemsPerPage}&rating=${ratingFilter ?? "0"}`);
+        const res = await instructorReviews(currentPage,itemsPerPage,ratingFilter)
         setReviews(res.data.reviews);
         setTotalPages(res.data.totalPages)
       } catch (err) {

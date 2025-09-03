@@ -4,9 +4,7 @@ import type { CourseData, Lecture } from "../../types/course.types";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
-import { editCourseS, getCourseById } from "../../services/instructor.services";
-import instructorApi from "../../services/instructorApiService";
-import type { Category } from "../../types/category.types";
+import { editCourseS, getCategories, getCourseById } from "../../services/instructor.services";
 
 const EditCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -45,7 +43,7 @@ const EditCourse: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const categoriesData = await instructorApi.get<Category[]>("/instructors/category")
+        const categoriesData = await getCategories()
         const activeNames = categoriesData.data
           .filter((cat: any) => !cat.isDeleted)
           .map((cat: any) => cat.name);
