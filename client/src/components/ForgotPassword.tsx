@@ -9,15 +9,16 @@ interface OtpPageProps {
 
 const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
-  const usertoken=localStorage.getItem("usersToken")
-  const instructortoken=localStorage.getItem("instructorsToken")
+  const usertoken = localStorage.getItem("usersToken");
+  const instructortoken = localStorage.getItem("instructorsToken");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-      if (usertoken) navigate('/');
-      if(instructortoken) navigate('/instructors/dashboard')
-    }, [usertoken, instructortoken, navigate]);
+    if (role === "users" && usertoken) navigate("/home");
+    if (role == "instructors" && instructortoken)
+      navigate("/instructors/dashboard");
+  }, [usertoken, instructortoken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,13 +40,11 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
     } catch (err) {
       setError("Something went wrong. Please try again later.");
     }
-    
   };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 p-8">
-
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-100">Forgot Password</h2>
           <p className="text-gray-300 mt-2">

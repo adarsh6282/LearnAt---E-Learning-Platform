@@ -5,6 +5,19 @@ import type {
 } from "../types/instructor.types";
 import type { CourseData } from "../types/course.types";
 import instructorApi from "./instructorApiService";
+import type { INotification } from "../context/NotificationContext";
+import type { Category } from "../types/category.types";
+import type { User } from "../types/user.types";
+
+interface Review {
+  _id: string;
+  text: string;
+  rating: number;
+  user: { name: string };
+  course: { title: string; instructor: { name: string } };
+  createdAt: string;
+  isHidden?: boolean;
+}
 
 interface InstructorRegisterResponse {
   message: string;
@@ -20,6 +33,19 @@ interface InstructorRegisterResponse {
     confirmPassword: string;
     resumeUrl: string;
   };
+}
+
+interface ChatResponse {
+  _id: string;
+}
+
+interface Message {
+  _id?: string;
+  chatId: string;
+  sender: string;
+  content?: string;
+  image?: string;
+  createdAt: string;
 }
 
 interface Enrollment {
@@ -153,5 +179,139 @@ export const instructorRefreshTokenS = async () => {
   return await instructorApi.post<{ token: string }>(
     "/instructors/refresh-token",
     {}
+  );
+};
+
+export const getWalletSforInstructor = async (page: number, limit: number) => {
+  return await instructorApi.get<{
+    transactions: [];
+    balance: number;
+    totalPages: number;
+  }>(`/instructors/wallet?page=${page}&limit=${limit}`);
+};
+
+export const instructorCourseChart = async () => {
+  return await instructorApi.get<{ title: string; enrolledCount: number }[]>(
+    "/instructors/course-stats"
+  );
+};
+
+export const instructorIncomeChart = async () => {
+  return await instructorApi.get<{ month: string; revenue: number }[]>(
+    "/instructors/income-stats"
+  );
+};
+
+export const unreadCountS = async (
+  userId: string,
+  userModel: "User" | "Instructor"
+) => {
+  const res = await instructorApi.get<{ count: number; chat: string }[]>(
+    `/instructors/chats/unread-counts?userId=${userId}&userModel=${userModel}`
+  );
+  const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
+  return totalCount;
+};
+
+export const instructorLogout = async () => {
+  return await instructorApi.post(
+    "/instructors/logout",
+    {},
+    { withCredentials: true }
+  );
+};
+
+export const instructorNotification = async (userId: string) => {
+  return await instructorApi.get<INotification[]>(
+    `/instructors/notifications/${userId}`
+  );
+};
+
+export const markAsReadInstructor = async (notificationId: string) => {
+  return await instructorApi.put(
+    `/instructors/notifications/read/${notificationId}`
+  );
+};
+
+export const getCategories = async () => {
+  return await instructorApi.get<Category[]>("/instructors/category");
+};
+
+export const getChatList = async (userId: string) => {
+  const res = await instructorApi.get<User[]>(
+    `/chats/list/${userId}?role=instructor`
+  );
+  const formattedChats = res.data.map((chat: any) => ({
+    chatId: chat._id,
+    partnerId: chat.user._id,
+    partnerName: chat.user.name,
+    lastMessage: chat.lastMessage,
+  }));
+
+  return formattedChats;
+};
+
+export const filteredUsers = async () => {
+  return await instructorApi.get<User[]>("/instructors/users/purchased");
+};
+
+export const initiateChat = async (
+  instructorId: string,
+  userId: string
+): Promise<ChatResponse> => {
+  const res = await instructorApi.post<ChatResponse>("/chats/initiate", {
+    instructorId,
+    userId,
+  });
+  return res.data;
+};
+
+export const instructorResetPassword = async (
+  email: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  return await instructorApi.put(`/instructors/resetpassword`, {
+    email,
+    newPassword,
+    confirmPassword,
+  });
+};
+
+export const markMessagesReadS = async (
+  chatId: string,
+  userId: string,
+  userModel: "User" | "Instructor"
+) => {
+  return await instructorApi.post(
+    `/instructors/messages/mark-as-read/${chatId}`,
+    {
+      userId: userId,
+      userModel: userModel,
+    }
+  );
+};
+
+export const getMessages = async (chatId: string) => {
+  return await instructorApi.get<Message[]>(`/messages/${chatId}`);
+};
+
+export const sentImageinMessage = async (formData: FormData) => {
+  return await instructorApi.post<{ message: string; url: string }>(
+    "/messages/upload-image",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+};
+
+export const instructorReviews = async (page:number,limit:number,rating:number) => {
+  return await instructorApi.get<{
+    reviews: Review[];
+    total: number;
+    totalPages: number;
+  }>(
+    `/instructors/reviews?page=${page}&limit=${limit}&rating=${
+      rating ?? "0"
+    }`
   );
 };

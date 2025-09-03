@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { socket } from "../../services/socket.service";
-import instructorApi from "../../services/instructorApiService";
 import { FiPaperclip } from "react-icons/fi";
 import { MdVideoCall } from "react-icons/md";
+import { getMessages, markMessagesReadS, sentImageinMessage } from "../../services/instructor.services";
 
 interface Message {
   _id?: string;
@@ -46,10 +46,7 @@ const InstructorChatWindow = () => {
       if (!chatId || !authUser) return;
 
       try {
-        await instructorApi.post(`/instructors/messages/mark-as-read/${chatId}`, {
-          userId: authUser._id,
-          userModel: authUser.role === "user" ? "User" : "Instructor",
-        });
+        await markMessagesReadS(chatId,authUser._id!,authUser.role=="user"?"User":"Instructor")
       } catch (err) {
         console.error("Failed to mark messages as read", err);
       }
@@ -63,7 +60,7 @@ const InstructorChatWindow = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await instructorApi.get<Message[]>(`/messages/${chatId}`);
+        const res = await getMessages(chatId!);
         const normalized = res.data.map((msg: any) => ({
           ...msg,
           sender: msg.senderId,
@@ -87,11 +84,7 @@ const InstructorChatWindow = () => {
       formData.append("chatImage", file);
 
       try {
-        const res = await instructorApi.post<{ message: string; url: string }>(
-          "/messages/upload-image",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        const res = await sentImageinMessage(formData)
         imageUrl = res.data.url;
       } catch (err) {
         console.error("Error uploading image:", err);

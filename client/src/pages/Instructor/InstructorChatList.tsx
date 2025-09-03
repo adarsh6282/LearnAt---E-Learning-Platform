@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import instructorApi from "../../services/instructorApiService";
 import { FiArrowLeft } from "react-icons/fi";
 import { socket } from "../../services/socket.service";
+import { filteredUsers, getChatList, initiateChat } from "../../services/instructor.services";
 interface ChatPartner {
   chatId: string;
   partnerId: string;
@@ -29,15 +29,7 @@ const InstructorChatList = () => {
 
     const fetchChats = async () => {
       try {
-        const res = await instructorApi.get(
-          `/chats/list/${authUser._id}?role=instructor`
-        );
-        const formattedChats = res.data.map((chat: any) => ({
-          chatId: chat._id,
-          partnerId: chat.user._id,
-          partnerName: chat.user.name,
-          lastMessage:chat.lastMessage
-        }));
+        const formattedChats=await getChatList(authUser._id!)
         setChats(formattedChats)
       } catch (err) {
         console.error("Error fetching instructor chats:", err);
@@ -81,9 +73,7 @@ const InstructorChatList = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await instructorApi.get<User[]>(
-        "/instructors/users/purchased"
-      );
+      const res = await filteredUsers()
       const filtered = res.data.filter(
         (user) => !chats.some((chat) => chat.partnerId === user._id)
       );
@@ -96,12 +86,9 @@ const InstructorChatList = () => {
 
   const handleStartChat = async (user: User) => {
     try {
-      const res = await instructorApi.post("/chats/initiate", {
-        instructorId: authUser?._id,
-        userId: user._id,
-      });
+      const chat=await initiateChat(authUser?._id!,user._id)
 
-      navigate(`/instructors/chat/${res.data._id}`, {
+      navigate(`/instructors/chat/${chat._id}`, {
         state: {
           partnerName: user.name,
         },

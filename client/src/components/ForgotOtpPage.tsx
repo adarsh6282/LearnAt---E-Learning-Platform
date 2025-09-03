@@ -18,9 +18,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (usertoken) navigate('/');
-    if(instructortoken) navigate('/instructors/dashboard')
-  }, [usertoken, instructortoken, navigate]);
+    if (role=="users"&&usertoken) navigate('/');
+    if(role=="instructors"&&instructortoken) navigate('/instructors/dashboard')
+  }, [usertoken, instructortoken, navigate, role]);
 
   useEffect(() => {
     if (timer === 0) {

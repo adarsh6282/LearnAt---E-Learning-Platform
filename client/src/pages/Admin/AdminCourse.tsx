@@ -81,7 +81,6 @@ const AdminCourse: React.FC = () => {
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">
             Admin Course Management
@@ -91,7 +90,6 @@ const AdminCourse: React.FC = () => {
           </p>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="flex items-center space-x-3">
@@ -101,7 +99,6 @@ const AdminCourse: React.FC = () => {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && courses.length === 0 && (
           <div className="text-center py-16">
             <div className="bg-white rounded-2xl shadow-sm p-12">
@@ -128,7 +125,6 @@ const AdminCourse: React.FC = () => {
           />
         </div>
 
-        {/* Courses Table */}
         {!loading && courses.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
@@ -210,7 +206,7 @@ const AdminCourse: React.FC = () => {
                             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Soft Delete
+                            Delete
                           </button>
                         ) : (
                           <button

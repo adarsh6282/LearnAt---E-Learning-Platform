@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
-import userApi from "../services/userApiService";
 import { FiPaperclip } from "react-icons/fi";
 import { MdVideoCall } from "react-icons/md";
+import { getMessageS, markMessagesReadS, sentImageinMessage } from "../services/user.services";
 
 interface Message {
   _id?: string;
@@ -48,10 +48,7 @@ const UserChatWindow = () => {
       if (!chatId || !authUser) return;
 
       try {
-        await userApi.post(`/users/messages/mark-as-read/${chatId}`, {
-          userId: authUser._id,
-          userModel: authUser.role === "user" ? "User" : "Instructor",
-        });
+        await markMessagesReadS(chatId,authUser._id!,authUser.role==="user"?"User":"Instructor")
       } catch (err) {
         console.error("Failed to mark messages as read", err);
       }
@@ -64,13 +61,9 @@ const UserChatWindow = () => {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const res = await userApi.get<Message[]>(
-        `/messages/${chatId}?userId=${authUser?._id}&role=${authUser?.role}`
-      );
-      const normalized = res.data.map((msg: any) => ({
-        ...msg,
-        sender: msg.senderId,
-      }));
+      if (!chatId || !authUser) return;
+
+      const normalized = await getMessageS(chatId,authUser?._id!,authUser?.role)
       setMessages(normalized);
     };
     if (chatId && authUser) fetchMessages();
@@ -86,11 +79,7 @@ const UserChatWindow = () => {
     if (file) {
       formData.append("chatImage", file);
       try {
-        const res = await userApi.post<{ message: string; url: string }>(
-          "/messages/upload-image",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        const res = await sentImageinMessage(formData)
         imageUrl = res.data.url;
       } catch (err) {
         console.log(err);
@@ -169,7 +158,6 @@ const UserChatWindow = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* File Upload */}
       <div className="flex items-center gap-2">
         <label className="cursor-pointer relative">
           <FiPaperclip className="w-6 h-6 text-cyan-400 hover:text-cyan-300 transition duration-200" />
@@ -185,7 +173,6 @@ const UserChatWindow = () => {
           />
         </label>
 
-        {/* Message Input */}
         <input
           type="text"
           value={text}

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { successToast } from "./Toast";
 import { useNavigate } from "react-router-dom";
-import userApi from "../services/userApiService";
-import instructorApi from "../services/instructorApiService";
+import { instructorResetPassword } from "../services/instructor.services";
+import { userResetPassword } from "../services/user.services";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -28,17 +28,21 @@ const ResetPassword: React.FC<OtpPageProps> = ({ role }) => {
     } else {
       setError("");
       try {
-        const selectedApi = role == "users" ? userApi : instructorApi;
         const email = localStorage.getItem("email");
-        const response = await selectedApi.put(`/${role}/resetpassword`, {
-          email,
-          newPassword,
-          confirmPassword,
-        });
-        if (response && response.status === 200) {
-          successToast((response.data as { message: string }).message);
-          localStorage.removeItem("email");
-          navigate(`/${role}/login`);
+        if(role==="users"){
+          const response = await userResetPassword(email!,newPassword,confirmPassword)
+          if (response && response.status === 200) {
+            successToast((response.data as { message: string }).message);
+            localStorage.removeItem("email");
+            navigate(`/users/login`);
+          }
+        }else if(role==="instructors"){
+          const response = await instructorResetPassword(email!,newPassword,confirmPassword)
+          if (response && response.status === 200) {
+            successToast((response.data as { message: string }).message);
+            localStorage.removeItem("email");
+            navigate(`/instructors/login`);
+          }
         }
       } catch (err) {
         setError("Something went wrong. Please try again later.");

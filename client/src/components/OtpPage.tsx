@@ -12,8 +12,8 @@ interface OtpPageProps {
 
 const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const [otp, setOtp] = useState("");
-  const usertoken=localStorage.getItem("usersToken")
-  const instructortoken=localStorage.getItem("instructorsToken")
+  const usertoken = localStorage.getItem("usersToken");
+  const instructortoken = localStorage.getItem("instructorsToken");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
@@ -21,8 +21,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (usertoken) navigate('/home');
-    if(instructortoken) navigate('/instructors/dashboard')
+    if (role === "users" && usertoken) navigate("/home");
+    if (role == "instructors" && instructortoken)
+      navigate("/instructors/dashboard");
   }, [usertoken, instructortoken, navigate]);
 
   useEffect(() => {

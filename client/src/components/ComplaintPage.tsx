@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import adminApi from "../services/adminApiService";
 import { formatDistanceToNow } from "date-fns";
 import { errorToast, successToast } from "../components/Toast";
 import { Link, useSearchParams } from "react-router-dom";
 import Pagination from "./Pagination";
-import { getComplaintsS } from "../services/admin.services";
+import { getComplaintsS, refreshedComplaint, updateComplaint } from "../services/admin.services";
 
 interface Complaint {
   _id: string;
@@ -77,12 +76,9 @@ const AdminComplaint: React.FC = () => {
   const handleSubmit = async () => {
     if (!selectedComplaint) return;
     try {
-      await adminApi.put(`/admin/complaints/${selectedComplaint._id}`, {
-        status,
-        response,
-      });
+      await updateComplaint(selectedComplaint._id,status,response)
       successToast("Response submitted successfully");
-      const refreshed = await adminApi.get<Complaint[]>("/admin/complaints");
+      const refreshed = await refreshedComplaint()
       setComplaints(refreshed.data);
       setSelectedComplaint(null);
       setResponse("");

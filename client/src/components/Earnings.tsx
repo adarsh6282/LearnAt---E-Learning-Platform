@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import adminApi from "../services/adminApiService";
-import instructorApi from "../services/instructorApiService";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "./Pagination";
+import { getWalletS } from "../services/admin.services";
+import { getWalletSforInstructor } from "../services/instructor.services";
 
 interface Transaction {
   id: string;
@@ -27,16 +27,18 @@ const Earnings: React.FC<WalletProps> = ({ role }) => {
 
   useEffect(() => {
     const fetchWallet = async () => {
-      const selectedApi = role === "admin" ? adminApi : instructorApi;
-      const res = await selectedApi.get<{
-        transactions: [];
-        balance: number;
-        totalPages: number;
-      }>(`/${role}/wallet?page=${currentPage}&limit=${itemsPerPage}`);
+      if(role==="admin"){
+      const res = await getWalletS(currentPage,itemsPerPage)
       setTransactions(res.data.transactions || []);
-      console.log(transactions)
       setTotalPages(res.data.totalPages);
       setBalance(res.data.balance);
+      }
+      if(role==="instructors"){
+      const res = await getWalletSforInstructor(currentPage,itemsPerPage)
+      setTransactions(res.data.transactions || []);
+      setTotalPages(res.data.totalPages);
+      setBalance(res.data.balance);
+      }
     };
     fetchWallet();
   }, [role, currentPage, itemsPerPage]);
