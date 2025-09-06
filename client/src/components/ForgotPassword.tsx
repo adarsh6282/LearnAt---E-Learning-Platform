@@ -18,7 +18,7 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
     if (role === "users" && usertoken) navigate("/home");
     if (role == "instructors" && instructortoken)
       navigate("/instructors/dashboard");
-  }, [usertoken, instructortoken, navigate]);
+  }, [usertoken, instructortoken, navigate,role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +38,7 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
         navigate(`/${role}/reset-verify-otp`);
       }
     } catch (err) {
+      console.log(err)
       setError("Something went wrong. Please try again later.");
     }
   };

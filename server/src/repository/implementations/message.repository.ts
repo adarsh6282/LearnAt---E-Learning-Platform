@@ -6,7 +6,7 @@ import { UpdateResult } from "mongodb";
 import mongoose from "mongoose";
 
 export class MessageRepository implements IMessageRepository {
-  async saveMessage(messageData: any): Promise<IMessage | null> {
+  async saveMessage(messageData: Partial<IMessage>): Promise<IMessage | null> {
     const withReadBy = {
       ...messageData,
       readBy: [

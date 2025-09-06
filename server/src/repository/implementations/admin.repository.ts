@@ -7,8 +7,8 @@ import { IAdmin } from "../../models/interfaces/admin.interface";
 import Admin from "../../models/implementations/adminModel";
 import { BaseRepository } from "../base.repository";
 import Course from "../../models/implementations/courseModel";
-import { FilterQuery } from "mongoose";
 import { DashboardData } from "../../types/admin.types";
+import { FilterQuery } from "mongoose";
 
 export class AdminRepository
   extends BaseRepository<IAdmin>
@@ -39,7 +39,7 @@ export class AdminRepository
   async getAllTutors(
     page: number,
     limit: number,
-    filter: any
+    filter: FilterQuery<IInstructor>
   ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 

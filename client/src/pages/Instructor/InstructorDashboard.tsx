@@ -13,15 +13,11 @@ interface Dashboard {
 
 const InstructorDashboard = () => {
   const context = useContext(InstructorContext);
-  if (!context) {
-    return "no context here";
-  }
-  const { instructor, getInstructorProfile } = context;
   const [dashboardData, setDashboardData] = useState<Dashboard | null>(null);
   const [resume, setResume] = useState<File | null>(null);
   const location=useLocation()
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchDashboard = async () => {
       const res = await instructorApi.get<Dashboard>("/instructors/dashboard");
@@ -29,7 +25,7 @@ const InstructorDashboard = () => {
     };
     fetchDashboard();
   }, [location.pathname]);
-
+  
   useEffect(() => {
     const fetchInstructor = async () => {
       try {
@@ -42,7 +38,11 @@ const InstructorDashboard = () => {
     };
     fetchInstructor();
   }, []);
-
+  if (!context) {
+    return "no context here";
+  }
+  
+  const { instructor, getInstructorProfile } = context;
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setResume(e.target.files[0]);
@@ -51,8 +51,9 @@ const InstructorDashboard = () => {
 
   const handleReapply = async () => {
     if (!resume) return errorToast("Please upload your resume");
+    if(!instructor?.email) return errorToast("email is missing")
     const formData = new FormData();
-    formData.append("email", instructor?.email!);
+    formData.append("email", instructor?.email);
     formData.append("resume", resume);
     try {
       await reapplyS(formData);

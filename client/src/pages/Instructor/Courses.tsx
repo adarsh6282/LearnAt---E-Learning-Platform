@@ -17,8 +17,6 @@ const Courses: React.FC = () => {
   const [debounce,setDebounce]=useState<string>("")
   const token = localStorage.getItem("instructorsToken");
 
-  if (!token) return;
-
   useEffect(()=>{
     const timeout=setTimeout(() => {
       setDebounce(searchQuery)
@@ -33,7 +31,7 @@ const Courses: React.FC = () => {
         const res = await getInstructorCoursesS(currentPage, itemsPerPage, debounce);
         setCourses(res.data.courses);
         setTotalPages(res.data.totalPages);
-      } catch (err: any) {
+      } catch (err) {
         setError("Failed to load courses");
         console.error(err);
       } finally {
@@ -48,6 +46,8 @@ const Courses: React.FC = () => {
     const pageParam = parseInt(searchParams.get("page") || "1");
     setCurrentPage(pageParam);
   }, [searchParams]);
+
+  if (!token) return;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -55,6 +55,7 @@ const CourseDetail: React.FC = () => {
 
     try {
       const { data: order } = await CreateOrderS(courseId);
+      console.log(order)
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,

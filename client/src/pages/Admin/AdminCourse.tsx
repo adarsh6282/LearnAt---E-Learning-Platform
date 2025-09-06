@@ -9,6 +9,7 @@ import type { ICourse } from "../../types/course.types";
 import { errorToast, successToast } from "../../components/Toast";
 import Pagination from "../../components/Pagination";
 import { useSearchParams } from "react-router-dom";
+import type { AxiosError } from "axios";
 
 const AdminCourse: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
@@ -46,9 +47,10 @@ const AdminCourse: React.FC = () => {
       const res = await getCoursesS(currentPage, itemsPerPage, debounce);
       setCourses(res.data.course);
       setTotalPages(res.data.totalPage);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to fetch courses:", err);
-      errorToast(err.response?.data?.message);
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }

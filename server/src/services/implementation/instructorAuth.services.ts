@@ -9,13 +9,13 @@ import { IAdminRepository } from "../../repository/interfaces/admin.interface";
 import { sendMail } from "../../utils/sendMail";
 import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
-import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
-import { IReview } from "../../models/interfaces/review.interface";
 import { IReviewRepository } from "../../repository/interfaces/review.interface";
-import { IOrder } from "../../models/interfaces/order.interface";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
-import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
+import {
+  ITransaction,
+  IWallet,
+} from "../../models/interfaces/wallet.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 import { ICategoryRepository } from "../../repository/interfaces/category.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
@@ -246,9 +246,8 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async getProfileService(email: string): Promise<InstructorDTO> {
-    const instructor = await this._instructorAuthRepository.findForProfile(
-      email
-    );
+    const instructor =
+      await this._instructorAuthRepository.findForProfile(email);
     if (!instructor) {
       throw new Error("Inbstructor not exist");
     }
@@ -274,7 +273,14 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       education?: string;
     }
   ): Promise<InstructorDTO> {
-    const updateFields: any = {
+    const updateFields: Partial<{
+      name: string;
+      phone: string;
+      title: string;
+      yearsOfExperience: number;
+      education: string;
+      profilePicture: string;
+    }> = {
       name,
       phone,
       title,
@@ -289,7 +295,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
         unique_filename: true,
       });
 
-      updateFields.profilePicture = (result as any).secure_url;
+      updateFields.profilePicture = result.secure_url;
     }
 
     const instructor =
@@ -307,15 +313,16 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     instructorId: string,
     page: number,
     limit: number,
-    search:string
+    search: string
   ): Promise<{ courses: CourseDTO[]; total: number; totalPages: number }> {
-    const {courses,total,totalPages} = await this._courseRepository.findCoursesByInstructor(
-      instructorId,
-      page,
-      limit,
-      search
-    );
-    return {courses:toCourseDTOList(courses),total,totalPages}
+    const { courses, total, totalPages } =
+      await this._courseRepository.findCoursesByInstructor(
+        instructorId,
+        page,
+        limit,
+        search
+      );
+    return { courses: toCourseDTOList(courses), total, totalPages };
   }
 
   async getCourseById(courseId: string): Promise<CourseDTO> {
@@ -334,12 +341,33 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return categories;
   }
 
-  async getReviewsByInstructor(instructorId:string,page:number,limit:number,rating:number):Promise<{reviews:ReviewDTO[],total:number,totalPages:number}> {
-    const {reviews,total,totalPages} = await this._reviewRepository.getReviewsByInstructor(instructorId,page,limit,rating);
-    return {reviews:toReviewDTOList(reviews),total,totalPages}
+  async getReviewsByInstructor(
+    instructorId: string,
+    page: number,
+    limit: number,
+    rating: number
+  ): Promise<{ reviews: ReviewDTO[]; total: number; totalPages: number }> {
+    const { reviews, total, totalPages } =
+      await this._reviewRepository.getReviewsByInstructor(
+        instructorId,
+        page,
+        limit,
+        rating
+      );
+    return { reviews: toReviewDTOList(reviews), total, totalPages };
   }
 
-  async getEnrollments(instructorId:string,page:number,limit:number,search:string,status:string):Promise<{enrollments:IEnrollment[],total:number;totalPages:number}> {
+  async getEnrollments(
+    instructorId: string,
+    page: number,
+    limit: number,
+    search: string,
+    status: string
+  ): Promise<{
+    enrollments: IEnrollment[];
+    total: number;
+    totalPages: number;
+  }> {
     const enrollments = await this._orderRepository.getEnrollmentsByInstructor(
       instructorId,
       page,
@@ -350,7 +378,16 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return enrollments;
   }
 
-  async getWallet(instructorId:string,page:number,limit:number):Promise<{wallet:Partial<IWallet>,total:number,totalPages:number,transactions:ITransaction[]}> {
+  async getWallet(
+    instructorId: string,
+    page: number,
+    limit: number
+  ): Promise<{
+    wallet: Partial<IWallet>;
+    total: number;
+    totalPages: number;
+    transactions: ITransaction[];
+  }> {
     const wallet = await this._walletRepository.findWalletOfInstructor(
       instructorId,
       page,
@@ -383,21 +420,20 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async getNotifications(userId: string): Promise<NotificationDTO[]> {
-    const notification = await this._notificationRepository.getAllNotifications(userId);
-    return toNotificationDTOList(notification)
+    const notification =
+      await this._notificationRepository.getAllNotifications(userId);
+    return toNotificationDTOList(notification);
   }
 
   async markAsRead(notificationId: string): Promise<INotification | null> {
-    const notification = await this._notificationRepository.updateNotification(
-      notificationId
-    );
+    const notification =
+      await this._notificationRepository.updateNotification(notificationId);
     return notification;
   }
 
   async getPurchasedUsers(instructorId: string): Promise<IUser[]> {
-    const userIds = await this._courseRepository.getUsersByInstructor(
-      instructorId
-    );
+    const userIds =
+      await this._courseRepository.getUsersByInstructor(instructorId);
 
     if (!userIds.length) return [];
 

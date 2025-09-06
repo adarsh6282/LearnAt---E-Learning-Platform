@@ -55,13 +55,13 @@ const AdminComplaint: React.FC = () => {
         );
         setComplaints(res.data.complaints);
         setTotalPages(res.data.totalPages);
-      } catch (err: any) {
+      } catch (err) {
         errorToast("Failed to fetch complaints");
         console.error(err);
       }
     };
     fetchReports();
-  }, [currentPage, itemsPerPage, searchTerm, selectedStatus]);
+  }, [currentPage, itemsPerPage, debounce, selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -84,6 +84,7 @@ const AdminComplaint: React.FC = () => {
       setResponse("");
       setStatus("resolved");
     } catch (err) {
+      console.log(err)
       errorToast("Failed to respond");
     }
   };

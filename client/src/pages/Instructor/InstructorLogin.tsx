@@ -5,6 +5,7 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, Link } from "react-router-dom";
 import { instructorLoginS } from "../../services/instructor.services";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
+import type { AxiosError } from "axios";
 
 export default function InstructorLogin() {
   const [email, setEmail] = useState("");
@@ -54,9 +55,9 @@ export default function InstructorLogin() {
         successToast("Instructor Logined Successfully");
         navigate(INSTRUCTOR_ROUTES.DASHBOARD);
       }
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       setIsLoading(false);
     }
   };

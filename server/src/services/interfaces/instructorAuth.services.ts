@@ -4,11 +4,8 @@ import { NotificationDTO } from "../../DTO/notification.dto";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
-import { ICourse } from "../../models/interfaces/course.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
-import { IOrder } from "../../models/interfaces/order.interface";
-import { IReview } from "../../models/interfaces/review.interface";
 import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
 import { IEnrollment } from "../../types/enrollment.types";
 interface Dashboard{

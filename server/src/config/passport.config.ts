@@ -19,7 +19,7 @@ passport.use(
           return done(new Error("No email found in Google profile"));
         }
 
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
 
         if (user) {
           if (!user.googleId) {

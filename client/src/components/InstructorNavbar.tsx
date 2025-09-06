@@ -16,7 +16,10 @@ import { INSTRUCTOR_ROUTES } from "../constants/routes.constants";
 import { NotificationContext } from "../context/NotificationContext";
 import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
-import { instructorLogout, unreadCountS } from "../services/instructor.services";
+import {
+  instructorLogout,
+  unreadCountS,
+} from "../services/instructor.services";
 
 const InstructorNavbar = () => {
   const location = useLocation();
@@ -25,16 +28,7 @@ const InstructorNavbar = () => {
   const { authUser } = useAuth();
   const [readCount, setUnreadCount] = useState(0);
   const notificationContext = useContext(NotificationContext);
-  if (!context) {
-    return <div>Loading...</div>;
-  }
-
-  if (!notificationContext) {
-    return <div>Loading...</div>;
-  }
-
-  const { unreadCount } = notificationContext;
-
+  
   useEffect(() => {
     const fetchUnread = async () => {
       if (!authUser?._id) return;
@@ -42,7 +36,7 @@ const InstructorNavbar = () => {
       const userModel = authUser.role === "user" ? "User" : "Instructor";
 
       try {
-        const count=await unreadCountS(authUser._id,userModel)
+        const count = await unreadCountS(authUser._id, userModel);
         setUnreadCount(count);
       } catch (err) {
         console.error(err);
@@ -58,11 +52,21 @@ const InstructorNavbar = () => {
     };
   }, [authUser?._id, authUser?.role]);
 
+  if (!context) {
+    return <div>Loading...</div>;
+  }
+
+  if (!notificationContext) {
+    return <div>Loading...</div>;
+  }
+
+  const { unreadCount } = notificationContext;
+
   const { instructor } = context;
 
   const handleLogout = async () => {
     try {
-      await instructorLogout()
+      await instructorLogout();
       localStorage.removeItem("instructorsToken");
       localStorage.removeItem("instructorsEmail");
       navigate(INSTRUCTOR_ROUTES.LOGIN);

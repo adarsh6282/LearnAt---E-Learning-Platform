@@ -1,6 +1,7 @@
 import { IComplaint } from "../../models/interfaces/complaint.interface";
 import { IComplaintRepository } from "../interfaces/complaint.interface";
 import Complaint from "../../models/implementations/complaintSchema";
+import { FilterQuery } from "mongoose";
 
 export class ComplaintRepository implements IComplaintRepository {
   async createComplaint(data: Partial<IComplaint>): Promise<IComplaint | null> {
@@ -15,7 +16,7 @@ export class ComplaintRepository implements IComplaintRepository {
   ): Promise<{ complaints: IComplaint[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: FilterQuery<IComplaint> = {};
 
     if (search) {
       query.$or = [

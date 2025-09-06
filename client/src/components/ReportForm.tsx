@@ -27,6 +27,7 @@ const ReportForm = ({
       setIsOpen(false);
       setForm({ subject, message: "" });
     } catch (err) {
+      console.log(err)
       alert("Failed to submit report.");
     }
   };

@@ -1,6 +1,5 @@
 import { IAdminService } from "../interfaces/admin.services";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
-import { IUser } from "../../models/interfaces/auth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
@@ -36,6 +35,7 @@ import { ComplaintDTO } from "../../DTO/complaint.dto";
 import { toComplaintDTOList } from "../../Mappers/complaint.mapper";
 import { NotificationDTO } from "../../DTO/notification.dto";
 import { toNotificationDTOList } from "../../Mappers/notification.mapper";
+import { FilterQuery } from "mongoose";
 
 export class AdminService implements IAdminService {
   constructor(
@@ -118,7 +118,7 @@ export class AdminService implements IAdminService {
   async getAllTutors(
     page: number,
     limit: number,
-    filter: any
+    filter: FilterQuery<IInstructor>
   ): Promise<{ tutors: InstructorDTO[]; total: number; totalPages: number }> {
     const {tutors,total,totalPages} = await this._adminRepository.getAllTutors(page, limit, filter);
     return {tutors:toInstructorDTOList(tutors),total,totalPages}

@@ -1,6 +1,5 @@
 import { ReviewDTO } from "../../DTO/review.dto";
-import { toReviewDTO, toReviewDTOList } from "../../Mappers/review.mapper";
-import { IReview } from "../../models/interfaces/review.interface";
+import { toReviewDTOList } from "../../Mappers/review.mapper";
 import { IReviewRepository } from "../../repository/interfaces/review.interface";
 import { IReviewService } from "../interfaces/review.interface";
 

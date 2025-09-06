@@ -6,7 +6,7 @@ import { IMessageService } from "../interfaces/message.interface";
 export class MessageService implements IMessageService {
   constructor(private _messageRepository: IMessageRepository) {}
 
-  async sendMessage(data: any): Promise<IMessage | null> {
+  async sendMessage(data: Partial<IMessage>): Promise<IMessage | null> {
     return this._messageRepository.saveMessage(data);
   }
 

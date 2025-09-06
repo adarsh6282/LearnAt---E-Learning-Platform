@@ -2,6 +2,7 @@ import { ICategory } from "../../models/interfaces/category.interface";
 import { ICategoryRepository } from "../interfaces/category.interface";
 import Category from "../../models/implementations/categoryModel";
 import { BaseRepository } from "../base.repository";
+import { FilterQuery } from "mongoose";
 
 export class CategoryRepository
   extends BaseRepository<ICategory>
@@ -35,7 +36,7 @@ export class CategoryRepository
   ): Promise<{ category: ICategory[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: FilterQuery<ICategory> = {};
 
     if (search) {
       query.$or = [{ name: { $regex: search, $options: "i" } }];

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,7 +11,7 @@ const adminModel_1 = __importDefault(require("../models/implementations/adminMod
 const statusCodes_1 = require("../constants/statusCodes");
 dotenv_1.default.config();
 const authRole = (allowedRoles) => {
-    return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    return async (req, res, next) => {
         try {
             const authHeader = req.headers.authorization;
             if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -41,7 +32,7 @@ const authRole = (allowedRoles) => {
             }
             switch (decoded.role) {
                 case "user":
-                    const user = yield userModel_1.default.findById(decoded._id);
+                    const user = await userModel_1.default.findById(decoded._id);
                     if (!user) {
                         res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ success: false, message: "User not found" });
                         return;
@@ -56,7 +47,7 @@ const authRole = (allowedRoles) => {
                     req.user = { id: user._id, email: user.email };
                     break;
                 case "instructor":
-                    const instructor = yield instructorModel_1.default.findById(decoded._id);
+                    const instructor = await instructorModel_1.default.findById(decoded._id);
                     if (!instructor) {
                         res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ success: false, message: "Instructor not found" });
                         return;
@@ -71,7 +62,7 @@ const authRole = (allowedRoles) => {
                     req.instructor = { id: instructor._id, email: instructor.email };
                     break;
                 case "admin":
-                    const admin = yield adminModel_1.default.findOne({ email: decoded.email });
+                    const admin = await adminModel_1.default.findOne({ email: decoded.email });
                     if (!admin) {
                         res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ success: false, message: "Admin not found" });
                         return;
@@ -86,13 +77,11 @@ const authRole = (allowedRoles) => {
             }
             next();
         }
-        catch (error) {
-            console.error("Auth error:", error);
-            res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({
-                success: false,
-                message: "Authentication failed",
-            });
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ success: false, message });
         }
-    });
+    };
 };
 exports.default = authRole;

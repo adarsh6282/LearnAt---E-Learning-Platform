@@ -6,12 +6,13 @@ import { getTutorsS, toggleTutorBlockS } from "../../services/admin.services";
 import type { Tutor } from "../../types/instructor.types";
 import { ADMIN_ROUTES } from "../../constants/routes.constants";
 import Pagination from "../../components/Pagination";
+import type { AxiosError } from "axios";
 
 const AdminTutors = () => {
   const [loading, setLoading] = useState(true);
   const [blockingTutorId, setBlockingTutorId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debounce,setDebounce]=useState("")
+  const [debounce, setDebounce] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
@@ -20,12 +21,12 @@ const AdminTutors = () => {
   const navigate = useNavigate();
   const [tutors, setTutors] = useState<Tutor[]>([]);
 
-  useEffect(()=>{
-    const timeout=setTimeout(() => {
-      setDebounce(searchQuery)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounce(searchQuery);
     }, 300);
-    return ()=>clearTimeout(timeout)
-  },[searchQuery])
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchTutors = async () => {
@@ -33,10 +34,10 @@ const AdminTutors = () => {
         const res = await getTutorsS(currentPage, itemsPerPage, debounce);
         setTutors(res.tutors);
         setTotalPages(res.totalPages);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.log(err);
-        const msg = err.response?.data?.message;
-        errorToast(msg);
+        const error = err as AxiosError<{ message: string }>;
+        errorToast(error.response?.data?.message || "Failed to add category");
       } finally {
         setLoading(false);
       }
@@ -63,10 +64,10 @@ const AdminTutors = () => {
           tutor.email === email ? { ...tutor, isBlocked: !isBlocked } : tutor
         )
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err);
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setBlockingTutorId(null);
     }
@@ -161,12 +162,17 @@ const AdminTutors = () => {
                       {blockingTutorId === tutor.email
                         ? "Processing..."
                         : tutor.isBlocked
-                        ? "Unblock"
-                        : "Block"}
+                          ? "Unblock"
+                          : "Block"}
                     </button>
                   </td>
                   <td>
-                    <Link className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200" to={`/admin/tutor-view/${tutor._id}`}>View Details</Link>
+                    <Link
+                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
+                      to={`/admin/tutor-view/${tutor._id}`}
+                    >
+                      View Details
+                    </Link>
                   </td>
                 </tr>
               ))}

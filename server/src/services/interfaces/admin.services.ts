@@ -1,4 +1,3 @@
-import { IUser } from "../../models/interfaces/auth.interface";
 import { ICategory } from "../../models/interfaces/category.interface";
 import { ICourse } from "../../models/interfaces/course.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
@@ -16,6 +15,7 @@ import { CategoryDTO } from "../../DTO/category.dto";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { ComplaintDTO } from "../../DTO/complaint.dto";
 import { NotificationDTO } from "../../DTO/notification.dto";
+import { FilterQuery } from "mongoose";
 
 export interface IAdminService {
   login(email: string, password: string): Promise<AdminLoginResponse>;
@@ -33,7 +33,7 @@ export interface IAdminService {
   getAllTutors(
     page: number,
     limit: number,
-    filter: any
+    filter: FilterQuery<IInstructor>
   ): Promise<{ tutors: InstructorDTO[]; total: number; totalPages: number }>;
   verifyTutor(email: string): Promise<IInstructor | null>;
   rejectTutor(email: string, reason: string): Promise<IInstructor | null>;

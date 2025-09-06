@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -39,17 +30,17 @@ const initSocket = (server) => {
             socket.join(userId);
             console.log(`Socket joined notification room: ${userId}`);
         });
-        socket.on("sendMessage", (message) => __awaiter(void 0, void 0, void 0, function* () {
+        socket.on("sendMessage", async (message) => {
             try {
-                const saved = yield messageService.sendMessage(message);
+                const saved = await messageService.sendMessage(message);
                 socket.to(message.chat).emit("receiveMessage", saved);
-                const chat = yield chatModel_1.default.findById(message.chat);
+                const chat = await chatModel_1.default.findById(message.chat);
                 let receiverId;
-                if (message.senderId === (chat === null || chat === void 0 ? void 0 : chat.user.toString())) {
-                    receiverId = chat === null || chat === void 0 ? void 0 : chat.instructor.toString();
+                if (message.senderId === chat?.user.toString()) {
+                    receiverId = chat?.instructor.toString();
                 }
                 else {
-                    receiverId = chat === null || chat === void 0 ? void 0 : chat.user.toString();
+                    receiverId = chat?.user.toString();
                 }
                 if (receiverId) {
                     io.to(receiverId).emit("newMessageForBadge", {
@@ -57,9 +48,9 @@ const initSocket = (server) => {
                     });
                 }
                 const chatListUpdate = {
-                    chatId: chat === null || chat === void 0 ? void 0 : chat._id,
-                    lastMessage: chat === null || chat === void 0 ? void 0 : chat.lastMessage,
-                    lastMessageContent: chat === null || chat === void 0 ? void 0 : chat.lastMessageContent,
+                    chatId: chat?._id,
+                    lastMessage: chat?.lastMessage,
+                    lastMessageContent: chat?.lastMessageContent,
                 };
                 io.to(message.senderId.toString()).emit("updateChatList", chatListUpdate);
                 if (receiverId) {
@@ -69,7 +60,7 @@ const initSocket = (server) => {
             catch (error) {
                 console.error("Socket Error Saving Message:", error);
             }
-        }));
+        });
         socket.on("join-video-room", (chatId) => {
             socket.join(chatId);
             console.log(`Socket joined video room: ${chatId}`);
@@ -84,7 +75,7 @@ const initSocket = (server) => {
             console.log("receiver", receiverId);
             socket.to(chatId).emit("webrtc-offer", { offer, senderId });
         });
-        socket.on("call-rejected", ({ callerId, chatId }) => {
+        socket.on("call-rejected", ({ chatId }) => {
             socket.to(chatId).emit("end-call");
         });
         socket.on("webrtc-answer", ({ chatId, answer, senderId }) => {

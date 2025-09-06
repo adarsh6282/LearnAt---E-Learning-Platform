@@ -7,6 +7,7 @@ import { createCourseS } from "../../services/instructor.services";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 import instructorApi from "../../services/instructorApiService";
 import type { Category } from "../../types/category.types";
+import type { AxiosError } from "axios";
 
 const InstructorCreateCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -38,8 +39,8 @@ const InstructorCreateCourse: React.FC = () => {
       try {
         const response = await instructorApi.get<Category[]>("/instructors/category")
         const activeNames = response.data
-          .filter((cat: any) => !cat.isDeleted)
-          .map((cat: any) => cat.name);
+          .filter((cat: {name:string,isDeleted:boolean}) => !cat.isDeleted)
+          .map((cat: {name:string,isDeleted:boolean}) => cat.name);
         setCategories(activeNames);
       } catch (err) {
         console.error("Failed to load categories:", err);
@@ -180,8 +181,9 @@ const InstructorCreateCourse: React.FC = () => {
         successToast("Course created successfully!");
         navigate(INSTRUCTOR_ROUTES.COURSES);
       }
-    } catch (error: any) {
-      errorToast(error?.response?.data?.message || "Failed to create course");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }

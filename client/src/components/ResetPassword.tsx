@@ -45,6 +45,7 @@ const ResetPassword: React.FC<OtpPageProps> = ({ role }) => {
           }
         }
       } catch (err) {
+        console.log(err)
         setError("Something went wrong. Please try again later.");
       }
     }

@@ -8,6 +8,9 @@ import instructorApi from "./instructorApiService";
 import type { INotification } from "../context/NotificationContext";
 import type { Category } from "../types/category.types";
 import type { User } from "../types/user.types";
+import { createApi } from "./newApiService";
+
+const api=createApi("instructor")
 
 interface Review {
   _id: string;
@@ -61,7 +64,7 @@ export const getInstructorCoursesS = async (
   limit: number,
   search: string
 ) => {
-  return await instructorApi.get<{
+  return await api.get<{
     courses: ICourse[];
     total: number;
     totalPages: number;
@@ -69,11 +72,11 @@ export const getInstructorCoursesS = async (
 };
 
 export const getProfileS = async () => {
-  return await instructorApi.get<IInstructorProfile>("/instructors/profile");
+  return await api.get<IInstructorProfile>("/instructors/profile");
 };
 
 export const editProfileS = async (formPayload: FormData) => {
-  return await instructorApi.put<IInstructorProfile>(
+  return await api.put<IInstructorProfile>(
     "/instructors/profile",
     formPayload,
     {
@@ -85,7 +88,7 @@ export const editProfileS = async (formPayload: FormData) => {
 };
 
 export const createCourseS = async (formData: FormData) => {
-  return await instructorApi.post("/instructors/courses", formData, {
+  return await api.post("/instructors/courses", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -93,7 +96,7 @@ export const createCourseS = async (formData: FormData) => {
 };
 
 export const editCourseS = async (courseId: string, formData: FormData) => {
-  return await instructorApi.put(
+  return await api.put(
     `/instructors/courses/editcourse/${courseId}`,
     formData,
     {
@@ -105,7 +108,7 @@ export const editCourseS = async (courseId: string, formData: FormData) => {
 };
 
 export const instructorLoginS = async (email: string, password: string) => {
-  return await instructorApi.post<VerifyInstructor>("/instructors/login", {
+  return await api.post<VerifyInstructor>("/instructors/login", {
     email,
     password,
   });
@@ -136,7 +139,7 @@ export const instructorRegisterS = async (formPayload: {
   data.append("confirmPassword", formPayload.confirmPassword);
   data.append("resume", formPayload.resume);
 
-  return await instructorApi.post<InstructorRegisterResponse>(
+  return await api.post<InstructorRegisterResponse>(
     "/instructors/register",
     data,
     {
@@ -148,13 +151,13 @@ export const instructorRegisterS = async (formPayload: {
 };
 
 export const getCourseById = async (courseId: string) => {
-  return await instructorApi.get<CourseData>(
+  return await api.get<CourseData>(
     `/instructors/courses/${courseId}`
   );
 };
 
 export const reapplyS = async (formData: FormData) => {
-  return await instructorApi.put("/instructors/reapply", formData, {
+  return await api.put("/instructors/reapply", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -167,7 +170,7 @@ export const getEnrollments = async (
   search: string,
   status: string
 ) => {
-  return await instructorApi.get<{
+  return await api.get<{
     enrollments: Enrollment[];
     totalPages: number;
   }>(
@@ -176,14 +179,14 @@ export const getEnrollments = async (
 };
 
 export const instructorRefreshTokenS = async () => {
-  return await instructorApi.post<{ token: string }>(
+  return await api.post<{ token: string }>(
     "/instructors/refresh-token",
     {}
   );
 };
 
 export const getWalletSforInstructor = async (page: number, limit: number) => {
-  return await instructorApi.get<{
+  return await api.get<{
     transactions: [];
     balance: number;
     totalPages: number;
@@ -191,13 +194,13 @@ export const getWalletSforInstructor = async (page: number, limit: number) => {
 };
 
 export const instructorCourseChart = async () => {
-  return await instructorApi.get<{ title: string; enrolledCount: number }[]>(
+  return await api.get<{ title: string; enrolledCount: number }[]>(
     "/instructors/course-stats"
   );
 };
 
 export const instructorIncomeChart = async () => {
-  return await instructorApi.get<{ month: string; revenue: number }[]>(
+  return await api.get<{ month: string; revenue: number }[]>(
     "/instructors/income-stats"
   );
 };
@@ -206,7 +209,7 @@ export const unreadCountS = async (
   userId: string,
   userModel: "User" | "Instructor"
 ) => {
-  const res = await instructorApi.get<{ count: number; chat: string }[]>(
+  const res = await api.get<{ count: number; chat: string }[]>(
     `/instructors/chats/unread-counts?userId=${userId}&userModel=${userModel}`
   );
   const totalCount = res.data.reduce((acc, curr) => acc + curr.count, 0);
@@ -214,7 +217,7 @@ export const unreadCountS = async (
 };
 
 export const instructorLogout = async () => {
-  return await instructorApi.post(
+  return await api.post(
     "/instructors/logout",
     {},
     { withCredentials: true }
@@ -222,23 +225,23 @@ export const instructorLogout = async () => {
 };
 
 export const instructorNotification = async (userId: string) => {
-  return await instructorApi.get<INotification[]>(
+  return await api.get<INotification[]>(
     `/instructors/notifications/${userId}`
   );
 };
 
 export const markAsReadInstructor = async (notificationId: string) => {
-  return await instructorApi.put(
+  return await api.put(
     `/instructors/notifications/read/${notificationId}`
   );
 };
 
 export const getCategories = async () => {
-  return await instructorApi.get<Category[]>("/instructors/category");
+  return await api.get<Category[]>("/instructors/category");
 };
 
 export const getChatList = async (userId: string) => {
-  const res = await instructorApi.get<User[]>(
+  const res = await api.get<User[]>(
     `/chats/list/${userId}?role=instructor`
   );
   const formattedChats = res.data.map((chat: any) => ({
@@ -252,14 +255,14 @@ export const getChatList = async (userId: string) => {
 };
 
 export const filteredUsers = async () => {
-  return await instructorApi.get<User[]>("/instructors/users/purchased");
+  return await api.get<User[]>("/instructors/users/purchased");
 };
 
 export const initiateChat = async (
   instructorId: string,
   userId: string
 ): Promise<ChatResponse> => {
-  const res = await instructorApi.post<ChatResponse>("/chats/initiate", {
+  const res = await api.post<ChatResponse>("/chats/initiate", {
     instructorId,
     userId,
   });
@@ -271,7 +274,7 @@ export const instructorResetPassword = async (
   newPassword: string,
   confirmPassword: string
 ) => {
-  return await instructorApi.put(`/instructors/resetpassword`, {
+  return await api.put(`/instructors/resetpassword`, {
     email,
     newPassword,
     confirmPassword,
@@ -283,7 +286,7 @@ export const markMessagesReadS = async (
   userId: string,
   userModel: "User" | "Instructor"
 ) => {
-  return await instructorApi.post(
+  return await api.post(
     `/instructors/messages/mark-as-read/${chatId}`,
     {
       userId: userId,
@@ -293,19 +296,19 @@ export const markMessagesReadS = async (
 };
 
 export const getMessages = async (chatId: string) => {
-  return await instructorApi.get<Message[]>(`/messages/${chatId}`);
+  return await api.get<Message[]>(`/messages/${chatId}`);
 };
 
 export const sentImageinMessage = async (formData: FormData) => {
-  return await instructorApi.post<{ message: string; url: string }>(
+  return await api.post<{ message: string; url: string }>(
     "/messages/upload-image",
     formData,
     { headers: { "Content-Type": "multipart/form-data" } }
   );
 };
 
-export const instructorReviews = async (page:number,limit:number,rating:number) => {
-  return await instructorApi.get<{
+export const instructorReviews = async (page:number,limit:number,rating:number|null) => {
+  return await api.get<{
     reviews: Review[];
     total: number;
     totalPages: number;

@@ -2,7 +2,6 @@ import Certificate from "../../models/implementations/certificateModel";
 import { ICertificateReopsitory } from "../interfaces/certificate.interface";
 import { ICertificate } from "../../models/interfaces/certificate.interface";
 import mongoose from "mongoose";
-import type { Types } from "mongoose";
 
 export class CertificateRepository implements ICertificateReopsitory {
   async createCertificate(
@@ -35,6 +34,7 @@ export class CertificateRepository implements ICertificateReopsitory {
       "course",
       "title"
     );
+    
     return certificates.map((cert) => ({
       id: cert.id.toString(),
       user: userId,

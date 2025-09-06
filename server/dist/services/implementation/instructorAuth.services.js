@@ -32,15 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -68,246 +59,206 @@ class InstructorAuthSerivce {
         this._categoryRepository = _categoryRepository;
         this._notificationRepository = _notificationRepository;
     }
-    registerInstructor(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const existingAdmin = yield this._adminRepository.findAdminByEmail(email);
-            if (existingAdmin) {
-                throw new Error("This email is used by admin. Please register with new one");
-            }
-            const existingUser = yield this._userRepository.findByEmail(email);
-            if (existingUser) {
-                throw new Error("This email is used by user. Please register with new one");
-            }
-            const existing = yield this._instructorAuthRepository.findByEmail(email);
-            if (existing) {
-                throw new Error("Instructor already exists");
-            }
-            const otp = (0, otpGenerator_1.default)();
-            yield this._otpRepository.saveOTP({
-                email: email,
-                otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry,
+    async registerInstructor(email) {
+        const existingAdmin = await this._adminRepository.findAdminByEmail(email);
+        if (existingAdmin) {
+            throw new Error("This email is used by admin. Please register with new one");
+        }
+        const existingUser = await this._userRepository.findByEmail(email);
+        if (existingUser) {
+            throw new Error("This email is used by user. Please register with new one");
+        }
+        const existing = await this._instructorAuthRepository.findByEmail(email);
+        if (existing) {
+            throw new Error("Instructor already exists");
+        }
+        const otp = (0, otpGenerator_1.default)();
+        await this._otpRepository.saveOTP({
+            email: email,
+            otp: otp,
+            expiresAt: otpGenerator_1.otpExpiry,
+        });
+        await (0, sendMail_1.sendMail)(email, otp);
+    }
+    async verifyOtp(data) {
+        const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
+        if (!otpRecord)
+            throw new Error("OTP not found");
+        if (otpRecord.otp !== data.otp) {
+            throw new Error("Invalid OTP");
+        }
+        const hashedPassword = await bcrypt_1.default.hash(data.password, 10);
+        const instructor = await this._instructorAuthRepository.createInstructor({
+            ...data,
+            password: hashedPassword,
+            resume: data.resume,
+        });
+        await this._otpRepository.deleteOtpbyEmail(data.email);
+        const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
+        const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
+        return { instructor, token, instructorRefreshToken };
+    }
+    async reApplyS(email, resume) {
+        const instructor = await this._instructorAuthRepository.findByEmail(email);
+        if (!instructor)
+            throw new Error("Instructor not found");
+        const updatedData = {
+            resume: resume,
+            isVerified: false,
+            isRejected: false,
+            accountStatus: "pending",
+        };
+        return await this._instructorAuthRepository.updateInstructor(instructor.email, updatedData);
+    }
+    async loginInstructor(email, password) {
+        const instructor = await this._instructorAuthRepository.findByEmail(email);
+        if (!instructor) {
+            throw new Error("Instructor not registered");
+        }
+        if (instructor.isBlocked) {
+            throw new Error("Instructor is blocked");
+        }
+        const isMatch = await bcrypt_1.default.compare(password, instructor.password);
+        if (!isMatch) {
+            throw new Error("Passowrd doesn't match");
+        }
+        const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
+        const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
+        return { instructor, token, instructorRefreshToken };
+    }
+    async handleForgotPassword(email) {
+        const instructor = await this._instructorAuthRepository.findByEmail(email);
+        if (!instructor) {
+            throw new Error("No Instructor found");
+        }
+        const otp = (0, otpGenerator_1.default)();
+        await this._otpRepository.saveOTP({
+            email: email,
+            otp: otp,
+            expiresAt: otpGenerator_1.otpExpiry,
+        });
+        await (0, sendMail_1.sendMail)(email, otp);
+    }
+    async verifyForgotOtp(data) {
+        const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
+        if (!otpRecord) {
+            throw new Error("Couldn't find otp in email");
+        }
+        if (otpRecord.otp !== data.otp) {
+            throw new Error("otp doesn't match");
+        }
+        await this._otpRepository.deleteOtpbyEmail(data.email);
+        return true;
+    }
+    async handleResetPassword(data) {
+        const instructor = await this._instructorAuthRepository.findByEmail(data.email);
+        if (!instructor) {
+            throw new Error("User not found");
+        }
+        if (data.newPassword !== data.confirmPassword) {
+            throw new Error("Password didn't match");
+        }
+        const hashedPassword = await bcrypt_1.default.hash(data.newPassword, 10);
+        instructor.password = hashedPassword;
+        await instructor.save();
+        return true;
+    }
+    async handleResendOtp(email) {
+        const instructor = await this._otpRepository.findOtpbyEmail(email);
+        if (!instructor) {
+            throw new Error("NO user found");
+        }
+        const otp = (0, otpGenerator_1.default)();
+        await this._otpRepository.saveOTP({
+            email: email,
+            otp: otp,
+            expiresAt: otpGenerator_1.otpExpiry,
+        });
+        await (0, sendMail_1.sendMail)(email, otp);
+    }
+    async getProfileService(email) {
+        const instructor = await this._instructorAuthRepository.findForProfile(email);
+        if (!instructor) {
+            throw new Error("Inbstructor not exist");
+        }
+        return (0, instructor_mapper_1.toInstructorDTO)(instructor);
+    }
+    async updateProfileService(email, { name, phone, title, yearsOfExperience, education, profilePicture, }) {
+        const updateFields = {
+            name,
+            phone,
+            title,
+            yearsOfExperience,
+            education,
+        };
+        if (profilePicture?.path) {
+            const result = await cloudinary_config_1.default.uploader.upload(profilePicture.path, {
+                folder: "profilePicture",
+                use_filename: true,
+                unique_filename: true,
             });
-            yield (0, sendMail_1.sendMail)(email, otp);
-        });
+            updateFields.profilePicture = result.secure_url;
+        }
+        const instructor = await this._instructorAuthRepository.updateInstructorByEmail(email, updateFields);
+        if (!instructor)
+            throw new Error("Instructor not found");
+        return (0, instructor_mapper_1.toInstructorDTO)(instructor);
     }
-    verifyOtp(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
-            if (!otpRecord)
-                throw new Error("OTP not found");
-            if (otpRecord.otp !== data.otp) {
-                throw new Error("Invalid OTP");
-            }
-            const hashedPassword = yield bcrypt_1.default.hash(data.password, 10);
-            const instructor = yield this._instructorAuthRepository.createInstructor(Object.assign(Object.assign({}, data), { password: hashedPassword, resume: data.resume }));
-            yield this._otpRepository.deleteOtpbyEmail(data.email);
-            const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
-            const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-            return { instructor, token, instructorRefreshToken };
-        });
+    async getCoursesByInstructor(instructorId, page, limit, search) {
+        const { courses, total, totalPages } = await this._courseRepository.findCoursesByInstructor(instructorId, page, limit, search);
+        return { courses: (0, course_mapper_1.toCourseDTOList)(courses), total, totalPages };
     }
-    reApplyS(email, resume) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorAuthRepository.findByEmail(email);
-            if (!instructor)
-                throw new Error("Instructor not found");
-            const updatedData = {
-                resume: resume,
-                isVerified: false,
-                isRejected: false,
-                accountStatus: "pending",
-            };
-            return yield this._instructorAuthRepository.updateInstructor(instructor.email, updatedData);
-        });
+    async getCourseById(courseId) {
+        const course = await this._courseRepository.findCourseById(courseId);
+        if (!course) {
+            throw new Error("No Course Found");
+        }
+        return (0, course_mapper_1.toCourseDTO)(course);
     }
-    loginInstructor(email, password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorAuthRepository.findByEmail(email);
-            if (!instructor) {
-                throw new Error("Instructor not registered");
-            }
-            if (instructor.isBlocked) {
-                throw new Error("Instructor is blocked");
-            }
-            const isMatch = yield bcrypt_1.default.compare(password, instructor.password);
-            if (!isMatch) {
-                throw new Error("Passowrd doesn't match");
-            }
-            const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
-            const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-            return { instructor, token, instructorRefreshToken };
-        });
+    async getCategory() {
+        const categories = await this._categoryRepository.getCatgeoriesInstructor();
+        if (!categories) {
+            throw new Error("No categories found");
+        }
+        return categories;
     }
-    handleForgotPassword(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorAuthRepository.findByEmail(email);
-            if (!instructor) {
-                throw new Error("No Instructor found");
-            }
-            const otp = (0, otpGenerator_1.default)();
-            yield this._otpRepository.saveOTP({
-                email: email,
-                otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry,
-            });
-            yield (0, sendMail_1.sendMail)(email, otp);
-        });
+    async getReviewsByInstructor(instructorId, page, limit, rating) {
+        const { reviews, total, totalPages } = await this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
+        return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
     }
-    verifyForgotOtp(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const otpRecord = yield this._otpRepository.findOtpbyEmail(data.email);
-            if (!otpRecord) {
-                throw new Error("Couldn't find otp in email");
-            }
-            if (otpRecord.otp !== data.otp) {
-                throw new Error("otp doesn't match");
-            }
-            yield this._otpRepository.deleteOtpbyEmail(data.email);
-            return true;
-        });
+    async getEnrollments(instructorId, page, limit, search, status) {
+        const enrollments = await this._orderRepository.getEnrollmentsByInstructor(instructorId, page, limit, search, status);
+        return enrollments;
     }
-    handleResetPassword(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorAuthRepository.findByEmail(data.email);
-            if (!instructor) {
-                throw new Error("User not found");
-            }
-            if (data.newPassword !== data.confirmPassword) {
-                throw new Error("Password didn't match");
-            }
-            const hashedPassword = yield bcrypt_1.default.hash(data.newPassword, 10);
-            instructor.password = hashedPassword;
-            yield instructor.save();
-            return true;
-        });
+    async getWallet(instructorId, page, limit) {
+        const wallet = await this._walletRepository.findWalletOfInstructor(instructorId, page, limit);
+        if (!wallet) {
+            throw new Error("No wallet found for the instructor");
+        }
+        return wallet;
     }
-    handleResendOtp(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._otpRepository.findOtpbyEmail(email);
-            if (!instructor) {
-                throw new Error("NO user found");
-            }
-            const otp = (0, otpGenerator_1.default)();
-            yield this._otpRepository.saveOTP({
-                email: email,
-                otp: otp,
-                expiresAt: otpGenerator_1.otpExpiry,
-            });
-            yield (0, sendMail_1.sendMail)(email, otp);
-        });
+    async getCouresStats(instructorId) {
+        return await this._courseRepository.getCourseStatsOfInstructor(instructorId);
     }
-    getProfileService(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorAuthRepository.findForProfile(email);
-            if (!instructor) {
-                throw new Error("Inbstructor not exist");
-            }
-            return (0, instructor_mapper_1.toInstructorDTO)(instructor);
-        });
+    async getDashboard(instructorId) {
+        return await this._instructorAuthRepository.getDashboard(instructorId);
     }
-    updateProfileService(email_1, _a) {
-        return __awaiter(this, arguments, void 0, function* (email, { name, phone, title, yearsOfExperience, education, profilePicture, }) {
-            const updateFields = {
-                name,
-                phone,
-                title,
-                yearsOfExperience,
-                education,
-            };
-            if (profilePicture === null || profilePicture === void 0 ? void 0 : profilePicture.path) {
-                const result = yield cloudinary_config_1.default.uploader.upload(profilePicture.path, {
-                    folder: "profilePicture",
-                    use_filename: true,
-                    unique_filename: true,
-                });
-                updateFields.profilePicture = result.secure_url;
-            }
-            const instructor = yield this._instructorAuthRepository.updateInstructorByEmail(email, updateFields);
-            if (!instructor)
-                throw new Error("Instructor not found");
-            return (0, instructor_mapper_1.toInstructorDTO)(instructor);
-        });
+    async getIncomeStats(instructorId) {
+        return await this._walletRepository.getIncome(instructorId);
     }
-    getCoursesByInstructor(instructorId, page, limit, search) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { courses, total, totalPages } = yield this._courseRepository.findCoursesByInstructor(instructorId, page, limit, search);
-            return { courses: (0, course_mapper_1.toCourseDTOList)(courses), total, totalPages };
-        });
+    async getNotifications(userId) {
+        const notification = await this._notificationRepository.getAllNotifications(userId);
+        return (0, notification_mapper_1.toNotificationDTOList)(notification);
     }
-    getCourseById(courseId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const course = yield this._courseRepository.findCourseById(courseId);
-            if (!course) {
-                throw new Error("No Course Found");
-            }
-            return (0, course_mapper_1.toCourseDTO)(course);
-        });
+    async markAsRead(notificationId) {
+        const notification = await this._notificationRepository.updateNotification(notificationId);
+        return notification;
     }
-    getCategory() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const categories = yield this._categoryRepository.getCatgeoriesInstructor();
-            if (!categories) {
-                throw new Error("No categories found");
-            }
-            return categories;
-        });
-    }
-    getReviewsByInstructor(instructorId, page, limit, rating) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { reviews, total, totalPages } = yield this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
-            return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
-        });
-    }
-    getEnrollments(instructorId, page, limit, search, status) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const enrollments = yield this._orderRepository.getEnrollmentsByInstructor(instructorId, page, limit, search, status);
-            return enrollments;
-        });
-    }
-    getWallet(instructorId, page, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const wallet = yield this._walletRepository.findWalletOfInstructor(instructorId, page, limit);
-            if (!wallet) {
-                throw new Error("No wallet found for the instructor");
-            }
-            return wallet;
-        });
-    }
-    getCouresStats(instructorId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.getCourseStatsOfInstructor(instructorId);
-        });
-    }
-    getDashboard(instructorId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._instructorAuthRepository.getDashboard(instructorId);
-        });
-    }
-    getIncomeStats(instructorId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._walletRepository.getIncome(instructorId);
-        });
-    }
-    getNotifications(userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const notification = yield this._notificationRepository.getAllNotifications(userId);
-            return (0, notification_mapper_1.toNotificationDTOList)(notification);
-        });
-    }
-    markAsRead(notificationId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const notification = yield this._notificationRepository.updateNotification(notificationId);
-            return notification;
-        });
-    }
-    getPurchasedUsers(instructorId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const userIds = yield this._courseRepository.getUsersByInstructor(instructorId);
-            if (!userIds.length)
-                return [];
-            return this._userRepository.findUsersByIds(userIds);
-        });
+    async getPurchasedUsers(instructorId) {
+        const userIds = await this._courseRepository.getUsersByInstructor(instructorId);
+        if (!userIds.length)
+            return [];
+        return this._userRepository.findUsersByIds(userIds);
     }
 }
 exports.InstructorAuthSerivce = InstructorAuthSerivce;

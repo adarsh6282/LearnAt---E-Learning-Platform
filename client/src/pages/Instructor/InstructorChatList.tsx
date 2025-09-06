@@ -86,7 +86,8 @@ const InstructorChatList = () => {
 
   const handleStartChat = async (user: User) => {
     try {
-      const chat=await initiateChat(authUser?._id!,user._id)
+      if(!authUser?._id) return
+      const chat=await initiateChat(authUser?._id,user._id)
 
       navigate(`/instructors/chat/${chat._id}`, {
         state: {

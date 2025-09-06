@@ -5,25 +5,26 @@ import type { User } from "../../types/user.types";
 import { getUsersS, toggleUserBlockS } from "../../services/admin.services";
 import Pagination from "../../components/Pagination";
 import { useSearchParams } from "react-router-dom";
+import type { AxiosError } from "axios";
 
 const AdminUsers = () => {
   const [blockingUserId, setBlockingUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debounce,setDebounce]=useState("")
+  const [debounce, setDebounce] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
-  const pageParam=parseInt(searchParams.get("page")||"1")
+  const pageParam = parseInt(searchParams.get("page") || "1");
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
   const itemsPerPage = 5;
   const [users, setUsers] = useState<User[]>([]);
 
-  useEffect(()=>{
-    const timeout=setTimeout(() => {
-      setDebounce(searchQuery)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounce(searchQuery);
     }, 300);
-    return ()=>clearTimeout(timeout)
-  },[searchQuery])
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,10 +32,10 @@ const AdminUsers = () => {
         const res = await getUsersS(currentPage, itemsPerPage, debounce);
         setUsers(res.data.users);
         setTotalPages(res.data.totalPages);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.log(err);
-        const msg = err.response?.data?.message;
-        errorToast(msg);
+        const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -61,9 +62,9 @@ const AdminUsers = () => {
           user.email === email ? { ...user, isBlocked: !isBlocked } : user
         )
       );
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setBlockingUserId(null);
     }
@@ -148,8 +149,8 @@ const AdminUsers = () => {
                       {blockingUserId === user.email
                         ? "Processing..."
                         : user.isBlocked
-                        ? "Unblock"
-                        : "Block"}
+                          ? "Unblock"
+                          : "Block"}
                     </button>
                   </td>
                 </tr>

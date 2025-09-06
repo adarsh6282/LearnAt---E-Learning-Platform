@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { successToast } from "./Toast";
+import { errorToast, successToast } from "./Toast";
 import type { VerifyOtpResponse } from "../types/user.types";
 import type { VerifyInstructor } from "../types/instructor.types";
 import userApi from "../services/userApiService";
 import instructorApi from "../services/instructorApiService";
+import { sentOtp } from "../services/common.service";
+import type { AxiosError } from "axios";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -24,7 +26,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
     if (role === "users" && usertoken) navigate("/home");
     if (role == "instructors" && instructortoken)
       navigate("/instructors/dashboard");
-  }, [usertoken, instructortoken, navigate]);
+  }, [usertoken, instructortoken, navigate, role]);
 
   useEffect(() => {
     if (timer === 0) {
@@ -46,15 +48,8 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
     try {
       const stored = localStorage.getItem("signUpData");
       const userData = stored ? JSON.parse(stored) : null;
-      const selectedApi = role === "users" ? userApi : instructorApi;
 
-      const response = await selectedApi.post<
-        VerifyOtpResponse | VerifyInstructor
-      >(`/${role}/verify-otp`, {
-        ...userData,
-        otp,
-      });
-
+      const response = await sentOtp(role, userData, otp);
       if (response && response.status === 201) {
         const token = response.data.token;
         const email =
@@ -70,8 +65,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
         successToast(response.data.message);
         navigate("/");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "OTP verification failed");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -83,7 +79,6 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
     setTimer(60);
 
     try {
-      const selectedApi = role === "users" ? userApi : instructorApi;
       const stored = localStorage.getItem("signUpData");
       const userData = stored ? JSON.parse(stored) : null;
 
@@ -92,12 +87,21 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
         return;
       }
 
-      await selectedApi.post(`/${role}/resend-otp`, {
-        email: userData.email,
-      });
+      if (role == "users") {
+        await userApi.post(`/users/resend-otp`, {
+          email: userData.email,
+        });
+      } else if (role === "instructors") {
+        await instructorApi.post(`/instructors/resend-otp`, {
+          email: userData.email,
+        });
+      }
+
       successToast("OTP resent successfully!");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to resend OTP");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        errorToast(err.message);
+      }
       setCanResend(true);
     }
   };
