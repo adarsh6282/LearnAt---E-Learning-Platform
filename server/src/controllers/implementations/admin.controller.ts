@@ -4,6 +4,8 @@ import { Request, Response } from "express";
 import { httpStatus } from "../../constants/statusCodes";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../../utils/jwt";
+import { FilterQuery } from "mongoose";
+import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 
 export class AdminController implements IAdminController {
   constructor(private _adminService: IAdminService) {}
@@ -28,11 +30,12 @@ export class AdminController implements IAdminController {
       res
         .status(httpStatus.OK)
         .json({ message: "Login successful", token, email: adminEmail });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -40,11 +43,12 @@ export class AdminController implements IAdminController {
     try {
       const dashboardData = await this._adminService.getDashboardData();
       res.status(httpStatus.OK).json(dashboardData);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -60,10 +64,12 @@ export class AdminController implements IAdminController {
         message: `Tutor has been ${blocked ? "blocked" : "unblocked"}`,
         user: updatedUser,
       });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -79,10 +85,12 @@ export class AdminController implements IAdminController {
         message: `User has been ${blocked ? "blocked" : "unblocked"}`,
         tutor: updatedTutor,
       });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -96,14 +104,16 @@ export class AdminController implements IAdminController {
         limit,
         search
       );
-      console.log(users)
+      console.log(users);
       res
         .status(httpStatus.OK)
         .json({ users, total, totalPages, currentPage: page });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -114,7 +124,7 @@ export class AdminController implements IAdminController {
       const isVerified = req.query.isVerified;
       const search = (req.query.search as string) || "";
 
-      const filter: any = {};
+      const filter: FilterQuery<IInstructor> = {};
       if (isVerified === "true") filter.isVerified = true;
       if (isVerified === "false") filter.isVerified = false;
 
@@ -130,10 +140,12 @@ export class AdminController implements IAdminController {
       res
         .status(httpStatus.OK)
         .json({ tutors, total, totalPages, currentPage: page });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -141,12 +153,14 @@ export class AdminController implements IAdminController {
     const { email } = req.body;
 
     try {
-      const approve = await this._adminService.verifyTutor(email);
+      await this._adminService.verifyTutor(email);
       res.status(httpStatus.OK).json("Tutor Approved Successfully");
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -162,25 +176,28 @@ export class AdminController implements IAdminController {
       res
         .status(httpStatus.OK)
         .json({ message: "Tutor rejected successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async addCategory(req: Request, res: Response): Promise<void> {
     try {
       const { name } = req.body;
-      const category = await this._adminService.addCategory(name);
+      await this._adminService.addCategory(name);
       res
         .status(httpStatus.CREATED)
         .json({ message: "Category Added Successfully" });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message:message });
     }
   }
 
@@ -197,34 +214,40 @@ export class AdminController implements IAdminController {
         status
       );
       res.status(httpStatus.OK).json(category);
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message:message });
     }
   }
 
   async deleteCategory(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const category = await this._adminService.deleteCategory(id);
+      await this._adminService.deleteCategory(id);
       res.status(httpStatus.OK).json({ message: "Category disabled" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async restoreCategory(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const category = await this._adminService.restoreCategory(id);
+      await this._adminService.restoreCategory(id);
       res.status(httpStatus.OK).json({ message: "Category restored" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -238,18 +261,19 @@ export class AdminController implements IAdminController {
       res
         .status(httpStatus.OK)
         .json({ course: course, total, totalPage, currentPage: page });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async softDeleteCourse(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const updated = await this._adminService.softDeleteCourseS(id);
+      await this._adminService.softDeleteCourseS(id);
       res
         .status(httpStatus.OK)
         .json({ message: "Course disabled successfully" });
@@ -263,7 +287,7 @@ export class AdminController implements IAdminController {
   async recoverCourse(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const updated = await this._adminService.recoverCourseS(id);
+      await this._adminService.recoverCourseS(id);
       res
         .status(httpStatus.OK)
         .json({ message: "Course enabled successfully" });
@@ -304,54 +328,58 @@ export class AdminController implements IAdminController {
       res
         .status(httpStatus.OK)
         .json({ reviews, total, totalPages, currentPage: page });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async hideReview(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     try {
-      const review = await this._adminService.hideReview(id);
+      await this._adminService.hideReview(id);
       res.status(httpStatus.OK).json({ message: "Review hidden successfully" });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async unhideReview(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     try {
-      const review = await this._adminService.unhideReview(id);
+      await this._adminService.unhideReview(id);
       res
         .status(httpStatus.OK)
         .json({ message: "Review retrieved successfully" });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async deleteReview(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     try {
-      const review = this._adminService.deleteReview(id);
+      await this._adminService.deleteReview(id);
       res
         .status(httpStatus.OK)
         .json({ message: "Review Deleted Successfully" });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -368,10 +396,12 @@ export class AdminController implements IAdminController {
         totalPages,
         currentPage: page,
       });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -400,10 +430,12 @@ export class AdminController implements IAdminController {
         decoded.role
       );
       res.status(httpStatus.OK).json({ token: adminToken });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -427,19 +459,16 @@ export class AdminController implements IAdminController {
     try {
       const { status, response } = req.body;
       const { id } = req.params;
-      const complaint = await this._adminService.responseComplaint(
-        id,
-        status,
-        response
-      );
+      await this._adminService.responseComplaint(id, status, response);
       res
         .status(httpStatus.OK)
         .json({ message: "Response Submitted successfully" });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -447,8 +476,12 @@ export class AdminController implements IAdminController {
     try {
       const courseStats = await this._adminService.getCourseStats();
       res.status(httpStatus.OK).json(courseStats);
-    } catch (err: any) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -456,19 +489,32 @@ export class AdminController implements IAdminController {
     try {
       const incomeStats = await this._adminService.getIncomeStats();
       res.status(httpStatus.OK).json(incomeStats);
-    } catch (err: any) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async getSpecificCourseforAdmin(req: Request, res: Response): Promise<void> {
-    const { courseId } = req.params;
-    if (!courseId) {
-      res.status(httpStatus.NOT_FOUND).json({ message: "Course not found" });
-      return;
+    try {
+      const { courseId } = req.params;
+      if (!courseId) {
+        res.status(httpStatus.NOT_FOUND).json({ message: "Course not found" });
+        return;
+      }
+      const course =
+        await this._adminService.getSpecificCourseForAdmin(courseId);
+      res.status(httpStatus.OK).json(course);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
-    const course = await this._adminService.getSpecificCourseForAdmin(courseId);
-    res.status(httpStatus.OK).json(course);
   }
 
   async getSpecificTutor(req: Request, res: Response): Promise<void> {
@@ -476,8 +522,12 @@ export class AdminController implements IAdminController {
       const { id } = req.params;
       const tutor = await this._adminService.getSpecificTutor(id);
       res.status(httpStatus.OK).json(tutor);
-    } catch (err) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -486,18 +536,26 @@ export class AdminController implements IAdminController {
       const { userId } = req.params;
       const notifications = await this._adminService.getNotifications(userId);
       res.status(httpStatus.OK).json(notifications);
-    } catch (err) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      const notification = await this._adminService.markAsRead(notificationId);
+      await this._adminService.markAsRead(notificationId);
       res.status(httpStatus.OK).json({ message: "Message Read" });
-    } catch (err) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 

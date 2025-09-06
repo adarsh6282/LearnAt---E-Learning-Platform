@@ -1,4 +1,3 @@
-import { ICourse } from "../../models/interfaces/course.interface";
 import { IOrder } from "../../models/interfaces/order.interface";
 import { IEnrollment } from "../../types/enrollment.types";
 import {

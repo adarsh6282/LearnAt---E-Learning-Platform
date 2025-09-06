@@ -11,12 +11,6 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const context = useContext(InstructorContext);
-  if (!context) {
-    return "No context here";
-  }
-
-  const { instructor, getInstructorProfile } = context;
-
   useEffect(() => {
     const fetchProfile = async () => {
       if (token) {
@@ -27,6 +21,12 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
 
     fetchProfile();
   }, [token]);
+  
+  if (!context) {
+    return "No context here";
+  }
+
+  const { instructor, getInstructorProfile } = context;
 
   const isRejected = instructor?.accountStatus === "rejected";
   const isPending = instructor?.accountStatus === "pending";

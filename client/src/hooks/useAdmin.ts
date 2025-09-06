@@ -16,6 +16,7 @@ const useAdmin = () => {
       const decoded = jwtDecode<DecodedAdminToken>(token);
       return { id: decoded._id, role:decoded.role };
     } catch (err) {
+      console.log(err)
       console.error("Invalid admin token");
       return { id: null, role: null };
     }

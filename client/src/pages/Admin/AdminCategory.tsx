@@ -10,6 +10,7 @@ import {
 import type { Category } from "../../types/category.types";
 import Pagination from "../../components/Pagination";
 import { useSearchParams } from "react-router-dom";
+import type { AxiosError } from "axios";
 
 const AdminCategory = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -20,22 +21,22 @@ const AdminCategory = () => {
   const itemsPerPage = 4;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm,setSearchTerm]=useState("")
-  const [debounce,setDebounce]=useState("")
-  const [selectedStatus,setSelectedStatus]=useState("")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debounce, setDebounce] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  useEffect(()=>{
-    const timeout=setTimeout(() => {
-      setDebounce(searchTerm)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounce(searchTerm);
     }, 300);
 
-    return ()=>clearTimeout(timeout)
-  },[searchTerm])
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchCategories();
-  }, [currentPage,itemsPerPage,debounce,selectedStatus]);
+  }, [currentPage, itemsPerPage, debounce, selectedStatus]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
@@ -58,19 +59,26 @@ const AdminCategory = () => {
       setShowModal(false);
       setNewCategoryName("");
       fetchCategories();
-    } catch (err: any) {
-      errorToast(err.response?.data?.message || "Failed to add category");
+    } catch (err: unknown) {
+      console.log(err);
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const all = await getAllCategoriesS(currentPage,itemsPerPage,debounce,selectedStatus);
+      const all = await getAllCategoriesS(
+        currentPage,
+        itemsPerPage,
+        debounce,
+        selectedStatus
+      );
       setCategories(all.category);
-      setTotalPages(all.totalPages)
-    } catch (err: any) {
-      const msg = err.response?.data?.message || "Failed to fetch categories";
-      errorToast(msg);
+      setTotalPages(all.totalPages);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -81,8 +89,9 @@ const AdminCategory = () => {
       const response = await softDeleteCategoryS(id);
       successToast(response.message);
       fetchCategories();
-    } catch (err: any) {
-      errorToast(err.response?.data?.message);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 
@@ -91,8 +100,9 @@ const AdminCategory = () => {
       const response = await restoreCategoryS(id);
       successToast(response.message);
       fetchCategories();
-    } catch (err: any) {
-      errorToast(err.response?.data?.message);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 
@@ -109,32 +119,31 @@ const AdminCategory = () => {
           </h2>
 
           <div className="flex flex-wrap gap-4 mb-6">
+            <input
+              type="text"
+              placeholder="Search complaints..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-slate-300 rounded-md px-3 py-2 w-64"
+            />
 
-          <input
-            type="text"
-            placeholder="Search complaints..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-slate-300 rounded-md px-3 py-2 w-64"
-          />
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="border border-slate-300 rounded-md px-3 py-2"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
 
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border border-slate-300 rounded-md px-3 py-2"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-
-          <button
+            <button
               onClick={() => setShowModal(true)}
               className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
             >
               + Add Category
             </button>
-        </div>
+          </div>
         </div>
 
         <div className="flex-1 px-6 pb-6 flex flex-col">
@@ -212,7 +221,8 @@ const AdminCategory = () => {
       <Pagination
         currentPage={currentPage}
         onPageChange={handlePageChange}
-        totalPages={totalPages}/>
+        totalPages={totalPages}
+      />
     </div>
   );
 };

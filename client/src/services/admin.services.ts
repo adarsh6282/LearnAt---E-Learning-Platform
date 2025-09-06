@@ -1,4 +1,3 @@
-import adminApi from "./adminApiService";
 import type { User } from "../types/user.types";
 import type { Tutor } from "../types/instructor.types";
 import type { ICourse } from "../types/course.types";
@@ -6,6 +5,9 @@ import type { DashboardData } from "../types/admin.types";
 import type { AdminLoginResponse } from "../types/admin.types";
 import type { CourseViewType } from "../types/user.types";
 import type { INotification } from "../context/NotificationContext";
+import { createApi } from "./newApiService";
+
+const api=createApi("admin")
 
 interface Message {
   message: string;
@@ -38,7 +40,7 @@ export const getTutorsS = async (
   limit: number,
   searchQuery: string
 ): Promise<{ tutors: Tutor[]; total: number; totalPages: number }> => {
-  const response = await adminApi.get<{
+  const response = await api.get<{
     tutors: Tutor[];
     total: number;
     totalPages: number;
@@ -54,7 +56,7 @@ export const getTutorsS = async (
 };
 
 export const toggleTutorBlockS = async (email: string, isBlocked: boolean) => {
-  return await adminApi.put(`/admin/tutors/block/${email}`, {
+  return await api.put(`/admin/tutors/block/${email}`, {
     blocked: !isBlocked,
   });
 };
@@ -64,7 +66,7 @@ export const getUsersS = async (
   limit: number,
   searchQuery: string
 ) => {
-  return await adminApi.get<{
+  return await api.get<{
     users: User[];
     total: number;
     totalPages: number;
@@ -74,13 +76,13 @@ export const getUsersS = async (
 };
 
 export const toggleUserBlockS = async (email: string, isBlocked: boolean) => {
-  return await adminApi.put(`/admin/users/block/${email}`, {
+  return await api.put(`/admin/users/block/${email}`, {
     blocked: !isBlocked,
   });
 };
 
 export const getRequestsS = async (page: number, limit: number) => {
-  const res = await adminApi.get<{
+  const res = await api.get<{
     tutors: Tutor[];
     total: number;
     totalPages: number;
@@ -95,11 +97,11 @@ export const getRequestsS = async (page: number, limit: number) => {
 };
 
 export const handleAcceptS = async (email: string) => {
-  return await adminApi.put(`/admin/tutors/verify`, { email });
+  return await api.put(`/admin/tutors/verify`, { email });
 };
 
 export const handleRejectS = async (email: string, reason: string) => {
-  return await adminApi.delete(`/admin/tutors/reject/${email}`, {
+  return await api.delete(`/admin/tutors/reject/${email}`, {
     data: { reason },
   } as any);
 };
@@ -109,7 +111,7 @@ export const getCoursesS = async (
   limit: number,
   searchQuery: string
 ) => {
-  return await adminApi.get<{
+  return await api.get<{
     course: ICourse[];
     total: number;
     totalPage: number;
@@ -119,38 +121,38 @@ export const getCoursesS = async (
 };
 
 export const handleSoftDeleteS = async (id: string) => {
-  return await adminApi.put<Message>(`/admin/courses/${id}`, {});
+  return await api.put<Message>(`/admin/courses/${id}`, {});
 };
 
 export const handleRestoreS = async (id: string) => {
-  return await adminApi.put<Message>(`/admin/courses/recover/${id}`, {});
+  return await api.put<Message>(`/admin/courses/recover/${id}`, {});
 };
 
 export const getDashboardS = async () => {
-  return await adminApi.get<DashboardData>("/admin/dashboard");
+  return await api.get<DashboardData>("/admin/dashboard");
 };
 
 export const adminLoginS = async (formData: {
   email: string;
   password: string;
 }) => {
-  return adminApi.post<AdminLoginResponse>("/admin/login", formData);
+  return api.post<AdminLoginResponse>("/admin/login", formData);
 };
 
 export const adminCourseChartS = async () => {
-  return await adminApi.get<{ title: string; enrolledCount: number }[]>(
+  return await api.get<{ title: string; enrolledCount: number }[]>(
     "/admin/course-status"
   );
 };
 
 export const adminIncomeChartS = async () => {
-  return await adminApi.get<{ month: string; revenue: number }[]>(
+  return await api.get<{ month: string; revenue: number }[]>(
     "/admin/income-status"
   );
 };
 
 export const adminLogoutS = async () => {
-  return await adminApi.post("/admin/logout", {});
+  return await api.post("/admin/logout", {});
 };
 
 export const getComplaintsS = async (
@@ -159,7 +161,7 @@ export const getComplaintsS = async (
   search: string,
   status: string
 ) => {
-  return await adminApi.get<{
+  return await api.get<{
     complaints: Complaint[];
     totalPages: number;
   }>(
@@ -168,17 +170,17 @@ export const getComplaintsS = async (
 };
 
 export const AdminCourseViewS = async (courseId: string) => {
-  return await adminApi.get<CourseViewType>(`/admin/courses/${courseId}`);
+  return await api.get<CourseViewType>(`/admin/courses/${courseId}`);
 };
 
 export const getReviewForAdminS = async (
   page: number,
   limit: number,
   search: string,
-  rating: number,
+  rating: number|null,
   sort?: string
 ) => {
-  return await adminApi.get<{
+  return await api.get<{
     reviews: Review[];
     total: number;
     totalPages: number;
@@ -188,19 +190,19 @@ export const getReviewForAdminS = async (
 };
 
 export const hideReviewS = async (id: string) => {
-  return await adminApi.put(`/admin/reviews/${id}/hide`, {});
+  return await api.put(`/admin/reviews/${id}/hide`, {});
 };
 
 export const unHideReviewS = async (id: string) => {
-  return await adminApi.put(`/admin/reviews/${id}/unhide`, {});
+  return await api.put(`/admin/reviews/${id}/unhide`, {});
 };
 
 export const deleteReviewS = async (id: string) => {
-  return await adminApi.delete(`/admin/reviews/${id}`);
+  return await api.delete(`/admin/reviews/${id}`);
 };
 
 export const getWalletS = async (page: number, limit: number) => {
-  return await adminApi.get<{
+  return await api.get<{
     transactions: [];
     balance: number;
     totalPages: number;
@@ -208,15 +210,15 @@ export const getWalletS = async (page: number, limit: number) => {
 };
 
 export const adminNotification = async (userId: string) => {
-  return await adminApi.get<INotification[]>(`/admin/notifications/${userId}`);
+  return await api.get<INotification[]>(`/admin/notifications/${userId}`);
 };
 
 export const markAsReadAdmin = async (notificationId: string) => {
-  return await adminApi.put(`/admin/notifications/read/${notificationId}`);
+  return await api.put(`/admin/notifications/read/${notificationId}`);
 };
 
 export const adminTutorView = async (tutorId: string) => {
-  return await adminApi.get<Tutor>(`/admin/tutor-view/${tutorId}`);
+  return await api.get<Tutor>(`/admin/tutor-view/${tutorId}`);
 };
 
 export const updateComplaint = async (
@@ -224,12 +226,12 @@ export const updateComplaint = async (
   status: string,
   response: string
 ) => {
-  return await adminApi.put(`/admin/complaints/${selectedComplaint}`, {
+  return await api.put(`/admin/complaints/${selectedComplaint}`, {
     status,
     response,
   });
 };
 
 export const refreshedComplaint=async()=>{
-  return await adminApi.get<Complaint[]>("/admin/complaints");
+  return await api.get<Complaint[]>("/admin/complaints");
 }

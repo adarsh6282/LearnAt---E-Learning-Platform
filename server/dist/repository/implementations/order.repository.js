@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,174 +8,152 @@ const orderModel_1 = __importDefault(require("../../models/implementations/order
 const progressModel_1 = __importDefault(require("../../models/implementations/progressModel"));
 const mongoose_1 = require("mongoose");
 class OrderRepository {
-    createOrderRecord(orderData) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
-            const newOrder = yield orderModel_1.default.create(orderData);
-            const plainOrder = newOrder.toObject();
-            return {
-                _id: plainOrder._id.toString(),
-                courseId: plainOrder.courseId.toString(),
-                userId: plainOrder.userId.toString(),
-                amount: Number(plainOrder.amount),
-                status: plainOrder.status,
-                razorpayOrderId: (_a = plainOrder.razorpayOrderId) === null || _a === void 0 ? void 0 : _a.toString(),
-                razorpayPaymentId: (_b = plainOrder.razorpayPaymentId) === null || _b === void 0 ? void 0 : _b.toString(),
-                razorpaySignature: (_c = plainOrder.razorpaySignature) === null || _c === void 0 ? void 0 : _c.toString(),
-                createdAt: plainOrder.createdAt,
-            };
-        });
+    async createOrderRecord(orderData) {
+        const newOrder = await orderModel_1.default.create(orderData);
+        const plainOrder = newOrder.toObject();
+        return {
+            _id: plainOrder._id.toString(),
+            courseId: plainOrder.courseId.toString(),
+            userId: plainOrder.userId.toString(),
+            amount: Number(plainOrder.amount),
+            status: plainOrder.status,
+            razorpayOrderId: plainOrder.razorpayOrderId?.toString(),
+            razorpayPaymentId: plainOrder.razorpayPaymentId?.toString(),
+            razorpaySignature: plainOrder.razorpaySignature?.toString(),
+            createdAt: plainOrder.createdAt,
+        };
     }
-    markOrderAsPaid(orderId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield orderModel_1.default.findByIdAndUpdate(orderId, { status: "paid" });
-        });
+    async markOrderAsPaid(orderId) {
+        return await orderModel_1.default.findByIdAndUpdate(orderId, { status: "paid" });
     }
-    getOrderByRazorpayId(razorpayOrderId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield orderModel_1.default.findOne({ razorpayOrderId });
-        });
+    async getOrderByRazorpayId(razorpayOrderId) {
+        return await orderModel_1.default.findOne({ razorpayOrderId });
     }
-    isUserEnrolled(courseId, userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const order = yield orderModel_1.default.findOne({
-                courseId: new mongoose_1.Types.ObjectId(courseId),
-                userId: new mongoose_1.Types.ObjectId(userId),
-                status: "paid",
-            });
-            return !!order;
+    async isUserEnrolled(courseId, userId) {
+        const order = await orderModel_1.default.findOne({
+            courseId: new mongoose_1.Types.ObjectId(courseId),
+            userId: new mongoose_1.Types.ObjectId(userId),
+            status: "paid",
         });
+        return !!order;
     }
-    getEnrollmentsByInstructor(instructorId, page, limit, search, status) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const searchRegex = search ? new RegExp(search, "i") : null;
-            const orders = yield orderModel_1.default.find({ status: "paid" })
-                .populate({
-                path: "courseId",
-                match: { instructor: instructorId },
-                select: "_id title",
-            })
-                .populate({
-                path: "userId",
-                select: "_id name email",
-            });
-            let filteredOrders = orders.filter((order) => {
-                if (!order.courseId || !order.userId)
-                    return false;
-                const course = order.courseId;
-                const user = order.userId;
-                if (!searchRegex)
-                    return true;
-                return (course.title.match(searchRegex) ||
-                    user.name.match(searchRegex) ||
-                    user.email.match(searchRegex));
-            });
-            const total = filteredOrders.length;
-            const totalPages = Math.ceil(total / limit);
-            const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
-            let enrollments = yield Promise.all(paginatedOrders.map((order) => __awaiter(this, void 0, void 0, function* () {
-                const course = order.courseId;
-                const user = order.userId;
-                const progress = yield progressModel_1.default.findOne({
-                    courseId: course._id,
-                    userId: user._id,
-                });
-                return {
-                    _id: order._id.toString(),
-                    course: {
-                        _id: course._id.toString(),
-                        title: course.title,
-                    },
-                    user: {
-                        _id: user._id.toString(),
-                        name: user.name,
-                        email: user.email,
-                    },
-                    isCompleted: (progress === null || progress === void 0 ? void 0 : progress.isCompleted) || false,
-                    createdAt: order.createdAt.toISOString(),
-                };
-            })));
-            if (status) {
-                enrollments = enrollments.filter((enroll) => status === "complete" ? enroll.isCompleted : !enroll.isCompleted);
-            }
-            const finalTotal = enrollments.length;
-            const finalTotalPages = Math.ceil(finalTotal / limit);
-            return { enrollments, total: finalTotal, totalPages: finalTotalPages };
+    async getEnrollmentsByInstructor(instructorId, page, limit, search, status) {
+        const searchRegex = search ? new RegExp(search, "i") : null;
+        const orders = await orderModel_1.default.find({ status: "paid" })
+            .populate({
+            path: "courseId",
+            match: { instructor: instructorId },
+            select: "_id title",
+        })
+            .populate({
+            path: "userId",
+            select: "_id name email",
         });
-    }
-    findExistingOrder(filter) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return orderModel_1.default.findOne(filter);
+        const filteredOrders = orders.filter((order) => {
+            if (!order.courseId || !order.userId)
+                return false;
+            const course = order.courseId;
+            const user = order.userId;
+            if (!searchRegex)
+                return true;
+            return (course.title.match(searchRegex) ||
+                user.name.match(searchRegex) ||
+                user.email.match(searchRegex));
         });
-    }
-    getPurchases(userId, page, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const skip = (page - 1) * limit;
-            const total = yield orderModel_1.default.countDocuments({
-                userId: userId,
-                status: "paid",
-            });
-            const orders = yield orderModel_1.default.find({
-                userId: userId,
-                status: "paid",
-            })
-                .populate({
-                path: "courseId",
-                select: "title",
-            })
-                .skip(skip)
-                .limit(limit);
-            const purchases = orders.map((order) => {
-                var _a;
-                return ({
-                    _id: order._id.toString(),
-                    course: order.courseId,
-                    amount: (_a = order.amount) !== null && _a !== void 0 ? _a : 0,
-                    purchasedAt: order.createdAt,
-                    status: order.status,
-                });
+        const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
+        let enrollments = await Promise.all(paginatedOrders.map(async (order) => {
+            const course = order.courseId;
+            const user = order.userId;
+            const progress = await progressModel_1.default.findOne({
+                courseId: course._id,
+                userId: user._id,
             });
             return {
-                purchases,
-                total,
-                totalPages: Math.ceil(total / limit),
-            };
-        });
-    }
-    purchasedCourses(userId, page, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const skip = (page - 1) * limit;
-            const total = yield orderModel_1.default.countDocuments({
-                userId,
-                status: "paid",
-            });
-            const courses = yield orderModel_1.default.find({
-                userId,
-                status: "paid",
-            })
-                .populate("courseId", "title description price createdAt thumbnail")
-                .skip(skip)
-                .limit(limit)
-                .sort({ createdAt: -1 });
-            const purchasedCourses = courses
-                .filter((order) => order.courseId)
-                .map((order) => {
-                const course = order.courseId;
-                return {
-                    id: course._id.toString(),
+                _id: order._id.toString(),
+                course: {
+                    _id: course._id.toString(),
                     title: course.title,
-                    description: course.description,
-                    price: course.price,
-                    purchasedAt: order.createdAt.toISOString(),
-                    thumbnail: course.thumbnail,
-                };
-            });
+                },
+                user: {
+                    _id: user._id.toString(),
+                    name: user.name,
+                    email: user.email,
+                },
+                isCompleted: progress?.isCompleted || false,
+                createdAt: order.createdAt.toISOString(),
+            };
+        }));
+        if (status) {
+            enrollments = enrollments.filter((enroll) => status === "complete" ? enroll.isCompleted : !enroll.isCompleted);
+        }
+        const finalTotal = enrollments.length;
+        const finalTotalPages = Math.ceil(finalTotal / limit);
+        return { enrollments, total: finalTotal, totalPages: finalTotalPages };
+    }
+    async findExistingOrder(filter) {
+        return orderModel_1.default.findOne(filter);
+    }
+    async getPurchases(userId, page, limit) {
+        const skip = (page - 1) * limit;
+        const total = await orderModel_1.default.countDocuments({
+            userId: userId,
+            status: "paid",
+        });
+        const orders = await orderModel_1.default.find({
+            userId: userId,
+            status: "paid",
+        })
+            .populate({
+            path: "courseId",
+            select: "title",
+        })
+            .skip(skip)
+            .limit(limit);
+        const purchases = orders.map((order) => ({
+            _id: order._id.toString(),
+            course: order.courseId,
+            amount: order.amount ?? 0,
+            purchasedAt: order.createdAt,
+            status: order.status,
+        }));
+        return {
+            purchases,
+            total,
+            totalPages: Math.ceil(total / limit),
+        };
+    }
+    async purchasedCourses(userId, page, limit) {
+        const skip = (page - 1) * limit;
+        const total = await orderModel_1.default.countDocuments({
+            userId,
+            status: "paid",
+        });
+        const courses = await orderModel_1.default.find({
+            userId,
+            status: "paid",
+        })
+            .populate("courseId", "title description price createdAt thumbnail")
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+        const purchasedCourses = courses
+            .filter((order) => order.courseId)
+            .map((order) => {
+            const course = order.courseId;
             return {
-                purchasedCourses,
-                total,
-                totalPages: Math.ceil(total / limit),
+                id: course._id.toString(),
+                title: course.title,
+                description: course.description,
+                price: course.price,
+                purchasedAt: order.createdAt.toISOString(),
+                thumbnail: course.thumbnail,
             };
         });
+        return {
+            purchasedCourses,
+            total,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 }
 exports.OrderRepository = OrderRepository;

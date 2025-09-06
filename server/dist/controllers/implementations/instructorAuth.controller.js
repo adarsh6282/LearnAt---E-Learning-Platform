@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,526 +14,461 @@ class InstructorAuthController {
         this._instructorAuthService = _instructorAuthService;
         this._messageService = _messageService;
     }
-    signup(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { name, username, email, phone, education, title, yearsOfExperience, password, confirmPassword, } = req.body;
-                const resumeFile = req.file;
-                if (!resumeFile) {
-                    throw new Error("Resume file is missing");
-                }
-                const cloudResult = yield cloudinary_config_1.default.uploader.upload(resumeFile.path, {
-                    folder: "resumes",
-                    resource_type: "auto",
-                    format: "jpg",
-                });
-                const resume = cloudResult.secure_url;
-                fs_1.default.unlinkSync(resumeFile.path);
-                const updatedPayload = {
-                    name,
-                    username,
-                    email,
-                    phone,
-                    education,
-                    title,
-                    yearsOfExperience,
-                    password,
-                    confirmPassword,
-                    resume,
-                };
-                yield this._instructorAuthService.registerInstructor(email);
-                res.status(statusCodes_1.httpStatus.OK).json({
-                    message: "Form received, resume uploaded, OTP sent",
-                    data: updatedPayload,
-                });
+    async signup(req, res) {
+        try {
+            const { name, username, email, phone, education, title, yearsOfExperience, password, confirmPassword, } = req.body;
+            const resumeFile = req.file;
+            if (!resumeFile) {
+                throw new Error("Resume file is missing");
             }
-            catch (err) {
-                console.error(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+            const cloudResult = await cloudinary_config_1.default.uploader.upload(resumeFile.path, {
+                folder: "resumes",
+                resource_type: "auto",
+                format: "jpg",
+            });
+            const resume = cloudResult.secure_url;
+            fs_1.default.unlinkSync(resumeFile.path);
+            const updatedPayload = {
+                name,
+                username,
+                email,
+                phone,
+                education,
+                title,
+                yearsOfExperience,
+                password,
+                confirmPassword,
+                resume,
+            };
+            await this._instructorAuthService.registerInstructor(email);
+            res.status(statusCodes_1.httpStatus.OK).json({
+                message: "Form received, resume uploaded, OTP sent",
+                data: updatedPayload,
+            });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    reApply(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const resumeFile = req.file;
-                if (!resumeFile) {
-                    return;
-                }
-                const { email } = req.body;
-                console.log(email);
-                const cloudResult = yield cloudinary_config_1.default.uploader.upload(resumeFile.path, {
-                    folder: "resumes",
-                    resource_type: "auto",
-                });
-                const resumeUrl = cloudResult.secure_url;
-                const updatedInstructor = yield this._instructorAuthService.reApplyS(email, resumeUrl);
-                res.status(statusCodes_1.httpStatus.OK).json({
-                    message: "Reapplied successfully",
-                    instructor: updatedInstructor,
-                });
+    async reApply(req, res) {
+        try {
+            const resumeFile = req.file;
+            if (!resumeFile) {
+                return;
             }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: "Reapply failed", error: err.message });
-            }
-        });
+            const { email } = req.body;
+            console.log(email);
+            const cloudResult = await cloudinary_config_1.default.uploader.upload(resumeFile.path, {
+                folder: "resumes",
+                resource_type: "auto",
+            });
+            const resumeUrl = cloudResult.secure_url;
+            const updatedInstructor = await this._instructorAuthService.reApplyS(email, resumeUrl);
+            res.status(statusCodes_1.httpStatus.OK).json({
+                message: "Reapplied successfully",
+                instructor: updatedInstructor,
+            });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    signin(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { email, password } = req.body;
-                const { instructor, token, instructorRefreshToken } = yield this._instructorAuthService.loginInstructor(email, password);
-                res.cookie("instructorRefreshToken", instructorRefreshToken, {
-                    path: "/api/instructors",
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    sameSite: "strict",
-                    maxAge: 7 * 24 * 60 * 60 * 1000,
-                });
-                res.status(statusCodes_1.httpStatus.OK).json({ instructor, token });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async signin(req, res) {
+        try {
+            const { email, password } = req.body;
+            const { instructor, token, instructorRefreshToken } = await this._instructorAuthService.loginInstructor(email, password);
+            res.cookie("instructorRefreshToken", instructorRefreshToken, {
+                path: "/api/instructors",
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+            res.status(statusCodes_1.httpStatus.OK).json({ instructor, token });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    verifyOtp(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const instructorData = req.body;
-                const { instructor, token, instructorRefreshToken } = yield this._instructorAuthService.verifyOtp(instructorData);
-                res.cookie("instructorRefreshToken", instructorRefreshToken, {
-                    path: "/api/instructors",
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    sameSite: "strict",
-                    maxAge: 7 * 24 * 60 * 60 * 1000,
-                });
-                res.status(statusCodes_1.httpStatus.CREATED).json({
-                    instructor,
-                    token,
-                    message: "Instructor Registered Successfully, Waiting for approval",
-                });
-            }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async verifyOtp(req, res) {
+        try {
+            const instructorData = req.body;
+            const { instructor, token, instructorRefreshToken } = await this._instructorAuthService.verifyOtp(instructorData);
+            res.cookie("instructorRefreshToken", instructorRefreshToken, {
+                path: "/api/instructors",
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+            res.status(statusCodes_1.httpStatus.CREATED).json({
+                instructor,
+                token,
+                message: "Instructor Registered Successfully, Waiting for approval",
+            });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    forgotPassword(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { email } = req.body;
-                const user = yield this._instructorAuthService.handleForgotPassword(email);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP Sent Successfully" });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+            await this._instructorAuthService.handleForgotPassword(email);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP Sent Successfully" });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    verifyForgotOtp(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const data = req.body;
-                const userData = yield this._instructorAuthService.verifyForgotOtp(data);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP verified." });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async verifyForgotOtp(req, res) {
+        try {
+            const data = req.body;
+            await this._instructorAuthService.verifyForgotOtp(data);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP verified." });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    resetPassword(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const data = req.body;
-                yield this._instructorAuthService.handleResetPassword(data);
-                res
-                    .status(statusCodes_1.httpStatus.OK)
-                    .json({ message: "Password resetted successfully" });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async resetPassword(req, res) {
+        try {
+            const data = req.body;
+            await this._instructorAuthService.handleResetPassword(data);
+            res
+                .status(statusCodes_1.httpStatus.OK)
+                .json({ message: "Password resetted successfully" });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    resentOtp(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                let { email } = req.body;
-                yield this._instructorAuthService.handleResendOtp(email);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP resent Successsfully!" });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async resentOtp(req, res) {
+        try {
+            const { email } = req.body;
+            await this._instructorAuthService.handleResendOtp(email);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "OTP resent Successsfully!" });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    getProfile(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const email = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.email;
-                if (!email)
-                    return;
-                const instructor = yield this._instructorAuthService.getProfileService(email);
-                res.status(statusCodes_1.httpStatus.OK).json(instructor);
-            }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+    async getProfile(req, res) {
+        try {
+            const email = req.instructor?.email;
+            if (!email)
+                return;
+            const instructor = await this._instructorAuthService.getProfileService(email);
+            res.status(statusCodes_1.httpStatus.OK).json(instructor);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    updateProfile(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const { name, phone, title, yearsOfExperience, education } = req.body;
-                const profilePicture = req.file;
-                const email = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.email;
-                if (!email) {
-                    res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "Email not found" });
-                }
-                const updatedUser = yield this._instructorAuthService.updateProfileService(email, {
-                    name,
-                    phone,
-                    title,
-                    yearsOfExperience,
-                    education,
-                    profilePicture,
-                });
-                res.status(statusCodes_1.httpStatus.OK).json(updatedUser);
+    async updateProfile(req, res) {
+        try {
+            const { name, phone, title, yearsOfExperience, education } = req.body;
+            const profilePicture = req.file;
+            const email = req.instructor?.email;
+            if (!email) {
+                res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ message: "Email not found" });
             }
-            catch (err) {
-                console.error("Error updating profile:", err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: "Failed to update profile" });
-            }
-        });
+            const updatedUser = await this._instructorAuthService.updateProfileService(email, {
+                name,
+                phone,
+                title,
+                yearsOfExperience,
+                education,
+                profilePicture,
+            });
+            res.status(statusCodes_1.httpStatus.OK).json(updatedUser);
+        }
+        catch (err) {
+            console.error("Error updating profile:", err);
+            res
+                .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                .json({ message: "Failed to update profile" });
+        }
     }
-    getCourses(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
+    async getCourses(req, res) {
+        const instructorId = req.instructor?.id;
+        if (!instructorId) {
+            res
+                .status(statusCodes_1.httpStatus.NOT_FOUND)
+                .json({ message: "Instructor not found" });
+            return;
+        }
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 6;
+            const search = req.query.search || "";
+            const { courses, total, totalPages } = await this._instructorAuthService.getCoursesByInstructor(instructorId, page, limit, search);
+            res.status(statusCodes_1.httpStatus.OK).json({
+                courses,
+                total,
+                currentPage: page,
+                totalPages,
+            });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getCategory(req, res) {
+        try {
+            const category = await this._instructorAuthService.getCategory();
+            res.status(statusCodes_1.httpStatus.OK).json(category);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getCoursesById(req, res) {
+        try {
+            const { courseId } = req.params;
+            const course = await this._instructorAuthService.getCourseById(courseId);
+            res.status(statusCodes_1.httpStatus.OK).json(course);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getInstructorReviews(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const rating = req.query.rating
+                ? parseInt(req.query.rating)
+                : 0;
+            const instructorId = req.instructor?.id;
             if (!instructorId) {
                 res
                     .status(statusCodes_1.httpStatus.NOT_FOUND)
                     .json({ message: "Instructor not found" });
                 return;
             }
-            try {
-                const page = parseInt(req.query.page) || 1;
-                const limit = parseInt(req.query.limit) || 6;
-                const search = req.query.search || "";
-                const { courses, total, totalPages } = yield this._instructorAuthService.getCoursesByInstructor(instructorId, page, limit, search);
-                res.status(statusCodes_1.httpStatus.OK).json({
-                    courses,
-                    total,
-                    currentPage: page,
-                    totalPages,
-                });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
+            const review = await this._instructorAuthService.getReviewsByInstructor(instructorId, page, limit, rating);
+            res.status(statusCodes_1.httpStatus.OK).json(review);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    getCategory(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const category = yield this._instructorAuthService.getCategory();
-                res.status(statusCodes_1.httpStatus.OK).json(category);
-            }
-            catch (err) {
+    async getEnrollments(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const search = req.query.search || "";
+            const status = req.query.status || "";
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
                 res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
-    }
-    getCoursesById(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { courseId } = req.params;
-                const course = yield this._instructorAuthService.getCourseById(courseId);
-                res.status(statusCodes_1.httpStatus.OK).json(course);
-            }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
-    }
-    getInstructorReviews(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const page = parseInt(req.query.page) || 1;
-                const limit = parseInt(req.query.limit) || 10;
-                const rating = req.query.rating
-                    ? parseInt(req.query.rating)
-                    : 0;
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const review = yield this._instructorAuthService.getReviewsByInstructor(instructorId, page, limit, rating);
-                res.status(statusCodes_1.httpStatus.OK).json(review);
-            }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
-    }
-    getEnrollments(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const page = parseInt(req.query.page) || 1;
-                const limit = parseInt(req.query.limit) || 10;
-                const search = req.query.search || "";
-                const status = req.query.status || "";
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const enrollments = yield this._instructorAuthService.getEnrollments(instructorId, page, limit, search, status);
-                res.status(statusCodes_1.httpStatus.OK).json(enrollments);
-            }
-            catch (err) {
-                console.log(err);
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
-    }
-    getWallet(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const page = parseInt(req.query.page) || 1;
-                const limit = parseInt(req.query.limit) || 10;
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const { wallet, total, totalPages, transactions } = yield this._instructorAuthService.getWallet(instructorId, page, limit);
-                res.status(statusCodes_1.httpStatus.OK).json({
-                    balance: wallet === null || wallet === void 0 ? void 0 : wallet.balance,
-                    transactions: transactions,
-                    total,
-                    totalPages,
-                    currentPage: page,
-                });
-            }
-            catch (err) {
-                res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
-            }
-        });
-    }
-    refreshToken(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log("Instructor refresh hit");
-            console.log("Cookie token:", req.cookies.instructorRefreshToken);
-            const token = req.cookies.instructorRefreshToken;
-            if (!token) {
-                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "No Refresh Token" });
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
                 return;
             }
-            try {
-                const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_REFRESH_SECRET);
-                console.log("Decoded token:", decoded);
-                if (decoded.role !== "instructor") {
-                    res.status(statusCodes_1.httpStatus.FORBIDDEN).json({ message: "Invalid role" });
-                    return;
-                }
-                const instructorsToken = (0, jwt_1.generateToken)(decoded._id, decoded.email, decoded.role);
-                res.status(statusCodes_1.httpStatus.OK).json({ token: instructorsToken });
-            }
-            catch (err) {
+            const enrollments = await this._instructorAuthService.getEnrollments(instructorId, page, limit, search, status);
+            res.status(statusCodes_1.httpStatus.OK).json(enrollments);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getWallet(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
                 res
-                    .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
-                    .json({ message: err.message });
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
+                return;
             }
-        });
-    }
-    logOut(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            res.clearCookie("instructorRefreshToken", {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                path: "/instructors",
+            const { wallet, total, totalPages, transactions } = await this._instructorAuthService.getWallet(instructorId, page, limit);
+            res.status(statusCodes_1.httpStatus.OK).json({
+                balance: wallet?.balance,
+                transactions: transactions,
+                total,
+                totalPages,
+                currentPage: page,
             });
-            res.status(200).json({ message: "Logged out successfully" });
-        });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    getPurchasedStudents(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "NO Instructors found" });
-                    return;
-                }
-                const users = yield this._instructorAuthService.getPurchasedUsers(instructorId);
-                res.status(statusCodes_1.httpStatus.OK).json(users);
+    async refreshToken(req, res) {
+        console.log("Instructor refresh hit");
+        console.log("Cookie token:", req.cookies.instructorRefreshToken);
+        const token = req.cookies.instructorRefreshToken;
+        if (!token) {
+            res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "No Refresh Token" });
+            return;
+        }
+        try {
+            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_REFRESH_SECRET);
+            console.log("Decoded token:", decoded);
+            if (decoded.role !== "instructor") {
+                res.status(statusCodes_1.httpStatus.FORBIDDEN).json({ message: "Invalid role" });
+                return;
             }
-            catch (err) {
-                console.log(err);
-            }
-        });
+            const instructorsToken = (0, jwt_1.generateToken)(decoded._id, decoded.email, decoded.role);
+            res.status(statusCodes_1.httpStatus.OK).json({ token: instructorsToken });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
-    getCourseStats(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const stats = yield this._instructorAuthService.getCouresStats(instructorId);
-                res.status(statusCodes_1.httpStatus.OK).json(stats);
-            }
-            catch (err) {
-                console.log(err);
-            }
+    async logOut(req, res) {
+        res.clearCookie("instructorRefreshToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/instructors",
         });
+        res.status(200).json({ message: "Logged out successfully" });
     }
-    getDashboard(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const data = yield this._instructorAuthService.getDashboard(instructorId);
-                res.status(statusCodes_1.httpStatus.OK).json(data);
+    async getPurchasedStudents(req, res) {
+        try {
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "NO Instructors found" });
+                return;
             }
-            catch (err) {
-                console.log(err);
-            }
-        });
+            const users = await this._instructorAuthService.getPurchasedUsers(instructorId);
+            res.status(statusCodes_1.httpStatus.OK).json(users);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
-    getNotifications(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { userId } = req.params;
-                const notifications = yield this._instructorAuthService.getNotifications(userId);
-                res.status(statusCodes_1.httpStatus.OK).json(notifications);
+    async getCourseStats(req, res) {
+        try {
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
+                return;
             }
-            catch (err) {
-                console.log(err);
-            }
-        });
+            const stats = await this._instructorAuthService.getCouresStats(instructorId);
+            res.status(statusCodes_1.httpStatus.OK).json(stats);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
-    markAsRead(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { notificationId } = req.params;
-                const notification = yield this._instructorAuthService.markAsRead(notificationId);
-                res.status(statusCodes_1.httpStatus.OK).json({ message: "Message Read" });
+    async getDashboard(req, res) {
+        try {
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
+                return;
             }
-            catch (err) {
-                console.log(err);
-            }
-        });
+            const data = await this._instructorAuthService.getDashboard(instructorId);
+            res.status(statusCodes_1.httpStatus.OK).json(data);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
-    getIncomeStats(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                const instructorId = (_a = req.instructor) === null || _a === void 0 ? void 0 : _a.id;
-                if (!instructorId) {
-                    res
-                        .status(statusCodes_1.httpStatus.NOT_FOUND)
-                        .json({ message: "Instructor not found" });
-                    return;
-                }
-                const incomeStats = yield this._instructorAuthService.getIncomeStats(instructorId);
-                res.status(statusCodes_1.httpStatus.OK).json(incomeStats);
-            }
-            catch (err) {
-                console.log(err);
-            }
-        });
+    async getNotifications(req, res) {
+        try {
+            const { userId } = req.params;
+            const notifications = await this._instructorAuthService.getNotifications(userId);
+            res.status(statusCodes_1.httpStatus.OK).json(notifications);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
-    getUnreadCounts(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { userId, userModel } = req.query;
-                const counts = yield this._messageService.getUnreadCounts(userId, userModel);
-                res.status(statusCodes_1.httpStatus.OK).json(counts);
-            }
-            catch (err) {
-                res.status(500).json({ error: "Failed to fetch unread counts" });
-            }
-        });
+    async markAsRead(req, res) {
+        try {
+            const { notificationId } = req.params;
+            await this._instructorAuthService.markAsRead(notificationId);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Message Read" });
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
-    markRead(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const chatId = req.params.chatId;
-                const { userId, userModel } = req.body;
-                yield this._messageService.markRead(chatId, userId, userModel);
-                res.sendStatus(statusCodes_1.httpStatus.OK);
+    async getIncomeStats(req, res) {
+        try {
+            const instructorId = req.instructor?.id;
+            if (!instructorId) {
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "Instructor not found" });
+                return;
             }
-            catch (err) {
-                res.status(500).json({ error: "Failed to mark messages as read" });
-            }
-        });
+            const incomeStats = await this._instructorAuthService.getIncomeStats(instructorId);
+            res.status(statusCodes_1.httpStatus.OK).json(incomeStats);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async getUnreadCounts(req, res) {
+        try {
+            const { userId, userModel } = req.query;
+            const counts = await this._messageService.getUnreadCounts(userId, userModel);
+            res.status(statusCodes_1.httpStatus.OK).json(counts);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async markRead(req, res) {
+        try {
+            const chatId = req.params.chatId;
+            const { userId, userModel } = req.body;
+            await this._messageService.markRead(chatId, userId, userModel);
+            res.sendStatus(statusCodes_1.httpStatus.OK);
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
     }
 }
 exports.InstructorAuthController = InstructorAuthController;

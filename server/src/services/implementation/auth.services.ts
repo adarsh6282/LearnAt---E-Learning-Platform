@@ -10,7 +10,6 @@ import { IInstructorAuthRepository } from "../../repository/interfaces/instructo
 import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import cloudinary from "../../config/cloudinary.config";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
-import { IOrder } from "../../models/interfaces/order.interface";
 import razorpay from "../../config/razorpay.config";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
 import crypto from "crypto";
@@ -20,7 +19,6 @@ import { IProgressRepository } from "../../repository/interfaces/progress.interf
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
-import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 import {
@@ -233,7 +231,11 @@ export class AuthService implements IAuthService {
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
   ): Promise<UserDTO> {
-    const updateFields: any = { name, phone };
+    const updateFields: Partial<{
+      name:string,
+      phone:string,
+      profilePicture:string
+    }> = { name, phone };
 
     if (profilePicture?.path) {
       const result = await cloudinary.uploader.upload(profilePicture.path, {
@@ -242,7 +244,7 @@ export class AuthService implements IAuthService {
         unique_filename: true,
       });
 
-      updateFields.profilePicture = (result as any).secure_url;
+      updateFields.profilePicture = result.secure_url;
     }
 
     const user = await this._userRepository.updateUserByEmail(
@@ -349,7 +351,7 @@ export class AuthService implements IAuthService {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
-  }): Promise<{ success: Boolean }> {
+  }): Promise<{ success: boolean }> {
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_SECRET!)
@@ -375,7 +377,7 @@ export class AuthService implements IAuthService {
     );
 
     const course = await this._courseRepository.findCourseById(
-      order.courseId!?.toString()
+      order.courseId?.toString()
     );
 
     if (!course || !course.instructor)

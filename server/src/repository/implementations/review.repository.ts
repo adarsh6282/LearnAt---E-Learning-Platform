@@ -1,5 +1,5 @@
 import Review from "../../models/implementations/reviewModel";
-import { Types } from "mongoose";
+import { FilterQuery, Types } from "mongoose";
 import { IReviewRepository } from "../interfaces/review.interface";
 import { IReview } from "../../models/interfaces/review.interface";
 import Course from "../../models/implementations/courseModel";
@@ -51,7 +51,7 @@ export class ReviewRepository implements IReviewRepository {
       return { reviews: [], total: 0, totalPages: 0 };
     }
 
-    const filter: any = {
+    const filter: FilterQuery<IReview> = {
       course: { $in: courseIds },
       isHidden: false,
     };
@@ -85,7 +85,7 @@ export class ReviewRepository implements IReviewRepository {
   ): Promise<{ reviews: IReview[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: FilterQuery<IReview> = {};
 
     if (search) {
       const matchedCourses = await Course.find({
@@ -101,7 +101,7 @@ export class ReviewRepository implements IReviewRepository {
       ];
     }
 
-    let sortOption: any = { createdAt: -1 };
+    let sortOption: FilterQuery<IReview> = { createdAt: -1 };
 
     switch (sort) {
       case "oldest":

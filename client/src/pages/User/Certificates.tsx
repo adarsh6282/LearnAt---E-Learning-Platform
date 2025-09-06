@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { errorToast } from "../../components/Toast";
 import { useAuth } from "../../hooks/useAuth";
 import { getCertificatesS } from "../../services/user.services";
+import type { AxiosError } from "axios";
 
 interface Certificate {
   _id: string;
@@ -26,8 +27,9 @@ const UserCertificates = () => {
       try {
         const res = await getCertificatesS(authUser._id!)
         setCertificates(res.data);
-      } catch (err: any) {
-        errorToast(err.message || "Something went wrong");
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }

@@ -28,8 +28,23 @@ interface ChartProps {
   type: "course" | "income";
 }
 
+interface ChartDataset {
+  label: string;
+  data: number[];
+  backgroundColor?: string;
+  borderColor?: string;
+  fill?: boolean;
+  tension?: number;
+  borderRadius?: number;
+}
+
+interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
 const InstructorChart = ({ type }: ChartProps) => {
-  const [chartData, setChartData] = useState<any>(null);
+  const [chartData, setChartData] = useState<ChartData|null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,12 +55,12 @@ const InstructorChart = ({ type }: ChartProps) => {
 
         if (type === "course") {
           const res = await instructorCourseChart()
-          labels = res.data.map((item: any) => item.title);
-          data = res.data.map((item: any) => item.enrolledCount);
+          labels = res.data.map((item: {title:string,enrolledCount:number}) => item.title);
+          data = res.data.map((item: {title:string,enrolledCount:number}) => item.enrolledCount);
         } else if (type === "income") {
           const res = await instructorIncomeChart()
-          labels = res.data.map((item: any) => item.month);
-          data = res.data.map((item: any) => item.revenue);
+          labels = res.data.map((item: {month:string,revenue:number}) => item.month);
+          data = res.data.map((item: {month:string,revenue:number}) => item.revenue);
         }
 
         setChartData({

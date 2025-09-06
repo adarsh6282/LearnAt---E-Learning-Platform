@@ -1,38 +1,21 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageService = void 0;
 class MessageService {
     constructor(_messageRepository) {
         this._messageRepository = _messageRepository;
     }
-    sendMessage(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this._messageRepository.saveMessage(data);
-        });
+    async sendMessage(data) {
+        return this._messageRepository.saveMessage(data);
     }
-    fetchMessages(chatId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this._messageRepository.getChatMessages(chatId);
-        });
+    async fetchMessages(chatId) {
+        return this._messageRepository.getChatMessages(chatId);
     }
-    markRead(chatId, userId, userModel) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this._messageRepository.markMessagesAsRead(chatId, userId, userModel);
-        });
+    async markRead(chatId, userId, userModel) {
+        return this._messageRepository.markMessagesAsRead(chatId, userId, userModel);
     }
-    getUnreadCounts(userId, userModel) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this._messageRepository.getUnreadCounts(userId, userModel);
-        });
+    async getUnreadCounts(userId, userModel) {
+        return this._messageRepository.getUnreadCounts(userId, userModel);
     }
 }
 exports.MessageService = MessageService;

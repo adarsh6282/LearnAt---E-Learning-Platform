@@ -16,21 +16,21 @@ import { editProfileS } from "../../services/instructor.services";
 
 const InstructorProfile: React.FC = () => {
   const context = useContext(InstructorContext);
-
-  if (!context) {
-    return <div>Loading Instructor...</div>;
-  }
-
-  const { instructor, setInstructor } = context;
-
-  if (!instructor) {
-    return <div>Loading Instructor...</div>;
-  }
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  
+  if (!context) {
+    return <div>Loading Instructor...</div>;
+  }
+  
+  const { instructor, setInstructor } = context;
+  
+  if (!instructor) {
+    return <div>Loading Instructor...</div>;
+  }
+  
   const [formData, setFormData] = useState({
     name: instructor.name || "",
     phone: instructor.phone || "",

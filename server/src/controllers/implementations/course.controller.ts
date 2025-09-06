@@ -30,10 +30,12 @@ export class CourseController implements ICourseController {
 
       const course = await this._courseService.createCourse(courseData);
       res.status(httpStatus.CREATED).json(course);
-    } catch (error: any) {
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-        message: error.message || "Failed to create course",
-      });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -60,12 +62,13 @@ export class CourseController implements ICourseController {
     const updatedCourse = await this._courseService.updateCourse(courseId, updateData);
 
     res.status(httpStatus.OK).json(updatedCourse);
-  } catch (error: any) {
-    console.error("Course update error:", error);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      message: error.message || "Failed to update course",
-    });
-  }
+  } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+    }
   }
 }
 

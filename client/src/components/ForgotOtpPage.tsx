@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { successToast } from "./Toast";
+import { errorToast, successToast } from "./Toast";
 import { forgotVerifyOtpS, resendOtpS } from "../services/common.service";
+import type { AxiosError } from "axios";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -9,8 +10,8 @@ interface OtpPageProps {
 
 const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const [otp, setOtp] = useState("");
-  const usertoken=localStorage.getItem("usersToken")
-  const instructortoken=localStorage.getItem("instructorsToken")
+  const usertoken = localStorage.getItem("usersToken");
+  const instructortoken = localStorage.getItem("instructorsToken");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
@@ -18,8 +19,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (role=="users"&&usertoken) navigate('/');
-    if(role=="instructors"&&instructortoken) navigate('/instructors/dashboard')
+    if (role == "users" && usertoken) navigate("/");
+    if (role == "instructors" && instructortoken)
+      navigate("/instructors/dashboard");
   }, [usertoken, instructortoken, navigate, role]);
 
   useEffect(() => {
@@ -50,8 +52,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
         successToast((response.data as { message: string }).message);
         navigate(`/${role}/resetpassword`);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "OTP verification failed");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -72,8 +75,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
 
       await resendOtpS(role, email);
       successToast("OTP resent successfully!");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to resend OTP");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       setCanResend(true);
     }
   };

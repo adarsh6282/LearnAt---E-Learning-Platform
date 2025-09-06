@@ -2,6 +2,7 @@ import { ICourse } from "../../models/interfaces/course.interface";
 import { ICourseRepository } from "../interfaces/course.interface";
 import Course from "../../models/implementations/courseModel";
 import { BaseRepository } from "../base.repository";
+import { FilterQuery, Types } from "mongoose";
 
 export class CourseRepository
   extends BaseRepository<ICourse>
@@ -57,7 +58,7 @@ export class CourseRepository
   ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    let query: any = {};
+    const query: FilterQuery<ICourse> = {};
 
     if (search) {
       query.title = { $regex: search, $options: "i" };
@@ -105,7 +106,7 @@ export class CourseRepository
   ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    let query: any = { instructor: instructorId };
+    const query: FilterQuery<ICourse> = { instructor: instructorId };
 
     if (search) {
       query.title = { $regex: search, $options: "i" };
@@ -186,8 +187,8 @@ export class CourseRepository
     );
 
     const userIds = new Set<string>();
-    courses.forEach((course: any) => {
-      course.enrolledStudents.forEach((userId: any) => {
+    courses.forEach((course: ICourse) => {
+      course.enrolledStudents.forEach((userId: string|Types.ObjectId) => {
         userIds.add(userId.toString());
       });
     });

@@ -4,12 +4,13 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate } from "react-router-dom";
 import { instructorRegisterS } from "../../services/instructor.services";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
+import type { AxiosError } from "axios";
 
 const InstructorRegister: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [resume, setResume] = useState<File | null>(null);
-  const instructortoken=localStorage.getItem("instructorsToken")
+  const instructortoken = localStorage.getItem("instructorsToken");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -26,7 +27,7 @@ const InstructorRegister: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if(instructortoken) navigate('/instructors/dashboard')
+    if (instructortoken) navigate("/instructors/dashboard");
   }, [instructortoken, navigate]);
 
   const handleChange = (
@@ -100,10 +101,9 @@ const InstructorRegister: React.FC = () => {
         confirmPassword: "",
       });
       setErrors({});
-    } catch (err: any) {
-      console.log(err);
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 

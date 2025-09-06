@@ -15,12 +15,14 @@ export class Authcontroller implements IAuthController {
   async signup(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      const user = await this._authService.registerUser(email);
+      await this._authService.registerUser(email);
       res.status(httpStatus.OK).json({ message: "Otp sent successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -41,10 +43,12 @@ export class Authcontroller implements IAuthController {
       res
         .status(httpStatus.OK)
         .json({ user, token, message: "User Login Successfull" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -65,10 +69,12 @@ export class Authcontroller implements IAuthController {
       res
         .status(httpStatus.CREATED)
         .json({ user, token, message: "User Registered Successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -97,33 +103,41 @@ export class Authcontroller implements IAuthController {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
       res.status(httpStatus.OK).json({ message: "Verified", user: decoded });
-    } catch (err) {
-      res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      const user = await this._authService.handleForgotPassword(email);
+      await this._authService.handleForgotPassword(email);
 
       res.status(httpStatus.OK).json({ message: "OTP Sent Successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async verifyForgotOtp(req: Request, res: Response): Promise<void> {
     try {
       const data = req.body;
-      const userData = await this._authService.verifyForgotOtp(data);
+      await this._authService.verifyForgotOtp(data);
       res.status(httpStatus.OK).json({ message: "OTP verified." });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -134,22 +148,26 @@ export class Authcontroller implements IAuthController {
       res
         .status(httpStatus.OK)
         .json({ message: "Password resetted successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async resentOtp(req: Request, res: Response): Promise<void> {
     try {
-      let { email } = req.body;
+      const { email } = req.body;
       await this._authService.handleResendOtp(email);
       res.status(httpStatus.OK).json({ message: "OTP resent Successsfully!" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -159,8 +177,12 @@ export class Authcontroller implements IAuthController {
       if (!email) return;
       const user = await this._authService.getProfileByEmail(email);
       res.status(httpStatus.OK).json(user);
-    } catch (err: any) {
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json(err.message);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -208,10 +230,12 @@ export class Authcontroller implements IAuthController {
           maxPrice
         );
       res.status(httpStatus.OK).json({ courses: courses, total, totalPages });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -219,8 +243,12 @@ export class Authcontroller implements IAuthController {
     try {
       const category = await this._authService.getCategory();
       res.status(httpStatus.OK).json(category);
-    } catch (err) {
-      console.log(err);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -237,10 +265,12 @@ export class Authcontroller implements IAuthController {
         await this._authService.findCourseByIdService(courseId, userId);
 
       res.status(httpStatus.OK).json({ course, isEnrolled });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -250,9 +280,12 @@ export class Authcontroller implements IAuthController {
       const userId = req.user?.id;
       const order = await this._authService.createOrder(courseId!, userId!);
       res.status(httpStatus.OK).json(order);
-    } catch (err: any) {
-      console.log(err);
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -260,9 +293,12 @@ export class Authcontroller implements IAuthController {
     try {
       const result = await this._authService.verifyPayment(req.body);
       res.status(httpStatus.OK).json(result);
-    } catch (err: any) {
-      console.log(err);
-      res.status(httpStatus.BAD_REQUEST).json({ error: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -286,9 +322,12 @@ export class Authcontroller implements IAuthController {
       res
         .status(httpStatus.OK)
         .json({ watchedLectures: progress?.watchedLectures });
-    } catch (err: any) {
-      console.log(err)
-      res.status(httpStatus.BAD_REQUEST).json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -311,11 +350,14 @@ export class Authcontroller implements IAuthController {
         success: true,
         watchedLectures,
       });
-    } catch (err: any) {
-      res.status(httpStatus.BAD_REQUEST).json({
-        success: false,
-        message: err.message,
-      });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message });
     }
   }
 
@@ -357,11 +399,12 @@ export class Authcontroller implements IAuthController {
         decoded.role
       );
       res.status(httpStatus.OK).json({ token: usersToken });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -382,9 +425,8 @@ export class Authcontroller implements IAuthController {
         res.status(httpStatus.NOT_FOUND).json({ message: "user not found" });
         return;
       }
-      const instructors = await this._authService.fetchPurchasedInstructors(
-        userId
-      );
+      const instructors =
+        await this._authService.fetchPurchasedInstructors(userId);
       res.status(httpStatus.OK).json(instructors);
     } catch (error) {
       console.log(error);
@@ -407,7 +449,7 @@ export class Authcontroller implements IAuthController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      const notification = await this._authService.markAsRead(notificationId);
+      await this._authService.markAsRead(notificationId);
       res.status(httpStatus.OK).json({ message: "Message Read" });
     } catch (err) {
       console.log(err);
@@ -431,7 +473,7 @@ export class Authcontroller implements IAuthController {
         return;
       }
 
-      const complaint = await this._authService.submitComplaint({
+      await this._authService.submitComplaint({
         userId,
         type,
         subject,
@@ -487,26 +529,27 @@ export class Authcontroller implements IAuthController {
       res
         .status(httpStatus.OK)
         .json({ message: "Password changed successfully" });
-    } catch (error: any) {
-      console.log(error);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: error.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async courseInstructorView(req: Request, res: Response): Promise<void> {
     try {
       const instructorId = req.params.instructorId;
-      const instructor = await this._authService.getSpecificInstructor(
-        instructorId
-      );
+      const instructor =
+        await this._authService.getSpecificInstructor(instructorId);
       res.status(httpStatus.OK).json(instructor);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -551,14 +594,18 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async markRead(req: Request, res: Response):Promise<void> {
+  async markRead(req: Request, res: Response): Promise<void> {
     try {
       const chatId = req.params.chatId;
       const { userId, userModel } = req.body;
       await this._messageService.markRead(chatId, userId, userModel);
       res.sendStatus(200);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to mark messages as read" });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -573,8 +620,12 @@ export class Authcontroller implements IAuthController {
         userModel
       );
       res.json(counts);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch unread counts" });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 }

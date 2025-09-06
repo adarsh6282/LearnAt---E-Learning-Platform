@@ -4,6 +4,7 @@ import { errorToast } from "../../components/Toast";
 import type { DashboardData } from "../../types/admin.types";
 import { getDashboardS } from "../../services/admin.services";
 import AdminChart from "../../components/AdminChart";
+import type { AxiosError } from "axios";
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -16,10 +17,10 @@ const AdminDashboard = () => {
       try {
         const res = await getDashboardS();
         setDashboardData(res.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching dashboard data:", err);
-        const msg = err.response?.data?.message;
-        errorToast(msg);
+        const error = err as AxiosError<{ message: string }>;
+        errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }

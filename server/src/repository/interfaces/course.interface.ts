@@ -1,5 +1,4 @@
 import { ICourse } from "../../models/interfaces/course.interface";
-import { Types } from "mongoose";
 
 export interface ICourseRepository {
   createCourse(courseData: Partial<ICourse>): Promise<ICourse>;

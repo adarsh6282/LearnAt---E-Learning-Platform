@@ -6,10 +6,7 @@ import { ProgressDTO } from "../../DTO/progress.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
-import { ICourse } from "../../models/interfaces/course.interface";
-import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { INotification } from "../../models/interfaces/notification.interface";
-import { IOrder } from "../../models/interfaces/order.interface";
 import { IProgress } from "../../models/interfaces/progress.interface";
 import { IPurchase, PurchasedCourse } from "../../repository/implementations/order.repository";
 
@@ -50,7 +47,7 @@ export interface IAuthService {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
-  }): Promise<{success:Boolean}>;
+  }): Promise<{success:boolean}>;
   updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<IProgress|null>
   getUserCourseProgress(userId: string, courseId: string): Promise<ProgressDTO>,
   fetchPurchasedInstructors(userId:string):Promise<InstructorDTO[]>

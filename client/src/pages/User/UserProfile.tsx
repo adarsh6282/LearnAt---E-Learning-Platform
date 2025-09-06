@@ -10,6 +10,7 @@ import ChangePassword from "./ChangePassword";
 import Navbar from "../../components/Navbar";
 import UserCertificates from "./Certificates";
 import { useLocation } from "react-router-dom";
+import type { AxiosError } from "axios";
 
 const tabs = [
   "Profile",
@@ -61,8 +62,9 @@ const UserProfile = () => {
       const res = await editProfileS(formPayload);
       setUser?.(res.data);
       setIsEditing(false);
-    } catch (err: any) {
-      errorToast(err.response.data.message);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setIsLoading(false);
     }

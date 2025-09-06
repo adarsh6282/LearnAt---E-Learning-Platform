@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { socket } from "../services/socket.service";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface CallContextValue {
   incomingCall: {
@@ -12,13 +13,14 @@ interface CallContextValue {
   rejectCall: () => void;
 }
 
-const TIMEOUT_MS = 4000;
+const TIMEOUT_MS = 30000;
 
 const CallContext = createContext<CallContextValue | undefined>(undefined);
 
 export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   const { authUser } = useAuth();
   const timeoutRef = React.useRef<number | null>(null);
+  const navigate=useNavigate()
   const [incomingCall, setIncomingCall] = useState<{
     chatId: string;
     callerId: string;
@@ -71,6 +73,12 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setIncomingCall(null);
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
+
+      if(authUser?.role=="user"){
+        navigate(`/users/video/${incomingCall?.chatId}`)
+      }else if(authUser?.role=="instructor"){
+        navigate(`/instructors/video/${incomingCall?.chatId}`)
+      }
   };
 
   const rejectCall = () => {

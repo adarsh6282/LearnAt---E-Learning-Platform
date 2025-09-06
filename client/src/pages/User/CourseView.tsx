@@ -16,10 +16,10 @@ const CoursePage = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lecture | null>(null);
   const [watchedLectures, setWatchedLectures] = useState<string[]>([]);
 
-  if (!courseId) return null;
-
   useEffect(() => {
     const fetchCourse = async () => {
+      if (!courseId) return;
+
       const res = await getSpecificCourseS(courseId);
       const courseData = res.data.course;
       setCourse(courseData);
@@ -39,6 +39,8 @@ const CoursePage = () => {
     fetchCourse();
   }, [courseId]);
 
+  if (!courseId) return null;
+
   const handleTimeUpdate = async (
     e: React.SyntheticEvent<HTMLVideoElement>
   ) => {
@@ -53,7 +55,7 @@ const CoursePage = () => {
       try {
         await markLectureWatchedS(courseId, selectedLesson._id);
         setWatchedLectures((prev) => [...prev, selectedLesson._id]);
-      } catch (err: any) {
+      } catch (err) {
         console.log(err);
       }
     }

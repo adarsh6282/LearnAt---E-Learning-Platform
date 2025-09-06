@@ -88,12 +88,12 @@ const authRole = (allowedRoles: Array<"user" | "instructor" | "admin">) => {
       }
 
       next();
-    } catch (error: any) {
-      console.error("Auth error:", error);
-      res.status(httpStatus.UNAUTHORIZED).json({
-        success: false,
-        message: "Authentication failed",
-      });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.UNAUTHORIZED).json({ success:false,message });
     }
   };
 };

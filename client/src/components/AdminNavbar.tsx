@@ -17,13 +17,13 @@ import { NotificationContext } from "../context/NotificationContext";
 import { adminLogoutS } from "../services/admin.services";
 
 const AdminNavbar = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const notificationContext=useContext(NotificationContext)
   if(!notificationContext){
     return
   }
   const {unreadCount}=notificationContext
-  const location = useLocation();
 
   const handleLogout = async () => {
     try {

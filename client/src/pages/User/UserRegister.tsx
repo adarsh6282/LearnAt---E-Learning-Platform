@@ -6,6 +6,7 @@ import { errorToast, successToast } from "../../components/Toast";
 import { FcGoogle } from "react-icons/fc";
 import { userRegisterS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
+import type { AxiosError } from "axios";
 
 interface FormData {
   name: string;
@@ -108,9 +109,9 @@ const UserRegister: React.FC = () => {
         localStorage.setItem("signUpData", JSON.stringify(formData));
         navigate(USER_ROUTES.VERIFY_OTP);
       }
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       setIsLoading(false);
     }
   };

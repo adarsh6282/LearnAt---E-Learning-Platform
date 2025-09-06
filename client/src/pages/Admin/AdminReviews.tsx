@@ -44,7 +44,7 @@ const AdminReviews = () => {
           );
           setReviews(res.data.reviews);
           setTotalPages(res.data.totalPages);
-        } catch (err: any) {
+        } catch (err) {
         console.log(err);
       }
     };

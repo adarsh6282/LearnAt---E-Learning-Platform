@@ -9,6 +9,7 @@ import {
 } from "../../services/admin.services";
 import Pagination from "../../components/Pagination";
 import { useSearchParams } from "react-router-dom";
+import type { AxiosError } from "axios";
 
 const AdminTutorRequests = () => {
   const [loading, setLoading] = useState(true);
@@ -28,9 +29,9 @@ const AdminTutorRequests = () => {
         const res = await getRequestsS(currentPage, itemsPerPage);
         setRequests(res.tutors);
         setTotalPages(res.totalPages);
-      } catch (err: any) {
-        const msg = err.response?.data?.message;
-        errorToast(msg);
+      } catch (err: unknown) {
+        const error = err as AxiosError<{ message: string }>;
+        errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -52,9 +53,9 @@ const AdminTutorRequests = () => {
     try {
       await handleAcceptS(email);
       setRequests((prev) => prev.filter((t) => t.email !== email));
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 
@@ -62,10 +63,10 @@ const AdminTutorRequests = () => {
     try {
       await handleRejectS(email, reason);
       setRequests((prev) => prev.filter((t) => t.email !== email));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err);
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 
@@ -74,8 +75,8 @@ const AdminTutorRequests = () => {
       await handleReject(email, rejectReason);
       setRejectingEmail(null);
       setRejectReason("");
-    } catch (err: any) {
-    } finally {
+    } catch (err) {
+      console.log(err);
     }
   };
 

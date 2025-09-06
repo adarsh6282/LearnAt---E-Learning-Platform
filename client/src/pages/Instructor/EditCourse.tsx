@@ -5,6 +5,8 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 import { editCourseS, getCategories, getCourseById } from "../../services/instructor.services";
+import type { AxiosError } from "axios";
+
 
 const EditCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -14,10 +16,6 @@ const EditCourse: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string>("");
-
-  if (!courseId) {
-    return <div>No course id</div>;
-  }
 
   const [courseData, setCourseData] = useState<CourseData>({
     title: "",
@@ -44,9 +42,10 @@ const EditCourse: React.FC = () => {
     const loadData = async () => {
       try {
         const categoriesData = await getCategories()
+        console.log(categoriesData.data)
         const activeNames = categoriesData.data
-          .filter((cat: any) => !cat.isDeleted)
-          .map((cat: any) => cat.name);
+          .filter((cat: {name:string,isDeleted:boolean}) => !cat.isDeleted)
+          .map((cat: {name:string,isDeleted:boolean}) => cat.name);
         setCategories(activeNames);
 
         if (courseId) {
@@ -79,6 +78,10 @@ const EditCourse: React.FC = () => {
 
     loadData();
   }, [courseId, navigate]);
+
+    if (!courseId) {
+    return <div>No course id</div>;
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -266,8 +269,9 @@ const EditCourse: React.FC = () => {
         successToast("Course updated successfully!");
         navigate(INSTRUCTOR_ROUTES.COURSES);
       }
-    } catch (error: any) {
-      errorToast(error?.response?.data?.message || "Failed to update course");
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     } finally {
       setIsSubmitting(false);
     }
@@ -417,24 +421,9 @@ const EditCourse: React.FC = () => {
                   </p>
                 )}
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Course Status
-                </label>
-                <select
-                  value={courseData.isActive ? 'active' : 'inactive'}
-                  onChange={(e) => handleInputChange('isActive', e.target.value === 'active')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div> */}
             </div>
           </div>
 
-          {/* Lecture Section */}
           <div className="border-t border-gray-200 pt-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               {isEditingLecture ? "Edit Lecture" : "Add New Lecture"}
@@ -551,7 +540,8 @@ const EditCourse: React.FC = () => {
               </div>
             </div>
 
-            {/* List of Added Lectures */}
+            {/* added lectures list */}
+
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Course Lectures ({courseData.lectures.length})
@@ -614,7 +604,6 @@ const EditCourse: React.FC = () => {
             </div>
           </div>
 
-          {/* Submit Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               onClick={() => navigate(INSTRUCTOR_ROUTES.COURSES)}

@@ -1,3 +1,4 @@
+import { FilterQuery } from "mongoose";
 import { IAdmin } from "../../models/interfaces/admin.interface";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
@@ -19,7 +20,7 @@ export interface IAdminRepository {
   getAllTutors(
     page: number,
     limit: number,
-    filter: any
+    filter: FilterQuery<IInstructor>
   ): Promise<{ tutors: IInstructor[]; total: number; totalPages: number }>;
   getDashboardData():Promise<DashboardData>
 }

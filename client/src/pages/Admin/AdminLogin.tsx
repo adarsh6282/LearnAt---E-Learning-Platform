@@ -4,6 +4,7 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate } from "react-router-dom";
 import { adminLoginS } from "../../services/admin.services";
 import { ADMIN_ROUTES } from "../../constants/routes.constants";
+import type { AxiosError } from "axios";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -68,10 +69,10 @@ export default function AdminLogin() {
         successToast(message);
         navigate(ADMIN_ROUTES.DASHBOARD);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err);
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       setIsLoading(false);
     }
   };

@@ -88,7 +88,7 @@ export const initSocket = (server: HTTPServer): void => {
       socket.to(chatId).emit("webrtc-offer", { offer, senderId });
     });
 
-    socket.on("call-rejected", ({ callerId, chatId }) => {
+    socket.on("call-rejected", ({ chatId }) => {
       socket.to(chatId).emit("end-call");
     });
 

@@ -4,7 +4,11 @@ import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
 import { FiPaperclip } from "react-icons/fi";
 import { MdVideoCall } from "react-icons/md";
-import { getMessageS, markMessagesReadS, sentImageinMessage } from "../services/user.services";
+import {
+  getMessageS,
+  markMessagesReadS,
+  sentImageinMessage,
+} from "../services/user.services";
 
 interface Message {
   _id?: string;
@@ -48,7 +52,11 @@ const UserChatWindow = () => {
       if (!chatId || !authUser) return;
 
       try {
-        await markMessagesReadS(chatId,authUser._id!,authUser.role==="user"?"User":"Instructor")
+        await markMessagesReadS(
+          chatId,
+          authUser._id!,
+          authUser.role === "user" ? "User" : "Instructor"
+        );
       } catch (err) {
         console.error("Failed to mark messages as read", err);
       }
@@ -63,7 +71,15 @@ const UserChatWindow = () => {
     const fetchMessages = async () => {
       if (!chatId || !authUser) return;
 
-      const normalized = await getMessageS(chatId,authUser?._id!,authUser?.role)
+      if (!authUser?._id) {
+        return;
+      }
+
+      const normalized = await getMessageS(
+        chatId,
+        authUser?._id,
+        authUser?.role
+      );
       setMessages(normalized);
     };
     if (chatId && authUser) fetchMessages();
@@ -79,7 +95,7 @@ const UserChatWindow = () => {
     if (file) {
       formData.append("chatImage", file);
       try {
-        const res = await sentImageinMessage(formData)
+        const res = await sentImageinMessage(formData);
         imageUrl = res.data.url;
       } catch (err) {
         console.log(err);

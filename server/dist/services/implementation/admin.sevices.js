@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = void 0;
 const jwt_1 = require("../../utils/jwt");
@@ -31,228 +22,172 @@ class AdminService {
         this._complaintRepository = _complaintRepository;
         this._notificationRepository = _notificationRepository;
     }
-    login(email, password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const admin = yield this._adminRepository.findAdminByEmail(email);
-            if (!admin) {
-                throw new Error("Admin not found");
-            }
-            if (admin.password !== password) {
-                throw new Error("Password doesn't match");
-            }
-            const token = (0, jwt_1.generateToken)(admin._id.toString(), admin.email, "admin");
-            const adminRefreshToken = (0, jwt_1.generateRefreshToken)(admin._id.toString(), admin.email, "admin");
-            return { token, email: admin.email, adminRefreshToken };
-        });
+    async login(email, password) {
+        const admin = await this._adminRepository.findAdminByEmail(email);
+        if (!admin) {
+            throw new Error("Admin not found");
+        }
+        if (admin.password !== password) {
+            throw new Error("Password doesn't match");
+        }
+        const token = (0, jwt_1.generateToken)(admin._id.toString(), admin.email, "admin");
+        const adminRefreshToken = (0, jwt_1.generateRefreshToken)(admin._id.toString(), admin.email, "admin");
+        return { token, email: admin.email, adminRefreshToken };
     }
-    blockUnblockUser(email, blocked) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this._userRepository.findByEmail(email);
-            console.log(user);
-            if (!user) {
-                throw new Error("User not found");
-            }
-            const updateUser = yield this._adminRepository.updateUserBlockStatus(email, blocked);
-            if (!updateUser) {
-                throw new Error("Failed to update user");
-            }
-            return (0, user_mapper_1.toUserDTO)(updateUser);
-        });
+    async blockUnblockUser(email, blocked) {
+        const user = await this._userRepository.findByEmail(email);
+        console.log(user);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const updateUser = await this._adminRepository.updateUserBlockStatus(email, blocked);
+        if (!updateUser) {
+            throw new Error("Failed to update user");
+        }
+        return (0, user_mapper_1.toUserDTO)(updateUser);
     }
-    blockUnblockTutor(email, blocked) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const tutor = yield this._instructorRepository.findByEmail(email);
-            console.log(tutor);
-            if (!tutor) {
-                throw new Error("Tutor not found");
-            }
-            const updateTutor = yield this._adminRepository.updateTutorBlockStatus(email, blocked);
-            if (!updateTutor) {
-                throw new Error("Failed to update tutor");
-            }
-            return (0, instructor_mapper_1.toInstructorDTO)(updateTutor);
-        });
+    async blockUnblockTutor(email, blocked) {
+        const tutor = await this._instructorRepository.findByEmail(email);
+        console.log(tutor);
+        if (!tutor) {
+            throw new Error("Tutor not found");
+        }
+        const updateTutor = await this._adminRepository.updateTutorBlockStatus(email, blocked);
+        if (!updateTutor) {
+            throw new Error("Failed to update tutor");
+        }
+        return (0, instructor_mapper_1.toInstructorDTO)(updateTutor);
     }
-    getAllUsers(page, limit, search) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { users, total, totalPages } = yield this._adminRepository.getAllUsers(page, limit, search);
-            return { users: (0, user_mapper_1.toUserDTOList)(users), total, totalPages };
-        });
+    async getAllUsers(page, limit, search) {
+        const { users, total, totalPages } = await this._adminRepository.getAllUsers(page, limit, search);
+        return { users: (0, user_mapper_1.toUserDTOList)(users), total, totalPages };
     }
-    getAllTutors(page, limit, filter) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { tutors, total, totalPages } = yield this._adminRepository.getAllTutors(page, limit, filter);
-            return { tutors: (0, instructor_mapper_1.toInstructorDTOList)(tutors), total, totalPages };
-        });
+    async getAllTutors(page, limit, filter) {
+        const { tutors, total, totalPages } = await this._adminRepository.getAllTutors(page, limit, filter);
+        return { tutors: (0, instructor_mapper_1.toInstructorDTOList)(tutors), total, totalPages };
     }
-    verifyTutor(email) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._instructorRepository.updateTutor(email, true, false, "active");
-        });
+    async verifyTutor(email) {
+        return await this._instructorRepository.updateTutor(email, true, false, "active");
     }
-    rejectTutor(email, reason) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const instructor = yield this._instructorRepository.findByEmail(email);
-            if (!instructor) {
-                throw new Error("Tutor not found");
-            }
-            instructor.isVerified = false;
-            instructor.isRejected = true;
-            instructor.accountStatus = "rejected";
-            yield (0, sendMail_1.sendRejectionMail)(instructor.email, reason);
-            return yield instructor.save();
-        });
+    async rejectTutor(email, reason) {
+        const instructor = await this._instructorRepository.findByEmail(email);
+        if (!instructor) {
+            throw new Error("Tutor not found");
+        }
+        instructor.isVerified = false;
+        instructor.isRejected = true;
+        instructor.accountStatus = "rejected";
+        await (0, sendMail_1.sendRejectionMail)(instructor.email, reason);
+        return await instructor.save();
     }
-    getDashboardData() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._adminRepository.getDashboardData();
-        });
+    async getDashboardData() {
+        return await this._adminRepository.getDashboardData();
     }
-    addCategory(name) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const category = yield this._categoryRepository.findCategory(name);
-            if (category) {
-                throw new Error("Category already exists");
-            }
-            return yield this._categoryRepository.createCategory(name);
-        });
+    async addCategory(name) {
+        const category = await this._categoryRepository.findCategory(name);
+        if (category) {
+            throw new Error("Category already exists");
+        }
+        return await this._categoryRepository.createCategory(name);
     }
-    getCategories(page, limit, search, status) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { category, total, totalPages } = yield this._categoryRepository.getCatgeories(page, limit, search, status);
-            if (!category) {
-                throw new Error("No categories found");
-            }
-            return { category: (0, category_mapper_1.toCategoryDTOList)(category), total, totalPages };
-        });
+    async getCategories(page, limit, search, status) {
+        const { category, total, totalPages } = await this._categoryRepository.getCatgeories(page, limit, search, status);
+        if (!category) {
+            throw new Error("No categories found");
+        }
+        return { category: (0, category_mapper_1.toCategoryDTOList)(category), total, totalPages };
     }
-    deleteCategory(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const category = yield this._categoryRepository.findCategoryById(id);
-            if (!category) {
-                throw new Error("No category found");
-            }
-            return yield this._categoryRepository.deleteCategory(id);
-        });
+    async deleteCategory(id) {
+        const category = await this._categoryRepository.findCategoryById(id);
+        if (!category) {
+            throw new Error("No category found");
+        }
+        return await this._categoryRepository.deleteCategory(id);
     }
-    restoreCategory(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const category = yield this._categoryRepository.findCategoryById(id);
-            if (!category) {
-                throw new Error("No category found");
-            }
-            return yield this._categoryRepository.restoreCategory(id);
-        });
+    async restoreCategory(id) {
+        const category = await this._categoryRepository.findCategoryById(id);
+        if (!category) {
+            throw new Error("No category found");
+        }
+        return await this._categoryRepository.restoreCategory(id);
     }
-    getCoursesService(page, limit, search) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { course, total, totalPage } = yield this._courseRepository.findAllCourse(page, limit, search);
-            return { course: (0, course_mapper_1.toCourseDTOList)(course), total, totalPage };
-        });
+    async getCoursesService(page, limit, search) {
+        const { course, total, totalPage } = await this._courseRepository.findAllCourse(page, limit, search);
+        return { course: (0, course_mapper_1.toCourseDTOList)(course), total, totalPage };
     }
-    softDeleteCourseS(courseId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.updateCourseStatus(courseId, false);
-        });
+    async softDeleteCourseS(courseId) {
+        return await this._courseRepository.updateCourseStatus(courseId, false);
     }
-    recoverCourseS(courseId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.updateCourseStatus(courseId, true);
-        });
+    async recoverCourseS(courseId) {
+        return await this._courseRepository.updateCourseStatus(courseId, true);
     }
-    getAllReviews(page, limit, search, rating, sort) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { reviews, total, totalPages } = yield this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
-            return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
-        });
+    async getAllReviews(page, limit, search, rating, sort) {
+        const { reviews, total, totalPages } = await this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
+        return { reviews: (0, review_mapper_1.toReviewDTOList)(reviews), total, totalPages };
     }
-    hideReview(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const review = yield this._reviewRepository.findReviewAndHide(id);
-            if (!review) {
-                throw new Error("Review not found");
-            }
-            return review;
-        });
+    async hideReview(id) {
+        const review = await this._reviewRepository.findReviewAndHide(id);
+        if (!review) {
+            throw new Error("Review not found");
+        }
+        return review;
     }
-    unhideReview(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const review = yield this._reviewRepository.findReviewAndUnhide(id);
-            if (!review) {
-                throw new Error("Review not found");
-            }
-            return review;
-        });
+    async unhideReview(id) {
+        const review = await this._reviewRepository.findReviewAndUnhide(id);
+        if (!review) {
+            throw new Error("Review not found");
+        }
+        return review;
     }
-    deleteReview(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const review = yield this._reviewRepository.deleteReview(id);
-            if (!review) {
-                throw new Error("Review not found");
-            }
-            return review;
-        });
+    async deleteReview(id) {
+        const review = await this._reviewRepository.deleteReview(id);
+        if (!review) {
+            throw new Error("Review not found");
+        }
+        return review;
     }
-    getWallet(page, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { wallet, total, totalPages, transactions } = yield this._walletRepository.findWalletOfAdmin(page, limit);
-            return { wallet, total, totalPages, transactions };
-        });
+    async getWallet(page, limit) {
+        const { wallet, total, totalPages, transactions } = await this._walletRepository.findWalletOfAdmin(page, limit);
+        return { wallet, total, totalPages, transactions };
     }
-    getComplaints(page, limit, search, filter) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { complaints, total, totalPages } = yield this._complaintRepository.getComplaints(page, limit, search, filter);
-            return { complaints: (0, complaint_mapper_1.toComplaintDTOList)(complaints), total, totalPages };
-        });
+    async getComplaints(page, limit, search, filter) {
+        const { complaints, total, totalPages } = await this._complaintRepository.getComplaints(page, limit, search, filter);
+        return { complaints: (0, complaint_mapper_1.toComplaintDTOList)(complaints), total, totalPages };
     }
-    responseComplaint(id, status, response) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!response || response.trim() == "") {
-                throw new Error("Please fill in a response");
-            }
-            const complaint = yield this._complaintRepository.updateComplaint(id, status, response);
-            return complaint;
-        });
+    async responseComplaint(id, status, response) {
+        if (!response || response.trim() == "") {
+            throw new Error("Please fill in a response");
+        }
+        const complaint = await this._complaintRepository.updateComplaint(id, status, response);
+        return complaint;
     }
-    getCourseStats() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._courseRepository.getCourseStats();
-        });
+    async getCourseStats() {
+        return await this._courseRepository.getCourseStats();
     }
-    getIncomeStats() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this._walletRepository.getIncomeStats();
-        });
+    async getIncomeStats() {
+        return await this._walletRepository.getIncomeStats();
     }
-    getSpecificCourseForAdmin(courseId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const course = yield this._courseRepository.findCourseById(courseId);
-            if (!course) {
-                throw new Error("Course not found");
-            }
-            return (0, course_mapper_1.toCourseDTO)(course);
-        });
+    async getSpecificCourseForAdmin(courseId) {
+        const course = await this._courseRepository.findCourseById(courseId);
+        if (!course) {
+            throw new Error("Course not found");
+        }
+        return (0, course_mapper_1.toCourseDTO)(course);
     }
-    getNotifications(userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const notification = yield this._notificationRepository.getAllNotifications(userId);
-            return (0, notification_mapper_1.toNotificationDTOList)(notification);
-        });
+    async getNotifications(userId) {
+        const notification = await this._notificationRepository.getAllNotifications(userId);
+        return (0, notification_mapper_1.toNotificationDTOList)(notification);
     }
-    markAsRead(notificationId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const notification = yield this._notificationRepository.updateNotification(notificationId);
-            return notification;
-        });
+    async markAsRead(notificationId) {
+        const notification = await this._notificationRepository.updateNotification(notificationId);
+        return notification;
     }
-    getSpecificTutor(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const tutor = yield this._instructorRepository.findById(id);
-            if (!tutor) {
-                throw new Error("Tutor not found");
-            }
-            return (0, instructor_mapper_1.toInstructorDTO)(tutor);
-        });
+    async getSpecificTutor(id) {
+        const tutor = await this._instructorRepository.findById(id);
+        if (!tutor) {
+            throw new Error("Tutor not found");
+        }
+        return (0, instructor_mapper_1.toInstructorDTO)(tutor);
     }
 }
 exports.AdminService = AdminService;

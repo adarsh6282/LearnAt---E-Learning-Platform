@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,7 +14,7 @@ const transporter = nodemailer_1.default.createTransport({
         pass: process.env.EMAIL_PASS
     }
 });
-const sendMail = (email, otp) => __awaiter(void 0, void 0, void 0, function* () {
+const sendMail = async (email, otp) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -36,10 +27,10 @@ const sendMail = (email, otp) => __awaiter(void 0, void 0, void 0, function* () 
                 </div>
                 <p style="text-align: center;">This code will expire in 5 minutes.</p>`
     };
-    yield transporter.sendMail(mailOptions);
-});
+    await transporter.sendMail(mailOptions);
+};
 exports.sendMail = sendMail;
-const sendRejectionMail = (email, reason) => __awaiter(void 0, void 0, void 0, function* () {
+const sendRejectionMail = async (email, reason) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -55,6 +46,6 @@ const sendRejectionMail = (email, reason) => __awaiter(void 0, void 0, void 0, f
       <p style="text-align: center;">If you believe this is a mistake or want more details, please contact support.</p>
     `
     };
-    yield transporter.sendMail(mailOptions);
-});
+    await transporter.sendMail(mailOptions);
+};
 exports.sendRejectionMail = sendRejectionMail;

@@ -3,11 +3,9 @@ import { IInstructorAuthService } from "../../services/interfaces/instructorAuth
 import { Request, Response } from "express";
 import { httpStatus } from "../../constants/statusCodes";
 import fs from "fs";
-import path from "path";
 import cloudinary from "../../config/cloudinary.config";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../../utils/jwt";
-import User from "../../models/implementations/userModel";
 import { IMessageService } from "../../services/interfaces/message.interface";
 
 export class InstructorAuthController implements IInstructorController {
@@ -64,11 +62,12 @@ export class InstructorAuthController implements IInstructorController {
         message: "Form received, resume uploaded, OTP sent",
         data: updatedPayload,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -98,11 +97,12 @@ export class InstructorAuthController implements IInstructorController {
         message: "Reapplied successfully",
         instructor: updatedInstructor,
       });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: "Reapply failed", error: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -121,10 +121,12 @@ export class InstructorAuthController implements IInstructorController {
       });
 
       res.status(httpStatus.OK).json({ instructor, token });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -147,38 +149,43 @@ export class InstructorAuthController implements IInstructorController {
         token,
         message: "Instructor Registered Successfully, Waiting for approval",
       });
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      const user = await this._instructorAuthService.handleForgotPassword(
+      await this._instructorAuthService.handleForgotPassword(
         email
       );
 
       res.status(httpStatus.OK).json({ message: "OTP Sent Successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async verifyForgotOtp(req: Request, res: Response): Promise<void> {
     try {
       const data = req.body;
-      const userData = await this._instructorAuthService.verifyForgotOtp(data);
+      await this._instructorAuthService.verifyForgotOtp(data);
       res.status(httpStatus.OK).json({ message: "OTP verified." });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -189,22 +196,26 @@ export class InstructorAuthController implements IInstructorController {
       res
         .status(httpStatus.OK)
         .json({ message: "Password resetted successfully" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
   async resentOtp(req: Request, res: Response): Promise<void> {
     try {
-      let { email } = req.body;
+      const { email } = req.body;
       await this._instructorAuthService.handleResendOtp(email);
       res.status(httpStatus.OK).json({ message: "OTP resent Successsfully!" });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -216,11 +227,12 @@ export class InstructorAuthController implements IInstructorController {
         email
       );
       res.status(httpStatus.OK).json(instructor);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -281,10 +293,12 @@ export class InstructorAuthController implements IInstructorController {
         currentPage: page,
         totalPages,
       });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -292,10 +306,12 @@ export class InstructorAuthController implements IInstructorController {
     try {
       const category = await this._instructorAuthService.getCategory();
       res.status(httpStatus.OK).json(category);
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -304,11 +320,12 @@ export class InstructorAuthController implements IInstructorController {
       const { courseId } = req.params;
       const course = await this._instructorAuthService.getCourseById(courseId);
       res.status(httpStatus.OK).json(course);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -333,11 +350,12 @@ export class InstructorAuthController implements IInstructorController {
         rating
       );
       res.status(httpStatus.OK).json(review);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -363,11 +381,12 @@ export class InstructorAuthController implements IInstructorController {
         status
       );
       res.status(httpStatus.OK).json(enrollments);
-    } catch (err: any) {
-      console.log(err);
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -393,10 +412,12 @@ export class InstructorAuthController implements IInstructorController {
         totalPages,
         currentPage: page,
       });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -429,10 +450,12 @@ export class InstructorAuthController implements IInstructorController {
         decoded.role
       );
       res.status(httpStatus.OK).json({ token: instructorsToken });
-    } catch (err: any) {
-      res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -478,7 +501,7 @@ export class InstructorAuthController implements IInstructorController {
         instructorId
       );
       res.status(httpStatus.OK).json(stats);
-    } catch (err: any) {
+    } catch (err) {
       console.log(err);
     }
   }
@@ -516,7 +539,7 @@ export class InstructorAuthController implements IInstructorController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      const notification = await this._instructorAuthService.markAsRead(
+      await this._instructorAuthService.markAsRead(
         notificationId
       );
       res.status(httpStatus.OK).json({ message: "Message Read" });
@@ -538,7 +561,7 @@ export class InstructorAuthController implements IInstructorController {
         instructorId
       );
       res.status(httpStatus.OK).json(incomeStats);
-    } catch (err: any) {
+    } catch (err) {
       console.log(err);
     }
   }
@@ -554,8 +577,12 @@ export class InstructorAuthController implements IInstructorController {
         userModel
       );
       res.status(httpStatus.OK).json(counts);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch unread counts" });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 
@@ -565,8 +592,12 @@ export class InstructorAuthController implements IInstructorController {
       const { userId, userModel } = req.body;
       await this._messageService.markRead(chatId, userId, userModel);
       res.sendStatus(httpStatus.OK);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to mark messages as read" });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
     }
   }
 }

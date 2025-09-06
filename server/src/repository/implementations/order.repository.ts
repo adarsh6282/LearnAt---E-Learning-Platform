@@ -23,14 +23,6 @@ export interface PurchasedCourse {
   thumbnail: string;
 }
 
-interface Course {
-  _id: string;
-  title: string;
-  description: string;
-  price: number;
-  thumbnail: string;
-}
-
 export class OrderRepository implements IOrderRepository {
   async createOrderRecord(orderData: IOrder): Promise<IOrder | null> {
     const newOrder = await Order.create(orderData);
@@ -91,7 +83,7 @@ export class OrderRepository implements IOrderRepository {
         select: "_id name email",
       });
 
-    let filteredOrders = orders.filter((order) => {
+    const filteredOrders = orders.filter((order) => {
       if (!order.courseId || !order.userId) return false;
 
       const course = order.courseId as any;
@@ -105,9 +97,6 @@ export class OrderRepository implements IOrderRepository {
         user.email.match(searchRegex)
       );
     });
-
-    const total = filteredOrders.length;
-    const totalPages = Math.ceil(total / limit);
 
     const paginatedOrders = filteredOrders.slice(
       (page - 1) * limit,
@@ -223,9 +212,9 @@ export class OrderRepository implements IOrderRepository {
       .sort({ createdAt: -1 });
 
     const purchasedCourses: PurchasedCourse[] = courses
-      .filter((order: any) => order.courseId)
+      .filter((order: {courseId:string|Types.ObjectId}) => order.courseId)
       .map((order: any) => {
-        const course = order.courseId as any;
+        const course = order.courseId as ICourse;
         return {
           id: course._id.toString(),
           title: course.title,

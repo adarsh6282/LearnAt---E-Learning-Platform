@@ -4,13 +4,17 @@ import { useAuth } from "../hooks/useAuth";
 import { useParams } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
 import { socket } from "../services/socket.service";
-import { filteredInstructor, getChatList, initiateChat } from "../services/user.services";
+import {
+  filteredInstructor,
+  getChatList,
+  initiateChat,
+} from "../services/user.services";
 
 interface ChatPartner {
   chatId: string;
   partnerId: string;
   partnerName: string;
-  lastMessage:string
+  lastMessage: string;
 }
 
 interface Instructor {
@@ -31,7 +35,7 @@ const ChatList = () => {
 
     const fetchChats = async () => {
       try {
-        const chat = await getChatList(authUser._id!)
+        const chat = await getChatList(authUser._id!);
         setChats(chat);
       } catch (err) {
         console.error("Error fetching user chats:", err);
@@ -75,7 +79,7 @@ const ChatList = () => {
 
   const fetchInstructors = async () => {
     try {
-      const filtered = await filteredInstructor(chats)
+      const filtered = await filteredInstructor(chats);
       setInstructors(filtered);
       setShowInstructors(true);
     } catch (err) {
@@ -85,7 +89,10 @@ const ChatList = () => {
 
   const handleStartChat = async (instructor: Instructor) => {
     try {
-      const chat = await initiateChat(authUser?._id!,instructor._id)
+      if (!authUser?._id) {
+        return;
+      }
+      const chat = await initiateChat(authUser?._id, instructor._id);
 
       navigate(`/users/chat/${chat._id}`, {
         state: {

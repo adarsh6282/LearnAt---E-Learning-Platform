@@ -2,7 +2,7 @@ import { UpdateResult } from "mongoose";
 import { IMessage } from "../../models/interfaces/chat.interface";
 
 export interface IMessageService{
-    sendMessage(data:any):Promise<IMessage|null>
+    sendMessage(data:Partial<IMessage>):Promise<IMessage|null>
     fetchMessages(chatId:string):Promise<IMessage[]|null>
     markRead(
     chatId: string,

@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { errorToast, successToast } from '../../components/Toast';
 import { changePasswordS } from '../../services/user.services';
+import type { AxiosError } from 'axios';
 
 export default function ChangePassword() {
   const [formData, setFormData] = useState({
@@ -31,9 +32,9 @@ export default function ChangePassword() {
     try {
       await changePasswordS(formData)
       successToast("Password changed successfully");
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
     }
   };
 

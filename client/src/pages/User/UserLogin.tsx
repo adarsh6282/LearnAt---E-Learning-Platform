@@ -7,6 +7,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { userLoginS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
 import { UserContext } from "../../context/UserContext";
+import type { AxiosError } from "axios";
 
 export default function UserLogin() {
   const [email, setEmail] = useState("");
@@ -68,9 +69,9 @@ export default function UserLogin() {
           navigate("/home");
         }, 2000);
       }
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      errorToast(msg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      errorToast(error.response?.data?.message ?? "Something went wrong");
       setIsLoading(false);
     }
   };
