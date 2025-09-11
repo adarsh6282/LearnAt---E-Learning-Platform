@@ -1,8 +1,7 @@
-import { IOrder } from "../models/interfaces/order.interface";
 import { Types } from "mongoose";
 
 export interface OrderDTO {
-  _id?: string;
+  _id?: string| Types.ObjectId;
   courseId: Types.ObjectId | string;
   userId: Types.ObjectId | string;
   razorpayOrderId?: string;

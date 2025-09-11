@@ -9,6 +9,7 @@ import {
   markMessagesReadS,
   sentImageinMessage,
 } from "../services/user.services";
+import { USER_ROUTES } from "../constants/routes.constants";
 
 interface Message {
   _id?: string;
@@ -137,7 +138,7 @@ const UserChatWindow = () => {
           className="text-3xl text-blue-500 cursor-pointer hover:text-blue-600"
           title="Start Video Call"
           onClick={() => {
-            navigate(`/users/video/${chatId}?target=${targetUserId}`);
+            navigate(`${USER_ROUTES.VIDEO_CALL(chatId)}?target=${targetUserId}`);
           }}
         />
       </div>

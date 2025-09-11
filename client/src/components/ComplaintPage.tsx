@@ -4,7 +4,11 @@ import { formatDistanceToNow } from "date-fns";
 import { errorToast, successToast } from "../components/Toast";
 import { Link, useSearchParams } from "react-router-dom";
 import Pagination from "./Pagination";
-import { getComplaintsS, refreshedComplaint, updateComplaint } from "../services/admin.services";
+import {
+  getComplaintsS,
+  refreshedComplaint,
+  updateComplaint,
+} from "../services/admin.services";
 
 interface Complaint {
   _id: string;
@@ -76,15 +80,15 @@ const AdminComplaint: React.FC = () => {
   const handleSubmit = async () => {
     if (!selectedComplaint) return;
     try {
-      await updateComplaint(selectedComplaint._id,status,response)
+      await updateComplaint(selectedComplaint._id, status, response);
       successToast("Response submitted successfully");
-      const refreshed = await refreshedComplaint()
+      const refreshed = await refreshedComplaint();
       setComplaints(refreshed.data);
       setSelectedComplaint(null);
       setResponse("");
       setStatus("resolved");
     } catch (err) {
-      console.log(err)
+      console.log(err);
       errorToast("Failed to respond");
     }
   };
@@ -106,6 +110,9 @@ const AdminComplaint: React.FC = () => {
             type="text"
             placeholder="Search complaints..."
             value={searchTerm}
+            onKeyDown={(e) => {
+              if (e.repeat) e.preventDefault();
+            }}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-slate-300 rounded-md px-3 py-2 w-64"
           />
@@ -163,8 +170,8 @@ const AdminComplaint: React.FC = () => {
                       c.status === "pending"
                         ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                         : c.status === "resolved"
-                        ? "bg-green-100 text-green-800 border-green-200"
-                        : "bg-red-100 text-red-800 border-red-200"
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : "bg-red-100 text-red-800 border-red-200"
                     }`}
                   >
                     {c.status === "resolved" ? (

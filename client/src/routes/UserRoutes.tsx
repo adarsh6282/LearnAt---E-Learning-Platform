@@ -35,9 +35,9 @@ const UserRoutes = () => {
       <Route element={<UserProviderWrapper />}>
         <Route path={USER_ROUTES.HOME} element={<LandingPage />} />
         <Route path={USER_ROUTES.REGISTER} element={<UserRegister />} />
-        <Route path="/users/course-view/:courseId" element={<CourseView />} />
-        <Route path="/users/notifications" element={<UserNotification />} />
-        <Route path="/users/purchasehistory" element={<PurchaseHistory />} />
+        <Route path={USER_ROUTES.COURSE_VIEW()} element={<CourseView />} />
+        <Route path={USER_ROUTES.NOTIFICATIONS} element={<UserNotification />} />
+        <Route path={USER_ROUTES.PURCHASE_HISTORY} element={<PurchaseHistory />} />
         <Route path={USER_ROUTES.LOGIN} element={<UserLogin />} />
         <Route
           path={USER_ROUTES.VERIFY_OTP}
@@ -47,14 +47,13 @@ const UserRoutes = () => {
           path={USER_ROUTES.FORGOT_OTP}
           element={<ForgotOtpPage role="users" />}
         />
-        <Route path="/users/chat" element={<ChatPage />}>
+        <Route path={USER_ROUTES.CHAT_PAGE} element={<ChatPage />}>
           <Route path=":chatId" element={<ChatWindow />} />
         </Route>
-        <Route path="/users/video/:chatId" element={<VideoCall />} />
-        <Route path="/users/purchase-history" element={<PurchaseHistory />} />
-        <Route path="/users/purchase-courses" element={<PurchasedCourses />} />
-        <Route path="/users/change-password" element={<ChangePassword />} />
-        <Route path="/users/certificates" element={<UserCertificates />} />
+        <Route path={USER_ROUTES.VIDEO_CALL()} element={<VideoCall />} />
+        <Route path={USER_ROUTES.PURCHASED_COURSES} element={<PurchasedCourses />} />
+        <Route path={USER_ROUTES.CHANGE_PASSWORD} element={<ChangePassword />} />
+        <Route path={USER_ROUTES.CERTIFICATES} element={<UserCertificates />} />
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}
@@ -81,7 +80,7 @@ const UserRoutes = () => {
           }
         />
         <Route
-          path={"/users/courses/:courseId"}
+          path={USER_ROUTES.COURSE_DETAIL()}
           element={
             <ProtectedRoute>
               <CourseDetail />

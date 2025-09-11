@@ -123,6 +123,9 @@ const AdminCategory = () => {
               type="text"
               placeholder="Search complaints..."
               value={searchTerm}
+              onKeyDown={(e) => {
+                if (e.repeat) e.preventDefault();
+              }}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="border border-slate-300 rounded-md px-3 py-2 w-64"
             />
@@ -194,6 +197,9 @@ const AdminCategory = () => {
             <input
               type="text"
               value={newCategoryName}
+              onKeyDown={(e) => {
+                if (e.repeat) e.preventDefault();
+              }}
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="Enter category name"
               className="w-full border border-gray-300 rounded p-2 mb-4 text-sm"

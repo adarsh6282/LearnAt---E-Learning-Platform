@@ -20,7 +20,7 @@ class CertificateRepository {
     async getCertificates(userId) {
         const certificates = await certificateModel_1.default.find({ user: userId }).populate("course", "title");
         return certificates.map((cert) => ({
-            id: cert.id.toString(),
+            _id: cert._id.toString(),
             user: userId,
             course: cert.course.toString(),
             courseTitle: cert.course.title,

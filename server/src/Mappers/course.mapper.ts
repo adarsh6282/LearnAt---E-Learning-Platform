@@ -9,6 +9,7 @@ export const toCourseDTO = (course: ICourse): CourseDTO => ({
   price: course.price,
   isActive: course.isActive,
   lectures: course.lectures.map((lecture) => ({
+    _id:lecture._id!.toString(),
     title: lecture.title,
     description: lecture.description,
     videoUrl: lecture.videoUrl,

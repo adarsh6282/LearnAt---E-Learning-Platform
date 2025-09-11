@@ -37,10 +37,12 @@ const InstructorCreateCourse: React.FC = () => {
   useEffect(() => {
     const getCategories = async () => {
       try {
-        const response = await instructorApi.get<Category[]>("/instructors/category")
+        const response = await instructorApi.get<Category[]>(
+          "/instructors/category"
+        );
         const activeNames = response.data
-          .filter((cat: {name:string,isDeleted:boolean}) => !cat.isDeleted)
-          .map((cat: {name:string,isDeleted:boolean}) => cat.name);
+          .filter((cat: { name: string; isDeleted: boolean }) => !cat.isDeleted)
+          .map((cat: { name: string; isDeleted: boolean }) => cat.name);
         setCategories(activeNames);
       } catch (err) {
         console.error("Failed to load categories:", err);
@@ -211,6 +213,9 @@ const InstructorCreateCourse: React.FC = () => {
                 type="text"
                 value={courseData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.repeat) e.preventDefault();
+                }}
                 placeholder="Enter course title"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -225,6 +230,9 @@ const InstructorCreateCourse: React.FC = () => {
               </label>
               <textarea
                 value={courseData.description}
+                onKeyDown={(e) => {
+                  if (e.repeat) e.preventDefault();
+                }}
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
@@ -271,6 +279,9 @@ const InstructorCreateCourse: React.FC = () => {
                   type="number"
                   min="0"
                   value={courseData.price}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={(e) =>
                     handleInputChange("price", parseFloat(e.target.value))
                   }
@@ -326,6 +337,9 @@ const InstructorCreateCourse: React.FC = () => {
                   <input
                     type="text"
                     value={newLecture.title}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) =>
                       handleLectureInputChange("title", e.target.value)
                     }
@@ -341,6 +355,9 @@ const InstructorCreateCourse: React.FC = () => {
                     type="number"
                     min="1"
                     value={newLecture.duration}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) =>
                       handleLectureInputChange("duration", e.target.value)
                     }
@@ -356,6 +373,9 @@ const InstructorCreateCourse: React.FC = () => {
                 </label>
                 <textarea
                   value={newLecture.description}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={(e) =>
                     handleLectureInputChange("description", e.target.value)
                   }

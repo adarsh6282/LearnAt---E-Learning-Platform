@@ -129,6 +129,9 @@ const Courses: React.FC = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                   placeholder="Title or instructor"
                   className="w-full px-3 py-2 bg-slate-900/80 text-slate-100 border border-cyan-400/10 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />

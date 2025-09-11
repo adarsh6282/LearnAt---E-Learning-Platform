@@ -14,9 +14,18 @@ export interface ICourse extends Document {
 }
 
 export interface ILecture {
+    _id?:string
     title: string;
     description: string;
     videoUrl: string;
     duration: string;
     order: number;
 } 
+
+export interface CreateLectureInput {
+  title: string;
+  description: string;
+  videoUrl: string;
+  duration: string;
+  order: number;
+}

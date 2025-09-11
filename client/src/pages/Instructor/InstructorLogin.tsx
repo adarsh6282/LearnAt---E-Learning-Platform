@@ -83,6 +83,9 @@ export default function InstructorLogin() {
                 name="email"
                 type="email"
                 value={email}
+                onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full py-2 pl-3 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="you@example.com"
@@ -106,6 +109,9 @@ export default function InstructorLogin() {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
+                onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full py-2 pl-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="••••••••"
@@ -150,9 +156,9 @@ export default function InstructorLogin() {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Don't have an account?{" "}
-          <a className="font-medium text-blue-600 hover:text-blue-500">
+          <Link to={"/instructors/register"} className="font-medium text-blue-600 hover:text-blue-500">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

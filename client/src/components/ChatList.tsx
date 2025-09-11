@@ -9,6 +9,7 @@ import {
   getChatList,
   initiateChat,
 } from "../services/user.services";
+import { USER_ROUTES } from "../constants/routes.constants";
 
 interface ChatPartner {
   chatId: string;
@@ -94,7 +95,7 @@ const ChatList = () => {
       }
       const chat = await initiateChat(authUser?._id, instructor._id);
 
-      navigate(`/users/chat/${chat._id}`, {
+      navigate(USER_ROUTES.CHAT_WINDOW(chat._id), {
         state: {
           partnerName: instructor.name,
         },

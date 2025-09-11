@@ -15,10 +15,11 @@ import AdminCourseView from "../pages/Admin/AdminCourseView";
 import TutorDetail from "../pages/Admin/AdminTutorVIew";
 import { NotificationProvider } from "../context/NotificationContext";
 import AdminNotification from "../pages/Admin/AdminNotification";
+import { ADMIN_ROUTES } from "../constants/routes.constants";
 
 const AdminRoutes = [
-  <Route key="admin-login" path="/admin/login" element={<AdminLogin />} />,
-  <Route key="admin-private" path="/admin" element={<AdminPrivateRoute />}>
+  <Route key="admin-login" path={ADMIN_ROUTES.LOGIN} element={<AdminLogin />} />,
+  <Route key="admin-private" path={ADMIN_ROUTES.BASE} element={<AdminPrivateRoute />}>
     <Route
       element={
         <NotificationProvider>
@@ -26,20 +27,20 @@ const AdminRoutes = [
         </NotificationProvider>
       }
     >
-      <Route path="dashboard" element={<AdminDashboard />} />
-      <Route path="users" element={<AdminUsers />} />
-      <Route path="tutors" element={<AdminTutors />} />
-      <Route path="tutor-requests" element={<AdminTutorRequests />} />
-      <Route path="tutor-view/:tutorId" element={<TutorDetail />} />
-      <Route path="category" element={<AdminCategory />} />
-      <Route path="courses" element={<AdminCourse />} />
-      <Route path="reviews" element={<AdminReviews />} />
-      <Route path="complaints" element={<ComplaintPage />} />
-      <Route path="earnings" element={<Earnings role="admin" />} />
-      <Route path="courses/:courseId" element={<AdminCourseView />} />
-      <Route path="/admin/notifications" element={<AdminNotification/>}/>
+      <Route path={ADMIN_ROUTES.DASHBOARD} element={<AdminDashboard />} />
+      <Route path={ADMIN_ROUTES.USERS} element={<AdminUsers />} />
+      <Route path={ADMIN_ROUTES.TUTORS} element={<AdminTutors />} />
+      <Route path={ADMIN_ROUTES.TUTOR_REQUESTS} element={<AdminTutorRequests />} />
+      <Route path={ADMIN_ROUTES.TUTOR_VIEW()} element={<TutorDetail />} />
+      <Route path={ADMIN_ROUTES.CATEGORY} element={<AdminCategory />} />
+      <Route path={ADMIN_ROUTES.COURSES} element={<AdminCourse />} />
+      <Route path={ADMIN_ROUTES.REVIEWS} element={<AdminReviews />} />
+      <Route path={ADMIN_ROUTES.COMPLAINTS} element={<ComplaintPage />} />
+      <Route path={ADMIN_ROUTES.EARNINGS} element={<Earnings role="admin" />} />
+      <Route path={ADMIN_ROUTES.COURSE_VIEW()} element={<AdminCourseView />} />
+      <Route path={ADMIN_ROUTES.NOTIFICATIONS} element={<AdminNotification/>}/>
     </Route>
-  </Route>,
+  </Route>
 ];
 
 export default AdminRoutes;

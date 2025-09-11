@@ -104,6 +104,9 @@ export default function AdminLogin() {
                   id="email"
                   name="email"
                   value={formData.email}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-4 py-3 bg-white/10 border ${
                     errors.email ? "border-red-400" : "border-white/20"
@@ -130,12 +133,16 @@ export default function AdminLogin() {
                   id="password"
                   name="password"
                   value={formData.password}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-12 py-3 bg-white/10 border ${
                     errors.password ? "border-red-400" : "border-white/20"
                   } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
                   placeholder="Enter your password"
                 />
+                
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}

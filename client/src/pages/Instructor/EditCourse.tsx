@@ -4,9 +4,12 @@ import type { CourseData, Lecture } from "../../types/course.types";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
-import { editCourseS, getCategories, getCourseById } from "../../services/instructor.services";
+import {
+  editCourseS,
+  getCategories,
+  getCourseById,
+} from "../../services/instructor.services";
 import type { AxiosError } from "axios";
-
 
 const EditCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -41,11 +44,11 @@ const EditCourse: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const categoriesData = await getCategories()
-        console.log(categoriesData.data)
+        const categoriesData = await getCategories();
+        console.log(categoriesData.data);
         const activeNames = categoriesData.data
-          .filter((cat: {name:string,isDeleted:boolean}) => !cat.isDeleted)
-          .map((cat: {name:string,isDeleted:boolean}) => cat.name);
+          .filter((cat: { name: string; isDeleted: boolean }) => !cat.isDeleted)
+          .map((cat: { name: string; isDeleted: boolean }) => cat.name);
         setCategories(activeNames);
 
         if (courseId) {
@@ -79,7 +82,7 @@ const EditCourse: React.FC = () => {
     loadData();
   }, [courseId, navigate]);
 
-    if (!courseId) {
+  if (!courseId) {
     return <div>No course id</div>;
   }
 
@@ -317,6 +320,9 @@ const EditCourse: React.FC = () => {
               <input
                 type="text"
                 value={courseData.title}
+                onKeyDown={(e) => {
+                  if (e.repeat) e.preventDefault();
+                }}
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 placeholder="Enter course title"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -332,6 +338,9 @@ const EditCourse: React.FC = () => {
               </label>
               <textarea
                 value={courseData.description}
+                onKeyDown={(e) => {
+                  if (e.repeat) e.preventDefault();
+                }}
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
@@ -378,6 +387,9 @@ const EditCourse: React.FC = () => {
                   type="number"
                   min="0"
                   value={courseData.price}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={(e) =>
                     handleInputChange("price", parseFloat(e.target.value))
                   }
@@ -442,6 +454,9 @@ const EditCourse: React.FC = () => {
                       onChange={(e) =>
                         handleLectureInputChange("title", e.target.value)
                       }
+                      onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                       placeholder="Enter lecture title"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -457,6 +472,9 @@ const EditCourse: React.FC = () => {
                       onChange={(e) =>
                         handleLectureInputChange("duration", e.target.value)
                       }
+                      onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                       placeholder="e.g., 30"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -472,6 +490,9 @@ const EditCourse: React.FC = () => {
                     onChange={(e) =>
                       handleLectureInputChange("description", e.target.value)
                     }
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     placeholder="Describe what students will learn in this lecture"
                     rows={3}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"

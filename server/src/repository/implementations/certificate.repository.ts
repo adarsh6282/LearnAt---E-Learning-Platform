@@ -22,7 +22,7 @@ export class CertificateRepository implements ICertificateReopsitory {
     userId: string
   ): Promise<
     {
-      id: string;
+      _id: string;
       user: string;
       course: string;
       courseTitle: string;
@@ -36,7 +36,7 @@ export class CertificateRepository implements ICertificateReopsitory {
     );
     
     return certificates.map((cert) => ({
-      id: cert.id.toString(),
+      _id: cert._id.toString(),
       user: userId,
       course: cert.course.toString(),
       courseTitle: (cert.course as any).title,

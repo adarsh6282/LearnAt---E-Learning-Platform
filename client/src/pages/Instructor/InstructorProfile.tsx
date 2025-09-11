@@ -20,17 +20,16 @@ const InstructorProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  
   if (!context) {
     return <div>Loading Instructor...</div>;
   }
-  
+
   const { instructor, setInstructor } = context;
-  
+
   if (!instructor) {
     return <div>Loading Instructor...</div>;
   }
-  
+
   const [formData, setFormData] = useState({
     name: instructor.name || "",
     phone: instructor.phone || "",
@@ -203,6 +202,9 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="text"
                     value={formData.name}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -239,6 +241,9 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="tel"
                     value={formData.phone}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -269,6 +274,9 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="text"
                     value={formData.title}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -287,6 +295,9 @@ const InstructorProfile: React.FC = () => {
                     type="number"
                     min="0"
                     value={formData.yearsOfExperience}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) =>
                       handleInputChange(
                         "yearsOfExperience",
@@ -311,6 +322,9 @@ const InstructorProfile: React.FC = () => {
                 {isEditing ? (
                   <textarea
                     value={formData.education}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={(e) =>
                       handleInputChange("education", e.target.value)
                     }

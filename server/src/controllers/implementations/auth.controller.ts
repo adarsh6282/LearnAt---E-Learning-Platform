@@ -37,7 +37,7 @@ export class Authcontroller implements IAuthController {
         path: "/api/users",
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
       res
@@ -63,7 +63,7 @@ export class Authcontroller implements IAuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
       res
@@ -346,10 +346,8 @@ export class Authcontroller implements IAuthController {
         courseId
       );
 
-      res.status(httpStatus.OK).json({
-        success: true,
-        watchedLectures,
-      });
+      res.status(httpStatus.OK).json(
+        watchedLectures);
     } catch (err: unknown) {
       console.error(err);
       const message =
