@@ -5,11 +5,11 @@ const toOrderDTO = (order) => ({
     _id: order._id?.toString(),
     courseId: order.courseId,
     userId: order.userId,
-    razorpayOrderId: order.razorpayOrderId,
-    razorpayPaymentId: order.razorpayPaymentId,
-    razorpaySignature: order.razorpaySignature,
-    amount: order.amount,
+    razorpayOrderId: order.razorpayOrderId ?? undefined,
+    razorpayPaymentId: order.razorpayPaymentId ?? undefined,
+    razorpaySignature: order.razorpaySignature ?? undefined,
+    amount: order.amount ?? 0,
     status: order.status,
-    currency: order.currency,
+    currency: order.currency ?? "INR",
 });
 exports.toOrderDTO = toOrderDTO;

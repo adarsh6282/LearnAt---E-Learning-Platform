@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { errorToast } from "../../components/Toast";
 import { getTutorsS, toggleTutorBlockS } from "../../services/admin.services";
 import type { Tutor } from "../../types/instructor.types";
 import { ADMIN_ROUTES } from "../../constants/routes.constants";
 import Pagination from "../../components/Pagination";
 import type { AxiosError } from "axios";
+import Table from "../../components/Table";
 
 const AdminTutors = () => {
   const [loading, setLoading] = useState(true);
@@ -100,84 +101,21 @@ const AdminTutors = () => {
             type="text"
             placeholder="Search by course title or instructor..."
             value={searchQuery}
+            onKeyDown={(e) => {
+              if (e.repeat) e.preventDefault();
+            }}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Action
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  View
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {tutors.map((tutor) => (
-                <tr
-                  key={tutor.email}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {tutor.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {tutor.email}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {tutor.isBlocked ? (
-                      <span className="text-red-600 font-semibold">
-                        Blocked
-                      </span>
-                    ) : (
-                      <span className="text-green-600 font-semibold">
-                        Active
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <button
-                      disabled={blockingTutorId === tutor.email}
-                      onClick={() => toggleBlock(tutor.email, tutor.isBlocked)}
-                      className={`px-3 py-1 rounded text-white ${
-                        tutor.isBlocked
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      {blockingTutorId === tutor.email
-                        ? "Processing..."
-                        : tutor.isBlocked
-                          ? "Unblock"
-                          : "Block"}
-                    </button>
-                  </td>
-                  <td>
-                    <Link
-                      className="text-blue-600 hover:underline hover:text-blue-800 transition duration-200"
-                      to={`/admin/tutor-view/${tutor._id}`}
-                    >
-                      View Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            data={tutors}
+            blockingId={blockingTutorId}
+            onToggleBlock={toggleBlock}
+            showView={true}
+          />
         </div>
         <Pagination
           currentPage={currentPage}

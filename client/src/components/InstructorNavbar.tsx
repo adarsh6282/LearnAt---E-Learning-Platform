@@ -132,7 +132,7 @@ const InstructorNavbar = () => {
 
           <div className="border-t border-blue-700/30 p-4">
             <Link
-              to="/instructors/notifications"
+              to={INSTRUCTOR_ROUTES.NOTIFICATIONS}
               className="w-full flex items-center justify-between px-4 py-3 text-blue-100 hover:text-white hover:bg-blue-700 hover:bg-opacity-50 rounded-lg transition-all duration-200 mb-2"
             >
               <div className="flex items-center space-x-3">

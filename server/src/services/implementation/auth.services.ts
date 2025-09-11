@@ -607,7 +607,7 @@ export class AuthService implements IAuthService {
 
   async getCertificates(userId: string): Promise<
     {
-      id: string;
+      _id: string;
       user: string;
       course: string;
       courseTitle: string;

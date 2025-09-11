@@ -10,8 +10,18 @@ export const USER_ROUTES = {
   GOOGLE_VERIFY: "/users/verifygoogle",
   PROFILE: "/users/profile",
   COURSES: "/users/courses",
-  COURSE_DETAIL: (courseId: string = ".courseId") =>
+  COURSE_DETAIL: (courseId: string = ":courseId") =>
     `/users/courses/${courseId}`,
+  COURSE_VIEW: (courseId: string = ":courseId") =>
+    `/users/course-view/${courseId}`,
+  NOTIFICATIONS: `/users/notifications`,
+  PURCHASE_HISTORY: `/users/purchasehistory`,
+  CHAT_PAGE: `/users/chat`,
+  CHAT_WINDOW: (chatId: string = ".chatId") => `/users/chat/${chatId}`,
+  VIDEO_CALL: (chatId: string = ":chatId") => `/users/video/${chatId}`,
+  PURCHASED_COURSES: `/users/purchase-courses`,
+  CHANGE_PASSWORD: `/users/change-password`,
+  CERTIFICATES: `/users/certificates`,
 } as const;
 
 export const INSTRUCTOR_ROUTES = {
@@ -26,6 +36,13 @@ export const INSTRUCTOR_ROUTES = {
   CREATE_COURSE: "/instructors/create-course",
   PROFILE: "/instructors/profile",
   COURSES: "/instructors/courses",
+  CHAT_PAGE:`/instructors/chat`,
+  VIDEO_CALL:`/instructors/video`,
+  EDIT_COURSE:(courseId:string = ":courseId")=>`/instructors/courses/${courseId}`,
+  REVIEWS:`/instructors/reviews`,
+  EARNINGS:`/instructors/earnings`,
+  ENROLLMENTS:`/instructors/enrollments`,
+  NOTIFICATIONS:`/instructors/notifications`
 } as const;
 
 export const ADMIN_ROUTES = {
@@ -37,4 +54,10 @@ export const ADMIN_ROUTES = {
   TUTORS: "/admin/tutors",
   TUTOR_REQUESTS: "/admin/tutor-requests",
   CATEGORY: "/admin/category",
+  TUTOR_VIEW: (tutorId: string = ":tutorId") => `/admin/tutor-view/${tutorId}`,
+  REVIEWS: `/admin/reviews`,
+  COMPLAINTS: `/admin/complaints`,
+  EARNINGS: `/admin/earnings`,
+  COURSE_VIEW: (courseId: string = ":courseId") => `/admin/courses/${courseId}`,
+  NOTIFICATIONS: `/admin/notifications`,
 } as const;

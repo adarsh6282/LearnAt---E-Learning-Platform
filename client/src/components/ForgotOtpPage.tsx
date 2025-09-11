@@ -99,6 +99,9 @@ const ForgotOtpPage: React.FC<OtpPageProps> = ({ role }) => {
             maxLength={6}
             placeholder="Enter OTP"
             value={otp}
+            onKeyDown={(e) => {
+              if (e.repeat) e.preventDefault();
+            }}
             onChange={(e) => setOtp(e.target.value)}
             className="w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             required

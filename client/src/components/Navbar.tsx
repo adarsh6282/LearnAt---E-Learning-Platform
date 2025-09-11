@@ -65,7 +65,7 @@ export default function Navbar() {
             className="h-8 sm:h-10 object-contain cursor-pointer transition-transform duration-300 hover:scale-105"
             onClick={() => {
               const token = localStorage.getItem("usersToken");
-              navigate(token ? "/home" : "/");
+              navigate(token ? USER_ROUTES.HOME: USER_ROUTES.ROOT);
             }}
           />
         </div>
@@ -90,7 +90,7 @@ export default function Navbar() {
             Contact Us
           </a>
           <Link
-            to="/users/chat"
+            to={USER_ROUTES.CHAT_PAGE}
             className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/chat"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
           >
             Chats
@@ -103,7 +103,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <>
             <Link
-              to="/users/notifications"
+              to={USER_ROUTES.NOTIFICATIONS}
               className="p-2 rounded-full hover:bg-cyan-400/10 transition-colors duration-200"
               title="Notifications"
             >
@@ -159,7 +159,7 @@ export default function Navbar() {
             Contact Us
           </a>
           <Link
-            to="/users/chat"
+            to={USER_ROUTES.CHAT_PAGE}
             className="hover:text-cyan-400"
             onClick={() => setIsMenuOpen(false)}
           >
@@ -169,7 +169,7 @@ export default function Navbar() {
           {token && (
             <>
               <Link
-                to="/users/notifications"
+                to={USER_ROUTES.NOTIFICATIONS}
                 className="hover:text-cyan-400"
                 onClick={() => setIsMenuOpen(false)}
               >

@@ -6,6 +6,7 @@ import { getUsersS, toggleUserBlockS } from "../../services/admin.services";
 import Pagination from "../../components/Pagination";
 import { useSearchParams } from "react-router-dom";
 import type { AxiosError } from "axios";
+import Table from "../../components/Table";
 
 const AdminUsers = () => {
   const [blockingUserId, setBlockingUserId] = useState<string | null>(null);
@@ -35,7 +36,7 @@ const AdminUsers = () => {
       } catch (err: unknown) {
         console.log(err);
         const error = err as AxiosError<{ message: string }>;
-      errorToast(error.response?.data?.message ?? "Something went wrong");
+        errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -96,68 +97,16 @@ const AdminUsers = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
-                <tr
-                  key={user.email}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {user.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {user.email}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {user.isBlocked ? (
-                      <span className="text-red-600 font-semibold">
-                        Blocked
-                      </span>
-                    ) : (
-                      <span className="text-green-600 font-semibold">
-                        Active
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <button
-                      disabled={blockingUserId === user.email}
-                      onClick={() => toggleBlock(user.email, user.isBlocked)}
-                      className={`px-3 py-1 rounded text-white ${
-                        user.isBlocked
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      {blockingUserId === user.email
-                        ? "Processing..."
-                        : user.isBlocked
-                          ? "Unblock"
-                          : "Block"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+          <Table
+            data={users}
+            blockingId={blockingUserId}
+            onToggleBlock={toggleBlock}
+            showView={false}
+          />
+
         </div>
+        
         <Pagination
           currentPage={currentPage}
           onPageChange={handlePageChange}

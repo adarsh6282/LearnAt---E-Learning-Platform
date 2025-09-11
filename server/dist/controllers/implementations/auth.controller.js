@@ -33,7 +33,7 @@ class Authcontroller {
                 path: "/api/users",
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000,
+                maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
                 .status(statusCodes_1.httpStatus.OK)
@@ -54,7 +54,7 @@ class Authcontroller {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000,
+                maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
                 .status(statusCodes_1.httpStatus.CREATED)
@@ -275,10 +275,7 @@ class Authcontroller {
                 return;
             }
             const watchedLectures = await this._authService.getUserCourseProgress(userId, courseId);
-            res.status(statusCodes_1.httpStatus.OK).json({
-                success: true,
-                watchedLectures,
-            });
+            res.status(statusCodes_1.httpStatus.OK).json(watchedLectures);
         }
         catch (err) {
             console.error(err);

@@ -7,7 +7,6 @@ import type {
 } from "../types/user.types";
 import type { IOrder, VerifyResponse } from "../types/order.types";
 import type { Review } from "../types/review.types";
-import userApi from "./userApiService";
 import type { INotification } from "../context/NotificationContext";
 import { createApi } from "./newApiService";
 
@@ -104,6 +103,10 @@ export const verifyResS = async (data: {
   return await api.post<VerifyResponse>("/users/orders/verify", data);
 };
 
+// export const markOrderAsFailed=async(orderId:string)=>{
+//   return await api.post("/users/fail-payment",{orderId})
+// }
+
 export const getReviewsS = async (courseId: string) => {
   return await api.get<{ reviews: Review[] }>(
     `/users/reviews/courses/${courseId}`
@@ -187,9 +190,11 @@ export const markLectureWatchedS = async (
   courseId: string,
   lectureId: string
 ) => {
-  return await api.post(`/users/course-view/progress/${courseId}`, {
+  const lecture = await api.post(`/users/course-view/progress/${courseId}`, {
     lectureId,
   });
+  console.log(lectureId)
+  return lecture
 };
 
 export const getPurchasedCoursesS = async (page: number, limit: number) => {

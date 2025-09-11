@@ -22,6 +22,7 @@ const CoursePage = () => {
 
       const res = await getSpecificCourseS(courseId);
       const courseData = res.data.course;
+      console.log(courseData.lectures)
       setCourse(courseData);
 
       if (courseData.lectures && courseData.lectures.length > 0) {

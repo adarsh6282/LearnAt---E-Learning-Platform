@@ -175,6 +175,9 @@ const UserProfile = () => {
                     <input
                       name="name"
                       value={formData.name}
+                      onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
                     />
@@ -194,6 +197,9 @@ const UserProfile = () => {
                     <input
                       name="phone"
                       value={formData.phone}
+                      onKeyDown={(e) => {
+                        if (e.repeat) e.preventDefault();
+                      }}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
                     />

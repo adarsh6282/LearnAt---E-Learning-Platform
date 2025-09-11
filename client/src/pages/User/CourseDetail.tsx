@@ -64,7 +64,7 @@ const CourseDetail: React.FC = () => {
         name: course.title,
         description: course.description,
         order_id: order.razorpayOrderId,
-        handler: async (response: any) => {
+        handler: async (response: {razorpay_order_id:string,razorpay_payment_id:string,razorpay_signature:string}) => {
           const verifyRes = await verifyResS({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -80,7 +80,7 @@ const CourseDetail: React.FC = () => {
         },
       };
 
-      const razor = new (window as any).Razorpay(options);
+      const razor = new window.Razorpay(options);
       razor.open();
     } catch (err) {
       console.error("Error in payment", err);
@@ -474,7 +474,7 @@ const CourseDetail: React.FC = () => {
               {isEnrolled ? (
                 <button
                   className="w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-4 rounded-full font-semibold cursor-pointer mb-4 hover:scale-105 transition-all duration-300"
-                  onClick={() => navigate(`/users/course-view/${courseId}`)}
+                  onClick={() => navigate(USER_ROUTES.COURSE_VIEW(courseId))}
                 >
                   Continue to Course
                 </button>

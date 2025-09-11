@@ -13,6 +13,7 @@ export interface CourseDTO {
 }
 
 interface ILecture {
+    _id:string
     title: string;
     description: string;
     videoUrl: string;

@@ -3,7 +3,7 @@ import {
   CreateCourseInput,
 } from "../interfaces/course.services";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
-import { ICourse, ILecture } from "../../models/interfaces/course.interface";
+import { CreateLectureInput, ICourse, ILecture } from "../../models/interfaces/course.interface";
 import { Types } from "mongoose";
 import cloudinary from "../../config/cloudinary.config";
 import streamifier from "streamifier";
@@ -51,7 +51,7 @@ export class CourseService implements ICourseService {
 
       const videoUrls = await Promise.all(videoUploadPromises);
 
-      const lectures = courseData.lectures.map((lecture, index) => ({
+      const lectures:CreateLectureInput[] = courseData.lectures.map((lecture, index) => ({
         title: lecture.title,
         description: lecture.description,
         videoUrl: videoUrls[index],

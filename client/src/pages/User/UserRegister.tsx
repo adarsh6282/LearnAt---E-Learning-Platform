@@ -156,6 +156,9 @@ const UserRegister: React.FC = () => {
                     name="name"
                     type="text"
                     value={formData.name}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="John Doe"
@@ -177,6 +180,9 @@ const UserRegister: React.FC = () => {
                     name="username"
                     type="text"
                     value={formData.username}
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="johndoe123"
@@ -201,6 +207,9 @@ const UserRegister: React.FC = () => {
                   name="email"
                   type="email"
                   value={formData.email}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="john@example.com"
@@ -222,6 +231,9 @@ const UserRegister: React.FC = () => {
                   name="phone"
                   type="tel"
                   value={formData.phone}
+                  onKeyDown={(e) => {
+                    if (e.repeat) e.preventDefault();
+                  }}
                   onChange={handleChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="(123) 456-7890"
@@ -244,6 +256,9 @@ const UserRegister: React.FC = () => {
                     name="password"
                     type="password"
                     placeholder="••••••••"
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -267,6 +282,9 @@ const UserRegister: React.FC = () => {
                     name="confirmPassword"
                     type="password"
                     placeholder="••••••••"
+                    onKeyDown={(e) => {
+                      if (e.repeat) e.preventDefault();
+                    }}
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"

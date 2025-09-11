@@ -18,7 +18,7 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
     if (role === "users" && usertoken) navigate("/home");
     if (role == "instructors" && instructortoken)
       navigate("/instructors/dashboard");
-  }, [usertoken, instructortoken, navigate,role]);
+  }, [usertoken, instructortoken, navigate, role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +38,7 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
         navigate(`/${role}/reset-verify-otp`);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setError("Something went wrong. Please try again later.");
     }
   };
@@ -65,6 +65,9 @@ const ForgotPassword: React.FC<OtpPageProps> = ({ role }) => {
               id="email"
               type="email"
               value={email}
+              onKeyDown={(e) => {
+                if (e.repeat) e.preventDefault();
+              }}
               onChange={(e) => setEmail(e.target.value)}
               className={`mt-1 w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors`}
               placeholder="you@example.com"

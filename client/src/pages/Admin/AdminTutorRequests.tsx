@@ -195,16 +195,22 @@ const AdminTutorRequests = () => {
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
               Reject Tutor
             </h2>
+
             <label className="block text-gray-700 mb-2">
               Reason for rejection:
             </label>
+
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.repeat) e.preventDefault();
+              }}
               className="w-full border border-gray-300 rounded p-2 text-sm"
               rows={3}
               placeholder="Enter a brief reason..."
             ></textarea>
+
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={() => confirmReject(rejectingEmail)}

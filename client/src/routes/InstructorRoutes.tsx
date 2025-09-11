@@ -51,7 +51,7 @@ const InstructorRoutes = () => {
       />
 
       <Route
-        path="/instructors/chat"
+        path={INSTRUCTOR_ROUTES.CHAT_PAGE}
         element={
           <InstructorProvider>
             <CallProvider>
@@ -64,7 +64,7 @@ const InstructorRoutes = () => {
         <Route path=":chatId" element={<InstructorChatWindow />} />
       </Route>
       <Route
-        path="/instructors/video"
+        path={INSTRUCTOR_ROUTES.VIDEO_CALL}
         element={
           <InstructorProvider>
             <CallProvider>
@@ -92,15 +92,15 @@ const InstructorRoutes = () => {
           </InstructorProvider>
         }
       >
-        <Route path="dashboard" element={<InstructorDashboard />} />
-        <Route path="create-course" element={<InstructorCreateCourse />} />
-        <Route path="courses/:courseId" element={<EditCourse />} />
-        <Route path="profile" element={<InstructorProfile />} />
-        <Route path="reviews" element={<InstructorReview />} />
-        <Route path="courses" element={<Courses />} />
-        <Route path="earnings" element={<Earnings role="instructors" />} />
-        <Route path="enrollments" element={<Enrollments />} />
-        <Route path="notifications" element={<InstructorNotification />} />
+        <Route path={INSTRUCTOR_ROUTES.DASHBOARD} element={<InstructorDashboard />} />
+        <Route path={INSTRUCTOR_ROUTES.CREATE_COURSE} element={<InstructorCreateCourse />} />
+        <Route path={INSTRUCTOR_ROUTES.EDIT_COURSE()} element={<EditCourse />} />
+        <Route path={INSTRUCTOR_ROUTES.PROFILE} element={<InstructorProfile />} />
+        <Route path={INSTRUCTOR_ROUTES.REVIEWS} element={<InstructorReview />} />
+        <Route path={INSTRUCTOR_ROUTES.COURSES} element={<Courses />} />
+        <Route path={INSTRUCTOR_ROUTES.EARNINGS} element={<Earnings role="instructors" />} />
+        <Route path={INSTRUCTOR_ROUTES.ENROLLMENTS} element={<Enrollments />} />
+        <Route path={INSTRUCTOR_ROUTES.NOTIFICATIONS} element={<InstructorNotification />} />
       </Route>
     </>
   );
