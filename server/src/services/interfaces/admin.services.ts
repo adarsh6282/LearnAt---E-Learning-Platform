@@ -1,13 +1,8 @@
-import { ICategory } from "../../models/interfaces/category.interface";
-import { ICourse } from "../../models/interfaces/course.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
-import { IReview } from "../../models/interfaces/review.interface";
 import { IWallet } from "../../models/interfaces/wallet.interface";
 import { AdminLoginResponse } from "../../types/admin.types";
 import { DashboardData } from "../../types/admin.types";
 import { ITransaction } from "../../models/interfaces/wallet.interface";
-import { IComplaint } from "../../models/interfaces/complaint.interface";
-import { INotification } from "../../models/interfaces/notification.interface";
 import { UserDTO } from "../../DTO/user.dto";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { CourseDTO } from "../../DTO/course.dto";
@@ -35,24 +30,24 @@ export interface IAdminService {
     limit: number,
     filter: FilterQuery<IInstructor>
   ): Promise<{ tutors: InstructorDTO[]; total: number; totalPages: number }>;
-  verifyTutor(email: string): Promise<IInstructor | null>;
-  rejectTutor(email: string, reason: string): Promise<IInstructor | null>;
-  addCategory(name: string): Promise<ICategory | null>;
+  verifyTutor(email: string): Promise<InstructorDTO>;
+  rejectTutor(email: string, reason: string): Promise<InstructorDTO>;
+  addCategory(name: string): Promise<CategoryDTO>;
   getCategories(
     page: number,
     limit: number,
     search:string,
     status:string
   ): Promise<{ category: CategoryDTO[]; total: number; totalPages: number }>;
-  deleteCategory(id: string): Promise<ICategory | null>;
-  restoreCategory(id: string): Promise<ICategory | null>;
+  deleteCategory(id: string): Promise<CategoryDTO>;
+  restoreCategory(id: string): Promise<CategoryDTO>;
   getCoursesService(
     page: number,
     limit: number,
     search: string
   ): Promise<{ course: CourseDTO[]; total: number; totalPage: number }>;
-  softDeleteCourseS(courseId: string): Promise<ICourse | null>;
-  recoverCourseS(courseId: string): Promise<ICourse | null>;
+  softDeleteCourseS(courseId: string): Promise<CourseDTO>;
+  recoverCourseS(courseId: string): Promise<CourseDTO>;
   getAllReviews(
     page: number,
     limit: number,
@@ -60,9 +55,9 @@ export interface IAdminService {
     rating:number|null,
     sort:string,
   ): Promise<{ reviews: ReviewDTO[]; total: number; totalPages: number }>;
-  hideReview(id: string): Promise<IReview | null>;
-  unhideReview(id: string): Promise<IReview | null>;
-  deleteReview(id: string): Promise<IReview | null>;
+  hideReview(id: string): Promise<ReviewDTO>;
+  unhideReview(id: string): Promise<ReviewDTO>;
+  deleteReview(id: string): Promise<ReviewDTO>;
   getWallet(
     page: number,
     limit: number
@@ -82,11 +77,11 @@ export interface IAdminService {
     id: string,
     status: string,
     response: string
-  ): Promise<IComplaint | null>;
+  ): Promise<ComplaintDTO>;
   getCourseStats(): Promise<{ title: string; enrolledCount: number }[]>;
   getIncomeStats(): Promise<{ month: string; revenue: number }[]>;
   getSpecificCourseForAdmin(courseId: string): Promise<CourseDTO>;
   getNotifications(userId: string): Promise<NotificationDTO[]>;
-  markAsRead(notificationId: string): Promise<INotification | null>;
+  markAsRead(notificationId: string): Promise<NotificationDTO>;
   getSpecificTutor(id: string): Promise<InstructorDTO>;
 }

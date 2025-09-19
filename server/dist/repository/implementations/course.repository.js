@@ -38,7 +38,9 @@ class CourseRepository extends base_repository_1.BaseRepository {
     }
     async findCourses(page, limit, search, category, minPrice, maxPrice) {
         const skip = (page - 1) * limit;
-        const query = {};
+        const query = {
+            isActive: true
+        };
         if (search) {
             query.title = { $regex: search, $options: "i" };
         }

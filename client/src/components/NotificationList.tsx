@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NotificationContext } from "../context/NotificationContext";
+import NotificationContext from "../context/NotificationContext";
 import { Bell, Loader2 } from "lucide-react";
 
 const NotificationList = () => {

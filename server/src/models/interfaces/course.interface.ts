@@ -29,3 +29,15 @@ export interface CreateLectureInput {
   duration: string;
   order: number;
 }
+
+export interface UpdateCourseInput {
+  title?: string;
+  description?: string;
+  category?: string;
+  price?: number;
+  isActive?: boolean;
+  thumbnail?: Express.Multer.File;
+  videos?: Express.Multer.File[];
+  existingLectures: ILecture[];
+  newLectures: ILecture[];
+}

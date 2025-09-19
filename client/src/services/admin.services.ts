@@ -103,7 +103,7 @@ export const handleAcceptS = async (email: string) => {
 export const handleRejectS = async (email: string, reason: string) => {
   return await api.delete(`/admin/tutors/reject/${email}`, {
     data: { reason },
-  } as any);
+  });
 };
 
 export const getCoursesS = async (
@@ -233,5 +233,5 @@ export const updateComplaint = async (
 };
 
 export const refreshedComplaint=async()=>{
-  return await api.get<Complaint[]>("/admin/complaints");
+  return await api.get<{complaints:Complaint[],totalPages:number}>("/admin/complaints");
 }

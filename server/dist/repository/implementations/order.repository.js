@@ -132,16 +132,20 @@ class OrderRepository {
             userId,
             status: "paid",
         })
-            .populate("courseId", "title description price createdAt thumbnail")
+            .populate({
+            path: "courseId",
+            select: "title description price createdAt thumbnail",
+            match: { isActive: true },
+        })
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 });
         const purchasedCourses = courses
-            .filter((order) => order.courseId)
+            .filter(order => order.courseId)
             .map((order) => {
             const course = order.courseId;
             return {
-                id: course._id.toString(),
+                _id: course._id.toString(),
                 title: course.title,
                 description: course.description,
                 price: course.price,

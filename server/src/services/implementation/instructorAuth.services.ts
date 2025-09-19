@@ -18,11 +18,8 @@ import {
 } from "../../models/interfaces/wallet.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 import { ICategoryRepository } from "../../repository/interfaces/category.interface";
-import { ICategory } from "../../models/interfaces/category.interface";
 import { IEnrollment } from "../../types/enrollment.types";
-import { IUser } from "../../models/interfaces/auth.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
-import { INotification } from "../../models/interfaces/notification.interface";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { toInstructorDTO } from "../../Mappers/instructor.mapper";
 import { CourseDTO } from "../../DTO/course.dto";
@@ -30,7 +27,11 @@ import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { toReviewDTOList } from "../../Mappers/review.mapper";
 import { NotificationDTO } from "../../DTO/notification.dto";
-import { toNotificationDTOList } from "../../Mappers/notification.mapper";
+import { toNotificationDTO, toNotificationDTOList } from "../../Mappers/notification.mapper";
+import { CategoryDTO } from "../../DTO/category.dto";
+import { toCategoryDTOList } from "../../Mappers/category.mapper";
+import { UserDTO } from "../../DTO/user.dto";
+import { toUserDTOList } from "../../Mappers/user.mapper";
 
 interface Dashboard {
   totalUsers: number;
@@ -81,7 +82,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   }
 
   async verifyOtp(data: IInstructor & { otp: string }): Promise<{
-    instructor: IInstructor;
+    instructor: InstructorDTO;
     token: string;
     instructorRefreshToken: string;
   }> {
@@ -110,10 +111,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       "instructor"
     );
 
-    return { instructor, token, instructorRefreshToken };
+    return { instructor:toInstructorDTO(instructor), token, instructorRefreshToken };
   }
 
-  async reApplyS(email: string, resume: string): Promise<IInstructor | null> {
+  async reApplyS(email: string, resume: string): Promise<InstructorDTO> {
     const instructor = await this._instructorAuthRepository.findByEmail(email);
 
     if (!instructor) throw new Error("Instructor not found");
@@ -125,17 +126,21 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       accountStatus: "pending",
     };
 
-    return await this._instructorAuthRepository.updateInstructor(
+    const updated = await this._instructorAuthRepository.updateInstructor(
       instructor.email,
       updatedData
     );
+    if(!updated){
+      throw new Error("failed to reapply")
+    }
+    return toInstructorDTO(updated)
   }
 
   async loginInstructor(
     email: string,
     password: string
   ): Promise<{
-    instructor: IInstructor;
+    instructor: InstructorDTO;
     token: string;
     instructorRefreshToken: string;
   }> {
@@ -162,7 +167,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       "instructor"
     );
 
-    return { instructor, token, instructorRefreshToken };
+    return { instructor:toInstructorDTO(instructor), token, instructorRefreshToken };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -231,7 +236,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     const instructor = await this._otpRepository.findOtpbyEmail(email);
 
     if (!instructor) {
-      throw new Error("NO user found");
+      throw new Error("NO instructor found");
     }
 
     const otp = generateOtp();
@@ -333,12 +338,12 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return toCourseDTO(course);
   }
 
-  async getCategory(): Promise<ICategory[] | null> {
+  async getCategory(): Promise<CategoryDTO[]> {
     const categories = await this._categoryRepository.getCatgeoriesInstructor();
     if (!categories) {
       throw new Error("No categories found");
     }
-    return categories;
+    return toCategoryDTOList(categories);
   }
 
   async getReviewsByInstructor(
@@ -425,18 +430,22 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return toNotificationDTOList(notification);
   }
 
-  async markAsRead(notificationId: string): Promise<INotification | null> {
+  async markAsRead(notificationId: string): Promise<NotificationDTO> {
     const notification =
       await this._notificationRepository.updateNotification(notificationId);
-    return notification;
+      if(!notification){
+        throw new Error("failed to update notification")
+      }
+    return toNotificationDTO(notification);
   }
 
-  async getPurchasedUsers(instructorId: string): Promise<IUser[]> {
+  async getPurchasedUsers(instructorId: string): Promise<UserDTO[]> {
     const userIds =
       await this._courseRepository.getUsersByInstructor(instructorId);
 
     if (!userIds.length) return [];
 
-    return this._userRepository.findUsersByIds(userIds);
+    const users = await this._userRepository.findUsersByIds(userIds);
+    return toUserDTOList(users)
   }
 }

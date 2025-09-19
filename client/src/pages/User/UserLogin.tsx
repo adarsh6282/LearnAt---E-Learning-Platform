@@ -6,7 +6,7 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, Link } from "react-router-dom";
 import { userLoginS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
-import { UserContext } from "../../context/UserContext";
+import UserContext from "../../context/UserContext";
 import type { AxiosError } from "axios";
 
 export default function UserLogin() {
@@ -30,7 +30,7 @@ export default function UserLogin() {
     const filled = email.trim() && password.trim();
 
     setCanSubmit(Boolean(filled));
-  });
+  },[email,password]);
 
   const validateForm = () => {
     const newErrors: { email?: string } = {};

@@ -1,4 +1,5 @@
-import { IChat } from "../../models/interfaces/chat.interface";
+import { ChatDTO } from "../../DTO/chat.dto";
+import { toChatDTO, toChatDTOList } from "../../Mappers/chat.mapper";
 import { IChatRepository } from "../../repository/interfaces/chat.interface";
 import { IChatService } from "../interfaces/chat.services";
 
@@ -8,16 +9,25 @@ export class ChatService implements IChatService {
   async initiateChat(
     userId: string,
     instructorId: string
-  ): Promise<IChat | null> {
-    return await this._chatRepository.findOrCreateChat(userId, instructorId);
+  ): Promise<ChatDTO> {
+    const chat = await this._chatRepository.findOrCreateChat(userId, instructorId);
+    if(!chat){
+      throw new Error("failed to initiate chat")
+    }
+    return toChatDTO(chat)
   }
 
   async getChatList(
     userId: string,
     role: "user" | "instructor"
-  ): Promise<IChat[] | null> {
-    return role === "user"
+  ): Promise<ChatDTO[]> {
+    const chats = role === "user"
       ? await this._chatRepository.getUsersChat(userId)
       : await this._chatRepository.getInstructorsChat(userId);
+
+      if(!chats){
+        throw new Error("failed to load chalist")
+      }
+      return toChatDTOList(chats)
   }
 }

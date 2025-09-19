@@ -6,10 +6,19 @@ import { ICourseController } from "../../controllers/interfaces/course.interface
 export class CourseController implements ICourseController {
   constructor(private _courseService: ICourseService) {}
 
-  async createCourse(req: Request, res: Response): Promise<void> {
+  async createCourse(
+    req: Request & {
+      files?: {
+        videos?: Express.Multer.File[];
+        thumbnail?: Express.Multer.File[];
+      };
+      instructor?: { id: string };
+    },
+    res: Response
+  ): Promise<void> {
     try {
-      const videoFiles = (req.files as any)?.videos || [];
-      const thumbnailFile = (req.files as any)?.thumbnail?.[0];
+      const videoFiles = req.files?.videos || [];
+      const thumbnailFile = req.files?.thumbnail?.[0];
 
       if (!videoFiles.length || !thumbnailFile) {
         res
@@ -18,7 +27,7 @@ export class CourseController implements ICourseController {
         return;
       }
 
-      const instructorId=req.instructor?.id
+      const instructorId = req.instructor?.id;
 
       const courseData = {
         ...req.body,
@@ -39,30 +48,42 @@ export class CourseController implements ICourseController {
     }
   }
 
-  async updateCourse(req: Request, res: Response): Promise<void> {
+  async updateCourse(
+    req: Request & {
+      files?: {
+        videos?: Express.Multer.File[];
+        thumbnail?: Express.Multer.File[];
+      };
+      instructor?: { id: string };
+    },
+    res: Response
+  ): Promise<void> {
     try {
-    const { courseId } = req.params;
-    const instructorId = req.instructor?.id;
+      const { courseId } = req.params;
+      const instructorId = req.instructor?.id;
 
-    const videoFiles = (req.files as any)?.videos || [];
-    const thumbnailFile = (req.files as any)?.thumbnail?.[0];
+      const videoFiles = (req.files)?.videos || [];
+      const thumbnailFile = (req.files)?.thumbnail?.[0];
 
-    const existingLectures = JSON.parse(req.body.existingLectures || "[]");
-    const newLectures = JSON.parse(req.body.newLectures || "[]");
+      const existingLectures = JSON.parse(req.body.existingLectures || "[]");
+      const newLectures = JSON.parse(req.body.newLectures || "[]");
 
-    const updateData = {
-      ...req.body,
-      instructorId,
-      existingLectures,
-      newLectures,
-      videos: videoFiles,
-      thumbnail: thumbnailFile,
-    };
+      const updateData = {
+        ...req.body,
+        instructorId,
+        existingLectures,
+        newLectures,
+        videos: videoFiles,
+        thumbnail: thumbnailFile,
+      };
 
-    const updatedCourse = await this._courseService.updateCourse(courseId, updateData);
+      const updatedCourse = await this._courseService.updateCourse(
+        courseId,
+        updateData
+      );
 
-    res.status(httpStatus.OK).json(updatedCourse);
-  } catch (err: unknown) {
+      res.status(httpStatus.OK).json(updatedCourse);
+    } catch (err: unknown) {
       console.error(err);
       const message =
         err instanceof Error ? err.message : "Something went wrong";

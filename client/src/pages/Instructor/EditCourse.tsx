@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 import {
   editCourseS,
-  getCategories,
+  getCategory,
   getCourseById,
 } from "../../services/instructor.services";
 import type { AxiosError } from "axios";
@@ -44,7 +44,7 @@ const EditCourse: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const categoriesData = await getCategories();
+        const categoriesData = await getCategory();
         console.log(categoriesData.data);
         const activeNames = categoriesData.data
           .filter((cat: { name: string; isDeleted: boolean }) => !cat.isDeleted)
@@ -201,17 +201,31 @@ const EditCourse: React.FC = () => {
       return;
     }
 
+    if (
+      !lectureToEdit.videoFile &&
+      !lectureToEdit.videoUrl &&
+      lectureToEdit._id
+    ) {
+      const existingLecture = courseData.lectures.find(
+        (lec) => lec._id === lectureToEdit._id
+      );
+      if (existingLecture) {
+        lectureToEdit.videoUrl = existingLecture.videoUrl;
+      }
+    }
+
     setCourseData((prev) => ({
       ...prev,
       lectures: prev.lectures.map((lecture) =>
-        lecture.id === lectureToEdit.id ? lectureToEdit : lecture
+        (lecture._id || lecture.id) === (lectureToEdit._id || lectureToEdit.id)
+          ? lectureToEdit
+          : lecture
       ),
     }));
 
     setLectureToEdit(null);
     setIsEditingLecture(false);
   };
-
   const cancelEditingLecture = () => {
     setLectureToEdit(null);
     setIsEditingLecture(false);
@@ -255,7 +269,15 @@ const EditCourse: React.FC = () => {
 
       if (newLectures.length > 0) {
         const newLecturesData = newLectures.map(
-          ({ videoFile, ...rest }) => rest
+          ({ title, description, videoUrl, duration, order, _id, id }) => ({
+            title,
+            description,
+            videoUrl,
+            duration,
+            order,
+            _id,
+            id,
+          })
         );
         formData.append("newLectures", JSON.stringify(newLecturesData));
 

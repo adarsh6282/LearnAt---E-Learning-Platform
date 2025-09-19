@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { socket } from "../services/socket.service";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -99,10 +99,4 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useCall = () => {
-  const context = useContext(CallContext);
-  if (!context) {
-    throw new Error("useCall must be used within a CallProvider");
-  }
-  return context;
-};
+export default CallContext

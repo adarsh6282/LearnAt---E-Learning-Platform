@@ -4,7 +4,12 @@ import { useAuth } from "../../hooks/useAuth";
 import { socket } from "../../services/socket.service";
 import { FiPaperclip } from "react-icons/fi";
 import { MdVideoCall } from "react-icons/md";
-import { getMessages, markMessagesReadS, sentImageinMessage } from "../../services/instructor.services";
+import {
+  getMessages,
+  markMessagesReadS,
+  sentImageinMessage,
+} from "../../services/instructor.services";
+import { X } from "lucide-react";
 
 interface Message {
   _id?: string;
@@ -12,7 +17,9 @@ interface Message {
   sender: string;
   content?: string;
   image?: string;
+  isDeleted?: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 const InstructorChatWindow = () => {
@@ -32,21 +39,48 @@ const InstructorChatWindow = () => {
 
     socket.emit("joinChat", chatId);
     console.log("Instructor Socket", socket.id);
+
     socket.on("receiveMessage", (msg: Message) => {
       setMessages((prev) => [...prev, msg]);
     });
+
+    const handleDelete = (messageId: string) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, isDeleted: true } : msg
+        )
+      );
+    };
+
+    socket.on("messageDeleted", handleDelete);
 
     return () => {
       socket.off("receiveMessage");
     };
   }, [chatId]);
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!chatId) {
+      return;
+    }
+    socket.emit("deleteMessage", { messageId, chatId, userId: authUser?._id });
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg._id === messageId ? { ...msg, isDeleted: true } : msg
+      )
+    );
+  };
+
   useEffect(() => {
     const markMessagesRead = async () => {
       if (!chatId || !authUser) return;
 
       try {
-        await markMessagesReadS(chatId,authUser._id!,authUser.role=="user"?"User":"Instructor")
+        await markMessagesReadS(
+          chatId,
+          authUser._id!,
+          authUser.role == "user" ? "User" : "Instructor"
+        );
       } catch (err) {
         console.error("Failed to mark messages as read", err);
       }
@@ -61,9 +95,15 @@ const InstructorChatWindow = () => {
     const fetchMessages = async () => {
       try {
         const res = await getMessages(chatId!);
-        const normalized = res.data.map((msg: any) => ({
-          ...msg,
+        const normalized = res.data.map((msg) => ({
+          _id: msg._id,
+          chatId: msg.chat,
           sender: msg.senderId,
+          content: msg.content,
+          isDeleted: msg.isDeleted,
+          image: msg.image,
+          createdAt: msg.createdAt,
+          updatedAt: msg.updatedAt,
         }));
         setMessages(normalized);
       } catch (err) {
@@ -84,7 +124,7 @@ const InstructorChatWindow = () => {
       formData.append("chatImage", file);
 
       try {
-        const res = await sentImageinMessage(formData)
+        const res = await sentImageinMessage(formData);
         imageUrl = res.data.url;
       } catch (err) {
         console.error("Error uploading image:", err);
@@ -136,20 +176,43 @@ const InstructorChatWindow = () => {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`p-3 rounded-xl text-sm max-w-sm break-words transition-all ${
-              msg.sender === authUser?._id
-                ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
-                : "bg-[#1a1a1d] text-gray-300 shadow-inner"
-            }`}
+            className={`group relative p-3 rounded-xl text-sm max-w-sm break-words transition-all
+        ${
+          msg.sender === authUser?._id
+            ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
+            : "bg-[#1a1a1d] text-gray-300 shadow-inner"
+        }`}
           >
-            {msg.content && <p>{msg.content}</p>}
-            {msg.image && msg.image.trim() !== "" && (
-              <img
-                src={msg.image}
-                alt="sent"
-                className="rounded mt-2 border border-gray-600 max-w-xs cursor-pointer transition-transform hover:scale-105"
-                onClick={() => setFullscreenImage(msg.image || "")}
-              />
+            {msg.isDeleted ? (
+              <p className="italic text-gray-700">Message deleted</p>
+            ) : (
+              <>
+                {msg.content && <p>{msg.content}</p>}
+                {msg.image && msg.image.trim() !== "" && (
+                  <img
+                    src={msg.image}
+                    alt="sent"
+                    className="rounded mt-2 border border-gray-600 max-w-xs cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => setFullscreenImage(msg.image || "")}
+                  />
+                )}
+              </>
+            )}
+
+            <span className="text-xs text-white absolute bottom-1 right-2">
+              {new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+
+            {msg.sender === authUser?._id && (
+              <button
+                onClick={() => handleDeleteMessage(msg._id!)}
+                className="absolute top-1 right-1 text-xs bg-red-600 hover:bg-red-500 px-1 py-1 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={13} />
+              </button>
             )}
           </div>
         ))}

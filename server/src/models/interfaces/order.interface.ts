@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 
 export interface IOrder {
-  _id?: string
+  _id?: string|Types.ObjectId
   courseId: Types.ObjectId | string;
   userId: Types.ObjectId | string;
   razorpayOrderId?: string;

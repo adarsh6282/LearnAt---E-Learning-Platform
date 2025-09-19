@@ -1,8 +1,10 @@
 export interface Lecture {
+  _id?:string
   id?: number;
   title: string;
   description: string;
-  videoFile: File | null;
+  videoFile?: File | null;
+  videoUrl?:string
   duration: string;
   order: number;
 }
@@ -71,7 +73,7 @@ export interface ICourse {
   description?: string;
   price?: number;
   category?:string;
-  lectures?:any []
+  lectures?:Lecture[]
   thumbnail?: string;
   isActive?: boolean;
   createdAt?: string;

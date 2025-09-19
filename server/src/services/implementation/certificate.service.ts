@@ -1,5 +1,6 @@
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
-import { ICertificate } from "../../models/interfaces/certificate.interface";
+import { CertificateDTO } from "../../DTO/certificate.dto";
+import { toCertificateDTO } from "../../Mappers/certificate.mapper";
 import { ICertificateReopsitory } from "../../repository/interfaces/certificate.interface";
 import { generateCertificate } from "../../utils/generateCertificate";
 import { ICertificateService } from "../interfaces/certificate.interface";
@@ -14,14 +15,12 @@ export class CertificateService implements ICertificateService {
   async createCertificateForUser(
     user: { id: string; name: string },
     course: { id: string; title: string }
-  ): Promise<Partial<ICertificate> | null> {
+  ): Promise<CertificateDTO> {
     const pdfBuffer = await generateCertificate({
       name: user.name,
       course: course.title,
       date: new Date(),
     });
-
-    console.log(pdfBuffer);
 
     const cloudinaryResponse = (await uploadBufferToCloudinary(
       pdfBuffer,
@@ -35,6 +34,10 @@ export class CertificateService implements ICertificateService {
       issuedDate: new Date(),
     });
 
-    return newCertificate;
+    if(!newCertificate){
+      throw new Error("failed to create certificate")
+    }
+
+    return toCertificateDTO(newCertificate);
   }
 }

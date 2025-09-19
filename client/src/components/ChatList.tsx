@@ -44,7 +44,7 @@ const ChatList = () => {
     };
 
     fetchChats();
-  }, [authUser?._id]);
+  }, [authUser]);
 
   useEffect(() => {
     const handleUpdate = (update: {

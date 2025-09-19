@@ -15,7 +15,7 @@ export interface IPurchase {
 }
 
 export interface PurchasedCourse {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
@@ -41,7 +41,7 @@ export class OrderRepository implements IOrderRepository {
     };
   }
 
-  async markOrderAsPaid(orderId: string): Promise<IOrder | null> {
+  async markOrderAsPaid(orderId: string|Types.ObjectId): Promise<IOrder | null> {
     return await Order.findByIdAndUpdate(orderId, { status: "paid" });
   }
 
@@ -58,7 +58,7 @@ export class OrderRepository implements IOrderRepository {
 
     return !!order;
   }
-  
+
   async getEnrollmentsByInstructor(
     instructorId: string,
     page: number,
@@ -73,12 +73,14 @@ export class OrderRepository implements IOrderRepository {
     const searchRegex = search ? new RegExp(search, "i") : null;
 
     const orders = await Order.find({ status: "paid" })
-      .populate({
+      .populate<{ courseId: ICourse }>({
         path: "courseId",
         match: { instructor: instructorId },
         select: "_id title",
       })
-      .populate({
+      .populate<{
+        userId: { _id: Types.ObjectId; name: string; email: string };
+      }>({
         path: "userId",
         select: "_id name email",
       });
@@ -86,8 +88,8 @@ export class OrderRepository implements IOrderRepository {
     const filteredOrders = orders.filter((order) => {
       if (!order.courseId || !order.userId) return false;
 
-      const course = order.courseId as any;
-      const user = order.userId as any;
+      const course = order.courseId;
+      const user = order.userId;
 
       if (!searchRegex) return true;
 
@@ -105,8 +107,8 @@ export class OrderRepository implements IOrderRepository {
 
     let enrollments = await Promise.all(
       paginatedOrders.map(async (order) => {
-        const course = order.courseId as any;
-        const user = order.userId as any;
+        const course = order.courseId;
+        const user = order.userId;
 
         const progress = await Progress.findOne({
           courseId: course._id,
@@ -206,17 +208,21 @@ export class OrderRepository implements IOrderRepository {
       userId,
       status: "paid",
     })
-      .populate("courseId", "title description price createdAt thumbnail")
+      .populate<{courseId:ICourse}>({
+        path: "courseId",
+        select: "title description price createdAt thumbnail",
+        match: { isActive: true },
+      })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
 
     const purchasedCourses: PurchasedCourse[] = courses
-      .filter((order: {courseId:string|Types.ObjectId}) => order.courseId)
-      .map((order: any) => {
-        const course = order.courseId as ICourse;
+      .filter(order => order.courseId)
+      .map((order) => {
+        const course = order.courseId;
         return {
-          id: course._id.toString(),
+          _id: course._id.toString(),
           title: course.title,
           description: course.description,
           price: course.price,

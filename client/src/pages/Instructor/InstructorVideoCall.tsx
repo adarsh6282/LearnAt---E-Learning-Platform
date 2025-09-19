@@ -27,6 +27,8 @@ const InstructorVideoCall = () => {
   const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
+    const localVideoEl = localVideoRef.current;
+    const remoteVideoEl = remoteVideoRef.current;
     socket.emit("join-video-room", chatId);
 
     const peerConnection = new RTCPeerConnection({
@@ -87,9 +89,9 @@ const InstructorVideoCall = () => {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
 
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
-      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-      toast.info("the other user missed or ended the call")
+      if (localVideoEl) localVideoEl.srcObject = null;
+      if (remoteVideoEl) remoteVideoEl.srcObject = null;
+      toast.info("the other user missed or ended the call");
       navigate(-1);
     });
 
@@ -101,15 +103,11 @@ const InstructorVideoCall = () => {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
       }
 
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = null;
-      }
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
-      }
+      if (localVideoEl) localVideoEl.srcObject = null;
+      if (remoteVideoEl) remoteVideoEl.srcObject = null;
       socket.off("end-call");
     };
-  }, [chatId]);
+  }, [chatId,navigate]);
 
   const startCall = async () => {
     try {
@@ -136,7 +134,12 @@ const InstructorVideoCall = () => {
         receiverId: targetUserId,
       });
 
-      socket.emit("webrtc-offer", { chatId, offer, senderId: socket.id,receiverId:targetUserId });
+      socket.emit("webrtc-offer", {
+        chatId,
+        offer,
+        senderId: socket.id,
+        receiverId: targetUserId,
+      });
 
       setCallStarted(true);
     } catch (err) {
@@ -167,7 +170,7 @@ const InstructorVideoCall = () => {
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
-      localStreamRef.current=null
+      localStreamRef.current = null;
     }
 
     if (localVideoRef.current) localVideoRef.current.srcObject = null;

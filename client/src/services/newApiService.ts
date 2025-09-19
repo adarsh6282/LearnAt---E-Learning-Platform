@@ -49,6 +49,17 @@ export function createApi(role: Role) {
   api.interceptors.response.use(
     (res) => res,
     async (error) => {
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+
+      if (status === 403 && message?.toLowerCase().includes("blocked")) {
+        localStorage.removeItem(config.tokenKey);
+        if (!window.location.pathname.includes(config.loginUrl)) {
+          window.location.href = config.loginUrl;
+        }
+        return Promise.reject(error);
+      }
+
       const originalRequest = error.config;
 
       if (error.response?.status === 401 && !originalRequest._retry) {
@@ -74,7 +85,6 @@ export function createApi(role: Role) {
           return Promise.reject(refreshError);
         }
       }
-
       return Promise.reject(error);
     }
   );

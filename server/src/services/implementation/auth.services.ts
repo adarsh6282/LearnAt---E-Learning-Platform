@@ -14,12 +14,10 @@ import razorpay from "../../config/razorpay.config";
 import { IOrderRepository } from "../../repository/interfaces/order.interace";
 import crypto from "crypto";
 import { Types } from "mongoose";
-import { IProgress } from "../../models/interfaces/progress.interface";
 import { IProgressRepository } from "../../repository/interfaces/progress.interface";
 import { IWalletRepository } from "../../repository/interfaces/wallet.interface";
 import { IComplaintRepository } from "../../repository/interfaces/complaint.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
-import { INotification } from "../../models/interfaces/notification.interface";
 import { INotificationRepository } from "../../repository/interfaces/notification.interface";
 import {
   IPurchase,
@@ -40,7 +38,9 @@ import { toOrderDTO } from "../../Mappers/order.mapper";
 import { ProgressDTO } from "../../DTO/progress.dto";
 import { toProgressDTO } from "../../Mappers/progress.mapper";
 import { NotificationDTO } from "../../DTO/notification.dto";
-import { toNotificationDTOList } from "../../Mappers/notification.mapper";
+import { toNotificationDTO, toNotificationDTOList } from "../../Mappers/notification.mapper";
+import { ComplaintDTO } from "../../DTO/complaint.dto";
+import { toComplaintDTO } from "../../Mappers/complaint.mapper";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -91,7 +91,7 @@ export class AuthService implements IAuthService {
 
   async verifyOtp(
     data: IUser & { otp: string }
-  ): Promise<{ user: IUser; token: string; userRefreshToken: string }> {
+  ): Promise<{ user: UserDTO; token: string; userRefreshToken: string }> {
     const otpRecord = await this._otpRepository.findOtpbyEmail(data.email);
 
     if (!otpRecord) throw new Error("OTP not found");
@@ -116,7 +116,7 @@ export class AuthService implements IAuthService {
   async loginUser(
     email: string,
     password: string
-  ): Promise<{ user: IUser; token: string; userRefreshToken: string }> {
+  ): Promise<{ user: UserDTO; token: string; userRefreshToken: string }> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) {
       throw new Error("user doesn't exist");
@@ -135,7 +135,7 @@ export class AuthService implements IAuthService {
     const token = generateToken(user._id, user.email, "user");
     const userRefreshToken = generateRefreshToken(user._id, user.email, "user");
 
-    return { user, token, userRefreshToken };
+    return { user:toUserDTO(user), token, userRefreshToken };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -449,7 +449,7 @@ export class AuthService implements IAuthService {
     userId: string,
     courseId: string,
     lectureId: string
-  ): Promise<IProgress | null> {
+  ): Promise<ProgressDTO> {
     let progress = await this._progressRepository.findProgress(
       userId,
       courseId
@@ -488,7 +488,12 @@ export class AuthService implements IAuthService {
         );
       }
     }
-    return progress;
+
+    if(!progress){
+      throw new Error("failed to update progress")
+    }
+
+    return toProgressDTO(progress);
   }
 
   async getUserCourseProgress(
@@ -522,11 +527,14 @@ export class AuthService implements IAuthService {
     return toNotificationDTOList(notification)
   }
 
-  async markAsRead(notificationId: string): Promise<INotification | null> {
+  async markAsRead(notificationId: string): Promise<NotificationDTO> {
     const notification = await this._notificationRepository.updateNotification(
       notificationId
     );
-    return notification;
+    if(!notification){
+      throw new Error("failed to update notification")
+    }
+    return toNotificationDTO(notification);
   }
 
   async checkStatus(userId: string, courseId: string): Promise<boolean> {
@@ -540,8 +548,12 @@ export class AuthService implements IAuthService {
     return isCompleted;
   }
 
-  async submitComplaint(data: Partial<IComplaint>): Promise<IComplaint | null> {
-    return await this._complaintRepository.createComplaint(data);
+  async submitComplaint(data: Partial<IComplaint>): Promise<ComplaintDTO> {
+    const complaint = await this._complaintRepository.createComplaint(data);
+    if(!complaint){
+      throw new Error("failed to submit complaint")
+    }
+    return toComplaintDTO(complaint)
   }
 
   async getPurchases(

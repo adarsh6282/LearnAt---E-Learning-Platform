@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { errorToast, successToast } from "./Toast";
 import type { VerifyOtpResponse } from "../types/user.types";
 import type { VerifyInstructor } from "../types/instructor.types";
-import userApi from "../services/userApiService";
-import instructorApi from "../services/instructorApiService";
 import { sentOtp } from "../services/common.service";
 import type { AxiosError } from "axios";
+import { resentOtp } from "../services/user.services";
+import { resentOtpS } from "../services/instructor.services";
 
 interface OtpPageProps {
   role: "users" | "instructors";
@@ -88,13 +88,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
       }
 
       if (role == "users") {
-        await userApi.post(`/users/resend-otp`, {
-          email: userData.email,
-        });
+        await resentOtp(userData.email)
       } else if (role === "instructors") {
-        await instructorApi.post(`/instructors/resend-otp`, {
-          email: userData.email,
-        });
+        await resentOtpS(userData.email)
       }
 
       successToast("OTP resent successfully!");

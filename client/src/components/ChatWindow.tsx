@@ -10,6 +10,7 @@ import {
   sentImageinMessage,
 } from "../services/user.services";
 import { USER_ROUTES } from "../constants/routes.constants";
+import { X } from "lucide-react";
 
 interface Message {
   _id?: string;
@@ -17,6 +18,7 @@ interface Message {
   sender: string;
   content?: string;
   image?: string;
+  isDeleted?: boolean;
   createdAt: string;
 }
 
@@ -41,12 +43,36 @@ const UserChatWindow = () => {
       setMessages((prev) => [...prev, msg]);
     };
 
+    const handleDelete = (messageId: string) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId
+            ? { ...msg, isDeleted: true, }
+            : msg
+        )
+      );
+    };
+
     socket.on("receiveMessage", handleMessage);
+    socket.on("messageDeleted", handleDelete);
 
     return () => {
       socket.off("receiveMessage", handleMessage);
+      socket.off("messageDeleted",handleDelete)
     };
   }, [chatId]);
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!chatId) {
+      return;
+    }
+    socket.emit("deleteMessage", { messageId, chatId, userId: authUser?._id });
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg._id === messageId ? { ...msg, isDeleted: true } : msg
+      )
+    );
+  };
 
   useEffect(() => {
     const markMessagesRead = async () => {
@@ -138,7 +164,9 @@ const UserChatWindow = () => {
           className="text-3xl text-blue-500 cursor-pointer hover:text-blue-600"
           title="Start Video Call"
           onClick={() => {
-            navigate(`${USER_ROUTES.VIDEO_CALL(chatId)}?target=${targetUserId}`);
+            navigate(
+              `${USER_ROUTES.VIDEO_CALL(chatId)}?target=${targetUserId}`
+            );
           }}
         />
       </div>
@@ -146,22 +174,27 @@ const UserChatWindow = () => {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`p-3 rounded-xl text-sm max-w-sm break-words transition-all relative
-      ${
-        msg.sender === authUser?._id
-          ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
-          : "bg-[#1a1a1d] text-gray-300 shadow-inner"
-      }`}
+            className={`group relative p-3 rounded-xl text-sm max-w-sm break-words transition-all
+        ${
+          msg.sender === authUser?._id
+            ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
+            : "bg-[#1a1a1d] text-gray-300 shadow-inner"
+        }`}
           >
-            {msg.content && <p>{msg.content}</p>}
-
-            {msg.image && msg.image.trim() !== "" && (
-              <img
-                src={msg.image}
-                alt="sent"
-                className="rounded mt-2 border border-gray-600 max-w-xs cursor-pointer transition-transform hover:scale-105"
-                onClick={() => setFullscreenImage(msg.image || "")}
-              />
+            {msg.isDeleted ? (
+              <p className="italic text-gray-700">Message deleted</p>
+            ) : (
+              <>
+                {msg.content && <p>{msg.content}</p>}
+                {msg.image && msg.image.trim() !== "" && (
+                  <img
+                    src={msg.image}
+                    alt="sent"
+                    className="rounded mt-2 border border-gray-600 max-w-xs cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => setFullscreenImage(msg.image || "")}
+                  />
+                )}
+              </>
             )}
 
             <span className="text-xs text-white absolute bottom-1 right-2">
@@ -170,6 +203,15 @@ const UserChatWindow = () => {
                 minute: "2-digit",
               })}
             </span>
+
+            {msg.sender === authUser?._id && (
+              <button
+                onClick={() => handleDeleteMessage(msg._id!)}
+                className="absolute top-1 right-1 text-xs bg-red-600 hover:bg-red-500 px-1 py-1 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         ))}
         <div ref={scrollRef} />

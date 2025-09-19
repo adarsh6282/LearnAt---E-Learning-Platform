@@ -75,6 +75,14 @@ class Authcontroller {
         }
         const { id, email } = req.user;
         const token = (0, jwt_1.generateToken)(id, email, "user");
+        const refreshToken = (0, jwt_1.generateRefreshToken)(id, email, "user");
+        res.cookie("userRefreshToken", refreshToken, {
+            httpOnly: true,
+            path: "/api/users",
+            secure: process.env.NOD_ENV === "production",
+            sameSite: "strict",
+            maxAge: Number(process.env.COOKIE_MAXAGE)
+        });
         const redirectUrl = process.env.GOOGLE_VERIFY_URL;
         res.redirect(`${redirectUrl}?token=${token}`);
     }

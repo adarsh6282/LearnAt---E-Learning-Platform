@@ -67,7 +67,11 @@ class AdminService {
         return { tutors: (0, instructor_mapper_1.toInstructorDTOList)(tutors), total, totalPages };
     }
     async verifyTutor(email) {
-        return await this._instructorRepository.updateTutor(email, true, false, "active");
+        const instructor = await this._instructorRepository.updateTutor(email, true, false, "active");
+        if (!instructor) {
+            throw new Error("failed to updated instructor");
+        }
+        return (0, instructor_mapper_1.toInstructorDTO)(instructor);
     }
     async rejectTutor(email, reason) {
         const instructor = await this._instructorRepository.findByEmail(email);
@@ -88,7 +92,11 @@ class AdminService {
         if (category) {
             throw new Error("Category already exists");
         }
-        return await this._categoryRepository.createCategory(name);
+        const newCategory = await this._categoryRepository.createCategory(name);
+        if (!newCategory) {
+            throw new Error("Failed to create category");
+        }
+        return (0, category_mapper_1.toCategoryDTO)(newCategory);
     }
     async getCategories(page, limit, search, status) {
         const { category, total, totalPages } = await this._categoryRepository.getCatgeories(page, limit, search, status);
@@ -102,24 +110,40 @@ class AdminService {
         if (!category) {
             throw new Error("No category found");
         }
-        return await this._categoryRepository.deleteCategory(id);
+        const deleted = await this._categoryRepository.deleteCategory(id);
+        if (!deleted) {
+            throw new Error("failed to delete category");
+        }
+        return (0, category_mapper_1.toCategoryDTO)(deleted);
     }
     async restoreCategory(id) {
         const category = await this._categoryRepository.findCategoryById(id);
         if (!category) {
             throw new Error("No category found");
         }
-        return await this._categoryRepository.restoreCategory(id);
+        const restored = await this._categoryRepository.restoreCategory(id);
+        if (!restored) {
+            throw new Error("failed to restore category");
+        }
+        return (0, category_mapper_1.toCategoryDTO)(restored);
     }
     async getCoursesService(page, limit, search) {
         const { course, total, totalPage } = await this._courseRepository.findAllCourse(page, limit, search);
         return { course: (0, course_mapper_1.toCourseDTOList)(course), total, totalPage };
     }
     async softDeleteCourseS(courseId) {
-        return await this._courseRepository.updateCourseStatus(courseId, false);
+        const course = await this._courseRepository.updateCourseStatus(courseId, false);
+        if (!course) {
+            throw new Error("failed to delete course");
+        }
+        return (0, course_mapper_1.toCourseDTO)(course);
     }
     async recoverCourseS(courseId) {
-        return await this._courseRepository.updateCourseStatus(courseId, true);
+        const course = await this._courseRepository.updateCourseStatus(courseId, true);
+        if (!course) {
+            throw new Error("failed to recover the course");
+        }
+        return (0, course_mapper_1.toCourseDTO)(course);
     }
     async getAllReviews(page, limit, search, rating, sort) {
         const { reviews, total, totalPages } = await this._reviewRepository.getAllReviews(page, limit, search, rating, sort);
@@ -130,21 +154,21 @@ class AdminService {
         if (!review) {
             throw new Error("Review not found");
         }
-        return review;
+        return (0, review_mapper_1.toReviewDTO)(review);
     }
     async unhideReview(id) {
         const review = await this._reviewRepository.findReviewAndUnhide(id);
         if (!review) {
             throw new Error("Review not found");
         }
-        return review;
+        return (0, review_mapper_1.toReviewDTO)(review);
     }
     async deleteReview(id) {
         const review = await this._reviewRepository.deleteReview(id);
         if (!review) {
             throw new Error("Review not found");
         }
-        return review;
+        return (0, review_mapper_1.toReviewDTO)(review);
     }
     async getWallet(page, limit) {
         const { wallet, total, totalPages, transactions } = await this._walletRepository.findWalletOfAdmin(page, limit);
@@ -159,7 +183,10 @@ class AdminService {
             throw new Error("Please fill in a response");
         }
         const complaint = await this._complaintRepository.updateComplaint(id, status, response);
-        return complaint;
+        if (!complaint) {
+            throw new Error("failed to respond to complaint");
+        }
+        return (0, complaint_mapper_1.toComplaintDTO)(complaint);
     }
     async getCourseStats() {
         return await this._courseRepository.getCourseStats();
@@ -180,7 +207,10 @@ class AdminService {
     }
     async markAsRead(notificationId) {
         const notification = await this._notificationRepository.updateNotification(notificationId);
-        return notification;
+        if (!notification) {
+            throw new Error("failed to update notification");
+        }
+        return (0, notification_mapper_1.toNotificationDTO)(notification);
     }
     async getSpecificTutor(id) {
         const tutor = await this._instructorRepository.findById(id);

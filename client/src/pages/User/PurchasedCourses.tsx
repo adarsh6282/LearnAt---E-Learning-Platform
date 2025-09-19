@@ -4,7 +4,7 @@ import Pagination from "../../components/Pagination";
 import { getPurchasedCoursesS } from "../../services/user.services";
 
 interface PurchasedCourse {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
@@ -54,8 +54,8 @@ export default function PurchasedCourses() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
               <div
-                key={course.id}
-                onClick={() => navigate(`/users/courses/${course.id}`)}
+                key={course._id}
+                onClick={() => navigate(`/users/courses/${course._id}`)}
                 className="bg-white/5 backdrop-blur-md rounded-2xl shadow-lg p-4 hover:scale-105 hover:shadow-xl transition cursor-pointer"
               >
                 <img

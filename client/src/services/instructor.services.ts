@@ -4,7 +4,6 @@ import type {
   VerifyInstructor,
 } from "../types/instructor.types";
 import type { CourseData } from "../types/course.types";
-import instructorApi from "./instructorApiService";
 import type { INotification } from "../context/NotificationContext";
 import type { Category } from "../types/category.types";
 import type { User } from "../types/user.types";
@@ -44,11 +43,33 @@ interface ChatResponse {
 
 interface Message {
   _id?: string;
-  chatId: string;
-  sender: string;
+  chat: string;
+  senderId: string;
   content?: string;
-  image?: string;
+  isDeleted:boolean
+  image?:string
+  senderRole:"User"|"Instructor"
+  readBy:{_id:string,readerId:string,readerModel:"User"|"Instructor"}[]
   createdAt: string;
+  updatedAt:string
+}
+
+interface Dashboard {
+  totalUsers: number;
+  totalCourses: number;
+}
+
+interface ChatResponse {
+  _id: string;
+  instructor: string;
+  user: {
+    _id: string;
+    name: string;
+  };
+  lastMessage: string;
+  lastMessageContent: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Enrollment {
@@ -236,15 +257,16 @@ export const markAsReadInstructor = async (notificationId: string) => {
   );
 };
 
-export const getCategories = async () => {
+export const getCategory = async () => {
   return await api.get<Category[]>("/instructors/category");
 };
 
 export const getChatList = async (userId: string) => {
-  const res = await api.get<User[]>(
+  const res = await api.get<ChatResponse[]>(
     `/chats/list/${userId}?role=instructor`
   );
-  const formattedChats = res.data.map((chat: any) => ({
+
+  const formattedChats = res.data.map((chat) => ({
     chatId: chat._id,
     partnerId: chat.user._id,
     partnerName: chat.user.name,
@@ -317,4 +339,16 @@ export const instructorReviews = async (page:number,limit:number,rating:number|n
       rating ?? "0"
     }`
   );
+};
+
+export const getDashboard=async()=>{
+  return await api.get<Dashboard>("/instructors/dashboard");
+}
+
+export const resentOtpS = async (email: string) => {
+  const otp = await api.post(`/instructors/resend-otp`, {
+    email,
+  });
+  console.log("email")
+  return otp
 };

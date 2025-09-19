@@ -6,7 +6,7 @@ import type { Course, SortOption } from "../../types/user.types";
 import { getCoursesS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
 import Pagination from "../../components/Pagination";
-import userApi from "../../services/userApiService";
+import { getCategory } from "../../services/user.services";
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -32,9 +32,9 @@ const Courses: React.FC = () => {
   useEffect(()=>{
       const timeout=setTimeout(() => {
         setDebounce({
-          search:debounce.search,
-          minPrice:debounce.minPrice,
-          maxPrice:debounce.maxPrice
+          search:searchTerm,
+          minPrice:priceRange[0],
+          maxPrice:priceRange[1]
         })
       }, 300);
       return ()=> clearTimeout(timeout)
@@ -44,7 +44,7 @@ const Courses: React.FC = () => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await getCoursesS(currentPage,itemsPerPage,searchTerm,selectedCategory,priceRange[0],priceRange[1]);
+        const res = await getCoursesS(currentPage,itemsPerPage,debounce.search,selectedCategory,debounce.minPrice,debounce.maxPrice);
         setCourses(res.data.courses);
         setTotalPages(res.data.totalPages)
         setTotal(res.data.total)
@@ -60,7 +60,7 @@ const Courses: React.FC = () => {
   useEffect(()=>{
     const fetchCategories=async()=>{
       try{
-        const res=await userApi.get<string[]>("/users/category")
+        const res=await getCategory()
         setCategories(res.data)
       }catch(err){
         console.log(err)

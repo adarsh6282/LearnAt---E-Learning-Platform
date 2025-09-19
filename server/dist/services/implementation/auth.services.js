@@ -51,6 +51,7 @@ const course_mapper_1 = require("../../Mappers/course.mapper");
 const order_mapper_1 = require("../../Mappers/order.mapper");
 const progress_mapper_1 = require("../../Mappers/progress.mapper");
 const notification_mapper_1 = require("../../Mappers/notification.mapper");
+const complaint_mapper_1 = require("../../Mappers/complaint.mapper");
 class AuthService {
     constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService, _categoryRepository) {
         this._userRepository = _userRepository;
@@ -117,7 +118,7 @@ class AuthService {
         }
         const token = (0, jwt_1.generateToken)(user._id, user.email, "user");
         const userRefreshToken = (0, jwt_1.generateRefreshToken)(user._id, user.email, "user");
-        return { user, token, userRefreshToken };
+        return { user: (0, user_mapper_1.toUserDTO)(user), token, userRefreshToken };
     }
     async handleForgotPassword(email) {
         const user = await this._userRepository.findByEmail(email);
@@ -322,7 +323,10 @@ class AuthService {
                 await this._certificateService.createCertificateForUser({ id: userId, name: user.name }, { id: courseId, title: course.title });
             }
         }
-        return progress;
+        if (!progress) {
+            throw new Error("failed to update progress");
+        }
+        return (0, progress_mapper_1.toProgressDTO)(progress);
     }
     async getUserCourseProgress(userId, courseId) {
         const progress = await this._progressRepository.findProgress(userId, courseId);
@@ -343,7 +347,10 @@ class AuthService {
     }
     async markAsRead(notificationId) {
         const notification = await this._notificationRepository.updateNotification(notificationId);
-        return notification;
+        if (!notification) {
+            throw new Error("failed to update notification");
+        }
+        return (0, notification_mapper_1.toNotificationDTO)(notification);
     }
     async checkStatus(userId, courseId) {
         const { isCompleted } = await this._progressRepository.CheckStatus(userId, courseId);
@@ -353,7 +360,11 @@ class AuthService {
         return isCompleted;
     }
     async submitComplaint(data) {
-        return await this._complaintRepository.createComplaint(data);
+        const complaint = await this._complaintRepository.createComplaint(data);
+        if (!complaint) {
+            throw new Error("failed to submit complaint");
+        }
+        return (0, complaint_mapper_1.toComplaintDTO)(complaint);
     }
     async getPurchases(userId, page, limit) {
         const purchases = await this._orderRepsitory.getPurchases(userId, page, limit);

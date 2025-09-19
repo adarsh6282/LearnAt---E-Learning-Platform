@@ -76,3 +76,19 @@ export type SortOption =
   | "price-high"
   | "rating"
   | "newest";
+
+export interface UserRegisterData {
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface InstructorRegisterData extends UserRegisterData {
+  title: string;
+  education: string;
+  yearsOfExperience: string;
+  resume: string;
+}

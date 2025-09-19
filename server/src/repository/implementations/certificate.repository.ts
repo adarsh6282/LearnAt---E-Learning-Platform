@@ -30,7 +30,7 @@ export class CertificateRepository implements ICertificateReopsitory {
       issuedDate: Date;
     }[]
   > {
-    const certificates = await Certificate.find({ user: userId }).populate(
+    const certificates = await Certificate.find({ user: userId }).populate<{ course: { _id: mongoose.Types.ObjectId; title: string } }>(
       "course",
       "title"
     );
@@ -39,7 +39,7 @@ export class CertificateRepository implements ICertificateReopsitory {
       _id: cert._id.toString(),
       user: userId,
       course: cert.course.toString(),
-      courseTitle: (cert.course as any).title,
+      courseTitle: cert.course.title,
       certificateUrl: cert.certificateUrl,
       issuedDate: cert.issuedDate,
     }));

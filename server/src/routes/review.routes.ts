@@ -11,7 +11,6 @@ router.post(
 );
 router.get(
   "/courses/:courseId",
-  authRole(["user"]),
   reviewController.getCourseReviews.bind(reviewController)
 );
 

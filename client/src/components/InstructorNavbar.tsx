@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 import { BiChat } from "react-icons/bi";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { InstructorContext } from "../context/InstructorContext";
+import  InstructorContext  from "../context/InstructorContext";
 import { INSTRUCTOR_ROUTES } from "../constants/routes.constants";
-import { NotificationContext } from "../context/NotificationContext";
+import NotificationContext from "../context/NotificationContext";
 import { useAuth } from "../hooks/useAuth";
 import { socket } from "../services/socket.service";
 import {
