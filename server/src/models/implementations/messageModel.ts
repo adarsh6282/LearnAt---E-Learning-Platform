@@ -23,6 +23,10 @@ const messageSchema: Schema<IMessage> = new Schema(
     image:{
       type:String
     },
+    isDeleted:{
+      type:Boolean,
+      default:false
+    },
     readBy: [
       {
         readerId: {

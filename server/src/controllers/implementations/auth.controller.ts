@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import { IAuthController } from "../interfaces/auth.interfaces";
 import { IAuthService } from "../../services/interfaces/auth.services";
 import { httpStatus } from "../../constants/statusCodes";
-import { generateToken } from "../../utils/jwt";
+import { generateRefreshToken, generateToken } from "../../utils/jwt";
 import jwt from "jsonwebtoken";
 import { IMessageService } from "../../services/interfaces/message.interface";
+import { UserRequest } from "../../types/express";
 
 export class Authcontroller implements IAuthController {
   constructor(
@@ -78,7 +79,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async googleAuth(req: Request, res: Response): Promise<void> {
+  async googleAuth(req: UserRequest, res: Response): Promise<void> {
     if (!req.user) {
       res
         .status(httpStatus.UNAUTHORIZED)
@@ -88,7 +89,17 @@ export class Authcontroller implements IAuthController {
 
     const { id, email } = req.user;
 
-    const token = generateToken(id, email, "user");
+    const token = generateToken(id!, email!, "user");
+    const refreshToken=generateRefreshToken(id!,email!,"user")
+
+    res.cookie("userRefreshToken",refreshToken,{
+      httpOnly:true,
+      path:"/api/users",
+      secure:process.env.NOD_ENV==="production",
+      sameSite:"strict",
+      maxAge:Number(process.env.COOKIE_MAXAGE)
+    })
+
     const redirectUrl = process.env.GOOGLE_VERIFY_URL;
 
     res.redirect(`${redirectUrl}?token=${token}`);
@@ -171,7 +182,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async getProfile(req: Request, res: Response): Promise<void> {
+  async getProfile(req: UserRequest, res: Response): Promise<void> {
     try {
       const email = req.user?.email;
       if (!email) return;
@@ -186,7 +197,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async updateProfile(req: Request, res: Response) {
+  async updateProfile(req: UserRequest, res: Response) {
     try {
       const { name, phone } = req.body;
       const profilePicture = req.file;
@@ -252,7 +263,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async findCourseById(req: Request, res: Response): Promise<void> {
+  async findCourseById(req: UserRequest, res: Response): Promise<void> {
     const { courseId } = req.params;
     const userId = req.user?.id;
 
@@ -274,7 +285,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async buyCourse(req: Request, res: Response): Promise<void> {
+  async buyCourse(req: UserRequest, res: Response): Promise<void> {
     try {
       const { courseId } = req.body;
       const userId = req.user?.id;
@@ -302,7 +313,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async markLectureWatched(req: Request, res: Response): Promise<void> {
+  async markLectureWatched(req: UserRequest, res: Response): Promise<void> {
     try {
       const { courseId } = req.params;
       const { lectureId } = req.body;
@@ -331,7 +342,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async getCourseProgress(req: Request, res: Response): Promise<void> {
+  async getCourseProgress(req: UserRequest, res: Response): Promise<void> {
     try {
       const { courseId } = req.params;
       const userId = req.user?.id;
@@ -359,7 +370,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async checkStatus(req: Request, res: Response): Promise<void> {
+  async checkStatus(req: UserRequest, res: Response): Promise<void> {
     const { courseId } = req.params;
     const userId = req.user?.id;
 
@@ -416,7 +427,7 @@ export class Authcontroller implements IAuthController {
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });
   }
 
-  async getPurchasedInstructors(req: Request, res: Response) {
+  async getPurchasedInstructors(req: UserRequest, res: Response) {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -454,7 +465,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async submitComplaint(req: Request, res: Response): Promise<void> {
+  async submitComplaint(req: UserRequest, res: Response): Promise<void> {
     try {
       const { type, subject, message, targetId } = req.body;
       const userId = req.user?.id;
@@ -487,7 +498,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async getPurchases(req: Request, res: Response): Promise<void> {
+  async getPurchases(req: UserRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       const page = parseInt(req.query.page as string) || 1;
@@ -508,7 +519,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async changePassword(req: Request, res: Response): Promise<void> {
+  async changePassword(req: UserRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
 
@@ -551,7 +562,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async purchasedCourses(req: Request, res: Response): Promise<void> {
+  async purchasedCourses(req: UserRequest, res: Response): Promise<void> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -570,7 +581,7 @@ export class Authcontroller implements IAuthController {
     }
   }
 
-  async getCertificates(req: Request, res: Response): Promise<void> {
+  async getCertificates(req: UserRequest, res: Response): Promise<void> {
     try {
       const user = req.user?.id;
       const page = parseInt(req.query.page as string) || 1;

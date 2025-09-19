@@ -5,8 +5,7 @@ import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate } from "react-router-dom";
 import { createCourseS } from "../../services/instructor.services";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
-import instructorApi from "../../services/instructorApiService";
-import type { Category } from "../../types/category.types";
+import { getCategory } from "../../services/instructor.services";
 import type { AxiosError } from "axios";
 
 const InstructorCreateCourse: React.FC = () => {
@@ -37,9 +36,7 @@ const InstructorCreateCourse: React.FC = () => {
   useEffect(() => {
     const getCategories = async () => {
       try {
-        const response = await instructorApi.get<Category[]>(
-          "/instructors/category"
-        );
+        const response = await getCategory();
         const activeNames = response.data
           .filter((cat: { name: string; isDeleted: boolean }) => !cat.isDeleted)
           .map((cat: { name: string; isDeleted: boolean }) => cat.name);
@@ -67,6 +64,9 @@ const InstructorCreateCourse: React.FC = () => {
     }
     if (courseData.price <= 0) {
       newErrors.price = "Price must be greater than 0";
+    }
+    if (courseData.price > 10000) {
+      newErrors.price = "Price must not be greater than 10000";
     }
     if (courseData.lectures.length === 0) {
       newErrors.lectures = "At least one lecture is required";
@@ -167,7 +167,15 @@ const InstructorCreateCourse: React.FC = () => {
       }
 
       const lecturesData = courseData.lectures.map(
-        ({ videoFile, ...rest }) => rest
+        ({ _id, id, title, description, videoUrl, duration, order }) => ({
+          _id,
+          id,
+          title,
+          description,
+          videoUrl,
+          duration,
+          order,
+        })
       );
       formData.append("lectures", JSON.stringify(lecturesData));
 

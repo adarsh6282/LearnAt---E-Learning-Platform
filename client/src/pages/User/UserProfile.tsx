@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { UserContext } from "../../context/UserContext";
+import UserContext from "../../context/UserContext";
 import { Mail, User, Phone } from "lucide-react";
 import { errorToast } from "../../components/Toast";
 import { editProfileS } from "../../services/user.services";
@@ -15,7 +15,7 @@ import type { AxiosError } from "axios";
 const tabs = [
   "Profile",
   "Course History",
-  "Our Courses",
+  "My Courses",
   "Certificates",
   "Change Password",
 ];
@@ -236,7 +236,7 @@ const UserProfile = () => {
           )}
 
           {activeTab === "Course History" && <PurchaseHistory />}
-          {activeTab === "Our Courses" && <PurchasedCourses />}
+          {activeTab === "My Courses" && <PurchasedCourses />}
           {activeTab === "Change Password" && <ChangePassword />}
           {activeTab === "Certificates" && <UserCertificates />}
         </div>

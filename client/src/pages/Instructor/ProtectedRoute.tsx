@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { InstructorContext } from "../../context/InstructorContext";
+import InstructorContext from "../../context/InstructorContext";
 
 interface Props {
   children: React.ReactNode;
@@ -9,24 +9,14 @@ interface Props {
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const token = localStorage.getItem("instructorsToken");
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
   const context = useContext(InstructorContext);
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (token) {
-        await getInstructorProfile();
-      }
-      setLoading(false);
-    };
 
-    fetchProfile();
-  }, [token]);
-  
+  const instructor = context?.instructor
+  const loading = context?.loading
+
   if (!context) {
     return "No context here";
   }
-
-  const { instructor, getInstructorProfile } = context;
 
   const isRejected = instructor?.accountStatus === "rejected";
   const isPending = instructor?.accountStatus === "pending";

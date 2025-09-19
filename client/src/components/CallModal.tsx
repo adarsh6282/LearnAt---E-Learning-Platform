@@ -1,8 +1,14 @@
-import React from "react";
-import { useCall } from "../context/CallContext";
+import React, { useContext } from "react";
+import callContext from "../context/CallContext";
 
 const CallModal: React.FC = () => {
-  const { incomingCall, acceptCall, rejectCall } = useCall();
+  const context=useContext(callContext)
+
+  if(!context){
+    return "no context here"
+  }
+  
+  const { incomingCall, acceptCall, rejectCall } = context;
 
   if (!incomingCall) return null;
 

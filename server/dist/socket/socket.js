@@ -61,6 +61,10 @@ const initSocket = (server) => {
                 console.error("Socket Error Saving Message:", error);
             }
         });
+        socket.on("deleteMessage", async ({ chatId, messageId, userId }) => {
+            await messageService.deleteMessage(messageId, userId);
+            socket.to(chatId).emit("messageDeleted", messageId);
+        });
         socket.on("join-video-room", (chatId) => {
             socket.join(chatId);
             console.log(`Socket joined video room: ${chatId}`);

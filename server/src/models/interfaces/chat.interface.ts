@@ -20,6 +20,7 @@ export interface IMessage {
     readerId: Types.ObjectId;
     readerModel: "User" | "Instructor";
   }[]
+  isDeleted:boolean;
   content: string;
   createdAt?: Date;
   updatedAt?: Date;

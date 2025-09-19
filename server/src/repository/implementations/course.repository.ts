@@ -58,7 +58,9 @@ export class CourseRepository
   ): Promise<{ courses: ICourse[]; total: number; totalPages: number }> {
     const skip = (page - 1) * limit;
 
-    const query: FilterQuery<ICourse> = {};
+    const query: FilterQuery<ICourse> = {
+      isActive:true
+    };
 
     if (search) {
       query.title = { $regex: search, $options: "i" };
@@ -175,9 +177,11 @@ export class CourseRepository
     );
 
     const instructorIds = [
-      ...new Set(courses.map((c: any) => c.instructor.toString())),
+      ...new Set(
+        courses.map((c) => (c.instructor as Types.ObjectId).toString())
+      ),
     ];
-
+    
     return instructorIds;
   }
 
@@ -188,7 +192,7 @@ export class CourseRepository
 
     const userIds = new Set<string>();
     courses.forEach((course: ICourse) => {
-      course.enrolledStudents.forEach((userId: string|Types.ObjectId) => {
+      course.enrolledStudents.forEach((userId: string | Types.ObjectId) => {
         userIds.add(userId.toString());
       });
     });

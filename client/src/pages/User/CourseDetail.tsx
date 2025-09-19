@@ -6,6 +6,8 @@ import { errorToast, successToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
 import {
   CreateOrderS,
+  fetchProgress,
+  getInstructor,
   getReviewsS,
   getSpecificCourseS,
   postReviewS,
@@ -13,7 +15,6 @@ import {
 } from "../../services/user.services";
 import type { Review } from "../../types/review.types";
 import { USER_ROUTES } from "../../constants/routes.constants";
-import userApi from "../../services/userApiService";
 import type { IInstructorProfile } from "../../types/instructor.types";
 import Navbar from "../../components/Navbar";
 
@@ -36,9 +37,11 @@ const CourseDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchIsCourseCompleted = async () => {
-      const res = await userApi.get<boolean>(
-        `/users/courses/progress/${courseId}`
-      );
+      if (!courseId) {
+        return;
+      }
+
+      const res = await fetchProgress(courseId);
       setIsCompleted(res.data);
     };
     fetchIsCourseCompleted();
@@ -55,7 +58,7 @@ const CourseDetail: React.FC = () => {
 
     try {
       const { data: order } = await CreateOrderS(courseId);
-      console.log(order)
+      console.log(order);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -64,7 +67,11 @@ const CourseDetail: React.FC = () => {
         name: course.title,
         description: course.description,
         order_id: order.razorpayOrderId,
-        handler: async (response: {razorpay_order_id:string,razorpay_payment_id:string,razorpay_signature:string}) => {
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
           const verifyRes = await verifyResS({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -127,7 +134,10 @@ const CourseDetail: React.FC = () => {
         const res = await getSpecificCourseS(courseId);
         setCourse(res.data.course);
         setIsEnrolled(res.data.isEnrolled);
-        fetchReviews();
+        
+        const resReviews = await getReviewsS(courseId);
+        const normalizedReviews: Review[] = resReviews.data.reviews || [];
+        setReviews(normalizedReviews);
       } catch (err) {
         console.error("Error fetching course:", err);
         setError("Failed to load course details");
@@ -141,9 +151,10 @@ const CourseDetail: React.FC = () => {
 
   const fetchInstructor = async () => {
     try {
-      const res = await userApi.get<IInstructorProfile>(
-        `/users/courseinstructor/${instructorId}`
-      );
+      if (!instructorId) {
+        return;
+      }
+      const res = await getInstructor(instructorId);
       setInstructor(res.data);
     } catch (err) {
       console.log(err);
@@ -240,7 +251,8 @@ const CourseDetail: React.FC = () => {
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   <span>
-                    {Math.floor(totalDuration / 60)}h {totalDuration % 60}m total
+                    {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
+                    total
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -495,7 +507,9 @@ const CourseDetail: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-200">Lessons:</span>
-                  <span className="font-medium text-slate-100">{totalLessons}</span>
+                  <span className="font-medium text-slate-100">
+                    {totalLessons}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-200">Access:</span>

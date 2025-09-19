@@ -46,6 +46,8 @@ const instructor_mapper_1 = require("../../Mappers/instructor.mapper");
 const course_mapper_1 = require("../../Mappers/course.mapper");
 const review_mapper_1 = require("../../Mappers/review.mapper");
 const notification_mapper_1 = require("../../Mappers/notification.mapper");
+const category_mapper_1 = require("../../Mappers/category.mapper");
+const user_mapper_1 = require("../../Mappers/user.mapper");
 class InstructorAuthSerivce {
     constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
@@ -96,7 +98,7 @@ class InstructorAuthSerivce {
         await this._otpRepository.deleteOtpbyEmail(data.email);
         const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
         const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-        return { instructor, token, instructorRefreshToken };
+        return { instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor), token, instructorRefreshToken };
     }
     async reApplyS(email, resume) {
         const instructor = await this._instructorAuthRepository.findByEmail(email);
@@ -108,7 +110,11 @@ class InstructorAuthSerivce {
             isRejected: false,
             accountStatus: "pending",
         };
-        return await this._instructorAuthRepository.updateInstructor(instructor.email, updatedData);
+        const updated = await this._instructorAuthRepository.updateInstructor(instructor.email, updatedData);
+        if (!updated) {
+            throw new Error("failed to reapply");
+        }
+        return (0, instructor_mapper_1.toInstructorDTO)(updated);
     }
     async loginInstructor(email, password) {
         const instructor = await this._instructorAuthRepository.findByEmail(email);
@@ -124,7 +130,7 @@ class InstructorAuthSerivce {
         }
         const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
         const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-        return { instructor, token, instructorRefreshToken };
+        return { instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor), token, instructorRefreshToken };
     }
     async handleForgotPassword(email) {
         const instructor = await this._instructorAuthRepository.findByEmail(email);
@@ -166,7 +172,7 @@ class InstructorAuthSerivce {
     async handleResendOtp(email) {
         const instructor = await this._otpRepository.findOtpbyEmail(email);
         if (!instructor) {
-            throw new Error("NO user found");
+            throw new Error("NO instructor found");
         }
         const otp = (0, otpGenerator_1.default)();
         await this._otpRepository.saveOTP({
@@ -220,7 +226,7 @@ class InstructorAuthSerivce {
         if (!categories) {
             throw new Error("No categories found");
         }
-        return categories;
+        return (0, category_mapper_1.toCategoryDTOList)(categories);
     }
     async getReviewsByInstructor(instructorId, page, limit, rating) {
         const { reviews, total, totalPages } = await this._reviewRepository.getReviewsByInstructor(instructorId, page, limit, rating);
@@ -252,13 +258,17 @@ class InstructorAuthSerivce {
     }
     async markAsRead(notificationId) {
         const notification = await this._notificationRepository.updateNotification(notificationId);
-        return notification;
+        if (!notification) {
+            throw new Error("failed to update notification");
+        }
+        return (0, notification_mapper_1.toNotificationDTO)(notification);
     }
     async getPurchasedUsers(instructorId) {
         const userIds = await this._courseRepository.getUsersByInstructor(instructorId);
         if (!userIds.length)
             return [];
-        return this._userRepository.findUsersByIds(userIds);
+        const users = await this._userRepository.findUsersByIds(userIds);
+        return (0, user_mapper_1.toUserDTOList)(users);
     }
 }
 exports.InstructorAuthSerivce = InstructorAuthSerivce;

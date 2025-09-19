@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
 import { errorToast, successToast } from "../../components/Toast";
 import {
@@ -35,10 +35,6 @@ const AdminCategory = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    fetchCategories();
-  }, [currentPage, itemsPerPage, debounce, selectedStatus]);
-
-  useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
     setCurrentPage(pageParam);
   }, [searchParams]);
@@ -66,7 +62,7 @@ const AdminCategory = () => {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback( async () => {
     try {
       const all = await getAllCategoriesS(
         currentPage,
@@ -82,7 +78,11 @@ const AdminCategory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[currentPage,itemsPerPage,debounce,selectedStatus])
+
+   useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleSoftDelete = async (id: string) => {
     try {

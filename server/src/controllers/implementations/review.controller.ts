@@ -2,11 +2,12 @@ import { Request, Response } from "express";
 import { IReviewService } from "../../services/interfaces/review.interface";
 import { IReviewController } from "../interfaces/review.interface";
 import { httpStatus } from "../../constants/statusCodes";
+import { UserRequest } from "../../types/express";
 
 export class ReviewController implements IReviewController {
   constructor(private _reviewService: IReviewService) {}
 
-  async submitReview(req: Request, res: Response): Promise<void> {
+  async submitReview(req: UserRequest, res: Response): Promise<void> {
     try {
       const { courseId } = req.params;
       const userId = req.user?.id;

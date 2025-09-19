@@ -37,8 +37,8 @@ class CourseController {
         try {
             const { courseId } = req.params;
             const instructorId = req.instructor?.id;
-            const videoFiles = req.files?.videos || [];
-            const thumbnailFile = req.files?.thumbnail?.[0];
+            const videoFiles = (req.files)?.videos || [];
+            const thumbnailFile = (req.files)?.thumbnail?.[0];
             const existingLectures = JSON.parse(req.body.existingLectures || "[]");
             const newLectures = JSON.parse(req.body.newLectures || "[]");
             const updateData = {

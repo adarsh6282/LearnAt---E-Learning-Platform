@@ -1,9 +1,8 @@
 import { useContext, useEffect, useState } from "react";
-import { InstructorContext } from "../../context/InstructorContext";
-import { reapplyS } from "../../services/instructor.services";
+import InstructorContext from "../../context/InstructorContext";
+import { getDashboard, reapplyS } from "../../services/instructor.services";
 import { errorToast, successToast } from "../../components/Toast";
 import InstructorChart from "../../components/InstructorChart";
-import instructorApi from "../../services/instructorApiService";
 import { useLocation } from "react-router-dom";
 
 interface Dashboard {
@@ -20,15 +19,18 @@ const InstructorDashboard = () => {
   
   useEffect(() => {
     const fetchDashboard = async () => {
-      const res = await instructorApi.get<Dashboard>("/instructors/dashboard");
+      const res = await getDashboard()
       setDashboardData(res.data);
     };
     fetchDashboard();
   }, [location.pathname]);
+
+  const { instructor, getInstructorProfile } = context||{};
   
   useEffect(() => {
     const fetchInstructor = async () => {
       try {
+        if(getInstructorProfile)
         await getInstructorProfile();
       } catch (err) {
         console.error("Error fetching instructor", err);
@@ -37,12 +39,12 @@ const InstructorDashboard = () => {
       }
     };
     fetchInstructor();
-  }, []);
+  }, [getInstructorProfile]);
+
   if (!context) {
     return "no context here";
   }
   
-  const { instructor, getInstructorProfile } = context;
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setResume(e.target.files[0]);

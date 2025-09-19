@@ -36,6 +36,9 @@ class MessageRepository {
             $push: { readBy: { readerId: userId, readerModel: userModel } },
         });
     }
+    async deleteMessage(messageId) {
+        return await messageModel_1.default.findByIdAndUpdate(messageId, { isDeleted: true, }, { new: true });
+    }
     async getUnreadCounts(userId, userModel) {
         const objectId = new mongoose_1.default.Types.ObjectId(userId);
         const messages = await messageModel_1.default.aggregate([

@@ -13,7 +13,7 @@ import {
 import { MdReport } from "react-icons/md";
 import { ADMIN_ROUTES } from "../constants/routes.constants";
 import { useContext } from "react";
-import { NotificationContext } from "../context/NotificationContext";
+import NotificationContext from "../context/NotificationContext";
 import { adminLogoutS } from "../services/admin.services";
 
 const AdminNavbar = () => {

@@ -47,6 +47,15 @@ export class MessageRepository implements IMessageRepository {
       }
     );
   }
+
+  async deleteMessage(messageId: string): Promise<IMessage | null> {
+    return await Message.findByIdAndUpdate(
+      messageId,
+      { isDeleted: true,},
+      { new: true }
+    );
+  }
+
   async getUnreadCounts(
     userId: string,
     userModel: "User" | "Instructor"

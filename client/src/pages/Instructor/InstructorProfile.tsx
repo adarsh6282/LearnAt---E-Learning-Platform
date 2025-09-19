@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { InstructorContext } from "../../context/InstructorContext";
+import InstructorContext from "../../context/InstructorContext";
 import {
   User,
   Mail,
@@ -16,27 +16,28 @@ import { editProfileS } from "../../services/instructor.services";
 
 const InstructorProfile: React.FC = () => {
   const context = useContext(InstructorContext);
+  const instructor = context?.instructor;
+  const setInstructor = context?.setInstructor;
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: instructor?.name || "",
+    phone: instructor?.phone || "",
+    title: instructor?.title || "",
+    yearsOfExperience: instructor?.yearsOfExperience || 0,
+    education: instructor?.education || "",
+  });
 
   if (!context) {
     return <div>Loading Instructor...</div>;
   }
 
-  const { instructor, setInstructor } = context;
-
   if (!instructor) {
     return <div>Loading Instructor...</div>;
   }
-
-  const [formData, setFormData] = useState({
-    name: instructor.name || "",
-    phone: instructor.phone || "",
-    title: instructor.title || "",
-    yearsOfExperience: instructor.yearsOfExperience || 0,
-    education: instructor.education || "",
-  });
 
   const handleInputChange = (name: string, value: string | number) => {
     setFormData((prev) => ({
@@ -100,7 +101,7 @@ const InstructorProfile: React.FC = () => {
 
       const res = await editProfileS(formPayload);
 
-      setInstructor(res.data);
+      setInstructor?.(res.data);
       setIsEditing(false);
     } catch (err) {
       console.error("Error saving profile:", err);

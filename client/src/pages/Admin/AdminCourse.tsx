@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Trash2, User, AlertCircle, CheckCircle } from "lucide-react";
 import {
   getCoursesS,
@@ -41,7 +41,7 @@ const AdminCourse: React.FC = () => {
     setSearchParams({ page: page.toString(), search: searchQuery.trim() });
   };
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback( async () => {
     try {
       setLoading(true);
       const res = await getCoursesS(currentPage, itemsPerPage, debounce);
@@ -54,7 +54,7 @@ const AdminCourse: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  },[currentPage,itemsPerPage,debounce])
 
   const handleSoftDelete = async (id: string) => {
     try {
@@ -78,7 +78,7 @@ const AdminCourse: React.FC = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, [currentPage, itemsPerPage, debounce]);
+  }, [fetchCourses]);
 
   return (
     <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">

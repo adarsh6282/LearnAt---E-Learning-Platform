@@ -7,6 +7,7 @@ exports.CourseService = void 0;
 const mongoose_1 = require("mongoose");
 const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 const streamifier_1 = __importDefault(require("streamifier"));
+const course_mapper_1 = require("../../Mappers/course.mapper");
 class CourseService {
     constructor(_courseRepository) {
         this._courseRepository = _courseRepository;
@@ -52,7 +53,10 @@ class CourseService {
                 thumbnail: thumbnailUrl,
                 lectures,
             });
-            return course;
+            if (!course) {
+                throw new Error("failed to create new course");
+            }
+            return (0, course_mapper_1.toCourseDTO)(course);
         }
         catch (error) {
             console.error("Course creation error:", error);
@@ -93,7 +97,7 @@ class CourseService {
             if (!updatedCourse) {
                 throw new Error("Course not found");
             }
-            return updatedCourse;
+            return (0, course_mapper_1.toCourseDTO)(updatedCourse);
         }
         catch (error) {
             console.error("Error updating course:", error);

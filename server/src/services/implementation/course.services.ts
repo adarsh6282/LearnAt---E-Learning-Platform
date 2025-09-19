@@ -3,10 +3,12 @@ import {
   CreateCourseInput,
 } from "../interfaces/course.services";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
-import { CreateLectureInput, ICourse, ILecture } from "../../models/interfaces/course.interface";
+import { CreateLectureInput, ICourse, ILecture, UpdateCourseInput } from "../../models/interfaces/course.interface";
 import { Types } from "mongoose";
 import cloudinary from "../../config/cloudinary.config";
 import streamifier from "streamifier";
+import { CourseDTO } from "../../DTO/course.dto";
+import { toCourseDTO } from "../../Mappers/course.mapper";
 
 export class CourseService implements ICourseService {
   constructor(private _courseRepository: ICourseRepository) {}
@@ -35,7 +37,7 @@ export class CourseService implements ICourseService {
     });
   }
 
-  async createCourse(courseData: CreateCourseInput): Promise<ICourse> {
+  async createCourse(courseData: CreateCourseInput): Promise<CourseDTO> {
     try {
       let thumbnailUrl: string | undefined = undefined;
       if (courseData.thumbnail) {
@@ -70,14 +72,18 @@ export class CourseService implements ICourseService {
         lectures,
       });
 
-      return course;
+      if(!course){
+        throw new Error("failed to create new course")
+      }
+
+      return toCourseDTO(course);
     } catch (error) {
       console.error("Course creation error:", error);
       throw error;
     }
   }
 
-  async updateCourse(courseId: string, courseData: any): Promise<ICourse> {
+  async updateCourse(courseId: string, courseData:UpdateCourseInput): Promise<CourseDTO> {
     try {
       let thumbnailUrl: string | undefined;
 
@@ -130,7 +136,7 @@ export class CourseService implements ICourseService {
         throw new Error("Course not found");
       }
 
-      return updatedCourse;
+      return toCourseDTO(updatedCourse);
       
     } catch (error) {
       console.error("Error updating course:", error);

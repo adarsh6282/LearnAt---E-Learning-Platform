@@ -1,4 +1,5 @@
-import { ICourse } from "../../models/interfaces/course.interface";
+import { CourseDTO } from "../../DTO/course.dto";
+import { UpdateCourseInput } from "../../models/interfaces/course.interface";
 
 export interface CreateCourseInput {
     title: string;
@@ -18,6 +19,6 @@ export interface CreateCourseInput {
 }
 
 export interface ICourseService {
-    createCourse(courseData: CreateCourseInput): Promise<ICourse>;
-    updateCourse(courseId:string,updateData:string):Promise<ICourse>
+    createCourse(courseData: CreateCourseInput): Promise<CourseDTO>;
+    updateCourse(courseId:string,courseData:UpdateCourseInput):Promise<CourseDTO>
 } 

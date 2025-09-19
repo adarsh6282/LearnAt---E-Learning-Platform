@@ -1,4 +1,3 @@
-import axiosInstance from "./apiService";
 import type { IUserProfile } from "../types/user.types";
 import type {
   Course,
@@ -9,8 +8,9 @@ import type { IOrder, VerifyResponse } from "../types/order.types";
 import type { Review } from "../types/review.types";
 import type { INotification } from "../context/NotificationContext";
 import { createApi } from "./newApiService";
+import type { IInstructorProfile } from "../types/instructor.types";
 
-const api=createApi("user")
+const api = createApi("user");
 
 interface Certificate {
   _id: string;
@@ -25,13 +25,32 @@ interface ChatResponse {
   _id: string;
 }
 
-interface Message {
-  _id?: string;
-  chatId: string;
-  sender: string;
+interface ApiMessage {
+  _id: string;
+  chat: string;
+  senderId: string;
   content?: string;
   image?: string;
+  senderRole: "User" | "Instructor";
+  readBy: {
+    _id: string;
+    readerId: string;
+    readerModel: "User" | "Instructor";
+  }[];
+  isDeleted:boolean;
   createdAt: string;
+  updatedAt: string;
+}
+
+interface Message {
+  _id: string;
+  chatId: string;
+  sender: string;
+  image?: string;
+  content?: string;
+  isDeleted:boolean
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Instructor {
@@ -46,6 +65,19 @@ interface ChatPartner {
   lastMessage: string;
 }
 
+interface ChatResponse {
+  _id: string;
+  user: string;
+  instructor: {
+    _id: string;
+    name: string;
+  };
+  lastMessage: string;
+  lastMessageContent: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Orders {
   _id: string;
   course: Course;
@@ -55,7 +87,7 @@ interface Orders {
 }
 
 interface PurchasedCourse {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
@@ -128,7 +160,7 @@ export const getSpecificCourseS = async (courseId: string) => {
 };
 
 export const verifyGoogleS = async (token: string) => {
-  return await axiosInstance.post("/users/verifygoogle", { token });
+  return await api.post("/users/verifygoogle", { token });
 };
 
 export const userLoginS = async (email: string, password: string) => {
@@ -193,8 +225,8 @@ export const markLectureWatchedS = async (
   const lecture = await api.post(`/users/course-view/progress/${courseId}`, {
     lectureId,
   });
-  console.log(lectureId)
-  return lecture
+  console.log(lectureId);
+  return lecture;
 };
 
 export const getPurchasedCoursesS = async (page: number, limit: number) => {
@@ -206,11 +238,13 @@ export const getPurchasedCoursesS = async (page: number, limit: number) => {
 };
 
 export const getChatList = async (userId: string) => {
-  const res = await api.get<any[]>(`/chats/list/${userId}?role=user`);
+  const res = await api.get<ChatResponse[]>(`/chats/list/${userId}?role=user`);
 
-  const formattedChats: ChatPartner[] = res.data
-    .filter((chat: any) => chat.instructor)
-    .map((chat: any) => ({
+  console.log(res.data);
+
+  const formattedChats = res.data
+    .filter((chat) => chat.instructor)
+    .map((chat) => ({
       chatId: chat._id,
       partnerId: chat.instructor._id,
       partnerName: chat.instructor.name,
@@ -222,8 +256,9 @@ export const getChatList = async (userId: string) => {
 
 export const filteredInstructor = async (chats: ChatPartner[]) => {
   const res = await api.get<Instructor[]>("/users/instructors/purchased");
+  console.log(res.data);
   const filtered = res.data.filter(
-    (inst: any) => !chats.some((chat) => chat.partnerId === inst._id)
+    (inst) => !chats.some((chat) => chat.partnerId === inst._id)
   );
 
   return filtered;
@@ -256,13 +291,21 @@ export const getMessageS = async (
   userId: string,
   userRole: string
 ) => {
-  const res = await api.get<Message[]>(
+  const res = await api.get<ApiMessage[]>(
     `/messages/${chatId}?userId=${userId}&role=${userRole}`
   );
-  const normalized = res.data.map((msg: any) => ({
-    ...msg,
+
+  const normalized: Message[] = res.data.map((msg) => ({
+    _id: msg._id,
+    chatId: msg.chat,
     sender: msg.senderId,
+    content: msg.content,
+    isDeleted:msg.isDeleted,
+    image: msg.image,
+    createdAt: msg.createdAt,
+    updatedAt: msg.updatedAt,
   }));
+
   return normalized;
 };
 
@@ -308,3 +351,23 @@ export const userResetPassword = async (
     confirmPassword,
   });
 };
+
+export const resentOtp = async (email: string) => {
+  return await api.post(`/users/resend-otp`, {
+    email,
+  });
+};
+
+export const fetchProgress = async (courseId: string) => {
+  return await api.get<boolean>(`/users/courses/progress/${courseId}`);
+};
+
+export const getInstructor = async (instructorId: string) => {
+  return await api.get<IInstructorProfile>(
+    `/users/courseinstructor/${instructorId}`
+  );
+};
+
+export const getCategory=async()=>{
+  return await api.get<string[]>("/users/category")
+}

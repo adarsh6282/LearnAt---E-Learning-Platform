@@ -70,6 +70,11 @@ export const initSocket = (server: HTTPServer): void => {
       }
     });
 
+    socket.on("deleteMessage",async({chatId,messageId,userId})=>{
+      await messageService.deleteMessage(messageId,userId)
+      socket.to(chatId).emit("messageDeleted",messageId)
+    })
+
     socket.on("join-video-room", (chatId: string) => {
       socket.join(chatId);
       console.log(`Socket joined video room: ${chatId}`);

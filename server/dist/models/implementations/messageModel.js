@@ -55,6 +55,10 @@ const messageSchema = new mongoose_1.Schema({
     image: {
         type: String
     },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
     readBy: [
         {
             readerId: {

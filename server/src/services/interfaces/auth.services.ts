@@ -6,8 +6,6 @@ import { ProgressDTO } from "../../DTO/progress.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
-import { INotification } from "../../models/interfaces/notification.interface";
-import { IProgress } from "../../models/interfaces/progress.interface";
 import { IPurchase, PurchasedCourse } from "../../repository/implementations/order.repository";
 
 export interface IAuthService {
@@ -15,10 +13,10 @@ export interface IAuthService {
   loginUser(
     email: string,
     password: string
-  ): Promise<{ user: IUser; token: string; userRefreshToken:string }>;
+  ): Promise<{ user: UserDTO; token: string; userRefreshToken:string }>;
   verifyOtp(
     data: IUser & { otp: string }
-  ): Promise<{ user: IUser; token: string,userRefreshToken:string }>;
+  ): Promise<{ user: UserDTO; token: string,userRefreshToken:string }>;
   handleForgotPassword(email: string): Promise<void>;
   verifyForgotOtp(data: { email: string; otp: string }): Promise<boolean>;
   handleResetPassword(data: {
@@ -48,12 +46,12 @@ export interface IAuthService {
     razorpay_payment_id: string;
     razorpay_signature: string;
   }): Promise<{success:boolean}>;
-  updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<IProgress|null>
+  updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<ProgressDTO>
   getUserCourseProgress(userId: string, courseId: string): Promise<ProgressDTO>,
   fetchPurchasedInstructors(userId:string):Promise<InstructorDTO[]>
   checkStatus(userId: string, courseId: string): Promise<boolean>,
   getNotifications(userId:string):Promise<NotificationDTO[]>
-  markAsRead(notificationId:string):Promise<INotification|null>
+  markAsRead(notificationId:string):Promise<NotificationDTO>
   submitComplaint(data:Partial<IComplaint>):Promise<IComplaint|null>
   getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }>
   changePassword(userId:string,oldPassword:string,newPassword:string,confirmPassword:string):Promise<void>

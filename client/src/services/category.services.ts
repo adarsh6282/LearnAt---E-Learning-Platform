@@ -1,5 +1,7 @@
 import type { CategoryResponse, Category } from "../types/category.types";
-import adminApi from "./adminApiService";
+import {createApi} from "./newApiService";
+
+const api=createApi("admin")
 
 export const getAllCategoriesS = async (
   page: number,
@@ -7,7 +9,7 @@ export const getAllCategoriesS = async (
   search:string,
   status:string
 ): Promise<{ category: Category[]; total: number; totalPages: number }> => {
-  const res = await adminApi.get<{
+  const res = await api.get<{
     category: Category[];
     total: number;
     totalPages: number;
@@ -17,7 +19,7 @@ export const getAllCategoriesS = async (
 };
 
 export const softDeleteCategoryS = async (id: string) => {
-  const res = await adminApi.patch<CategoryResponse>(
+  const res = await api.patch<CategoryResponse>(
     `/admin/category/delete/${id}`,
     {}
   );
@@ -25,7 +27,7 @@ export const softDeleteCategoryS = async (id: string) => {
 };
 
 export const restoreCategoryS = async (id: string) => {
-  const res = await adminApi.patch<CategoryResponse>(
+  const res = await api.patch<CategoryResponse>(
     `/admin/category/restore/${id}`,
     {}
   );
@@ -33,7 +35,7 @@ export const restoreCategoryS = async (id: string) => {
 };
 
 export const addCategoryS = async (category: { name: string }) => {
-  const res = await adminApi.post<CategoryResponse>(
+  const res = await api.post<CategoryResponse>(
     "/admin/category",
     category
   );

@@ -5,6 +5,7 @@ import {
   useMemo,
   type ReactNode,
   useRef,
+  useCallback,
 } from "react";
 import { useAuth } from "../hooks/useAuth";
 import useAdmin from "../hooks/useAdmin";
@@ -40,7 +41,7 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-export const NotificationContext =
+const NotificationContext =
   createContext<NotificationContextType | null>(null);
 
 export const NotificationProvider = ({
@@ -65,7 +66,7 @@ export const NotificationProvider = ({
     return { userId: null, role: null };
   }, [authUser, userRole, admin]);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!userId || !role) return;
     setLoading(true);
 
@@ -91,7 +92,7 @@ export const NotificationProvider = ({
     } finally {
       setLoading(false);
     }
-  };
+  },[userId,role])
 
   const markAsRead = async (notificationId: string) => {
     if (!userId || !role) return;
@@ -131,7 +132,7 @@ export const NotificationProvider = ({
     if (userId && role) {
       fetchNotifications();
     }
-  }, [userId, role]);
+  }, [userId, role,fetchNotifications]);
 
   useEffect(() => {
     if (!userId) return;
@@ -153,7 +154,7 @@ export const NotificationProvider = ({
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [userId]);
+  }, [userId,fetchNotifications]);
 
   return (
     <NotificationContext.Provider
@@ -169,3 +170,5 @@ export const NotificationProvider = ({
     </NotificationContext.Provider>
   );
 };
+
+export default NotificationContext

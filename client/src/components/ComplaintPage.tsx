@@ -83,7 +83,7 @@ const AdminComplaint: React.FC = () => {
       await updateComplaint(selectedComplaint._id, status, response);
       successToast("Response submitted successfully");
       const refreshed = await refreshedComplaint();
-      setComplaints(refreshed.data);
+      setComplaints(refreshed.data.complaints);
       setSelectedComplaint(null);
       setResponse("");
       setStatus("resolved");

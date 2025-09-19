@@ -18,7 +18,6 @@ declare global {
     email?: string;
     contact?: string;
   };
-  notes?: Record<string, any>;
   theme?: {
     color?: string;
   };
@@ -33,7 +32,5 @@ declare global {
 
   interface RazorpayInstance {
     open: () => void;
-    close: () => void;
-    on: (event: string, callback: (response: any) => void) => void;
   }
 }
