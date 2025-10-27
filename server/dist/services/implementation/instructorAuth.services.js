@@ -49,7 +49,7 @@ const notification_mapper_1 = require("../../Mappers/notification.mapper");
 const category_mapper_1 = require("../../Mappers/category.mapper");
 const user_mapper_1 = require("../../Mappers/user.mapper");
 class InstructorAuthSerivce {
-    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository) {
+    constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository, _quizRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -60,6 +60,7 @@ class InstructorAuthSerivce {
         this._walletRepository = _walletRepository;
         this._categoryRepository = _categoryRepository;
         this._notificationRepository = _notificationRepository;
+        this._quizRepository = _quizRepository;
     }
     async registerInstructor(email) {
         const existingAdmin = await this._adminRepository.findAdminByEmail(email);
@@ -98,7 +99,11 @@ class InstructorAuthSerivce {
         await this._otpRepository.deleteOtpbyEmail(data.email);
         const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
         const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-        return { instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor), token, instructorRefreshToken };
+        return {
+            instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor),
+            token,
+            instructorRefreshToken,
+        };
     }
     async reApplyS(email, resume) {
         const instructor = await this._instructorAuthRepository.findByEmail(email);
@@ -130,7 +135,11 @@ class InstructorAuthSerivce {
         }
         const token = (0, jwt_1.generateToken)(instructor._id, instructor.email, "instructor");
         const instructorRefreshToken = (0, jwt_1.generateRefreshToken)(instructor._id, instructor.email, "instructor");
-        return { instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor), token, instructorRefreshToken };
+        return {
+            instructor: (0, instructor_mapper_1.toInstructorDTO)(instructor),
+            token,
+            instructorRefreshToken,
+        };
     }
     async handleForgotPassword(email) {
         const instructor = await this._instructorAuthRepository.findByEmail(email);
@@ -269,6 +278,71 @@ class InstructorAuthSerivce {
             return [];
         const users = await this._userRepository.findUsersByIds(userIds);
         return (0, user_mapper_1.toUserDTOList)(users);
+    }
+    async createQuiz(instructorId, quiz, courseID) {
+        const course = await this._courseRepository.findCourseByIdAndInstructor(courseID, instructorId);
+        const Quiz = await this._quizRepository.findQuizByCouseId(courseID);
+        if (Quiz) {
+            throw new Error("Quiz is already created for this course");
+        }
+        if (!course) {
+            throw new Error("You are not allowed to create a quiz for this course");
+        }
+        const quizData = {
+            ...quiz,
+            courseId: courseID,
+            instructorId: instructorId,
+        };
+        const createdQuiz = await this._quizRepository.createQuiz(quizData);
+        return createdQuiz;
+    }
+    async updateQuiz(quizId, updateData) {
+        const existing = await this._quizRepository.findQuizById(quizId);
+        if (!existing) {
+            throw new Error("quiz not found");
+        }
+        if (!updateData.questions || !Array.isArray(updateData.questions)) {
+            throw new Error("Invalid questions data");
+        }
+        const updatedQuiz = await this._quizRepository.updateQuizById(quizId, updateData);
+        return updatedQuiz;
+    }
+    async getQuizzes(instructor) {
+        const quizzes = await this._quizRepository.findByInstructorId(instructor);
+        if (!quizzes) {
+            throw new Error("No quizzes found");
+        }
+        return quizzes.map((q) => ({
+            _id: q._id?.toString() || "",
+            title: q.title,
+            courseTitle: typeof q.courseId === "object" && "title" in q.courseId
+                ? q.courseId.title
+                : "Untitled Course",
+            totalQuestions: q.questions.length,
+            isDeleted: q.isDeleted,
+            createdAt: q.createdAt,
+        }));
+    }
+    async deleteQuiz(quizId) {
+        const quiz = await this._quizRepository.findQuizById(quizId);
+        if (!quiz) {
+            throw new Error("No quiz found");
+        }
+        return await this._quizRepository.changeStatus(quizId, true);
+    }
+    async restoreQuiz(quizId) {
+        const quiz = await this._quizRepository.findQuizById(quizId);
+        if (!quiz) {
+            throw new Error("No quiz found");
+        }
+        return await this._quizRepository.changeStatus(quizId, false);
+    }
+    async getQuiz(quizId) {
+        const quiz = await this._quizRepository.findQuizById(quizId);
+        if (!quiz) {
+            throw new Error("No quiz found");
+        }
+        return quiz;
     }
 }
 exports.InstructorAuthSerivce = InstructorAuthSerivce;

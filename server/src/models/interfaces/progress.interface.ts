@@ -6,6 +6,7 @@ export interface IProgress {
   courseId: Types.ObjectId|string;
   watchedLectures: string[];
   isCompleted:boolean;
+  isCertificateIssued: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

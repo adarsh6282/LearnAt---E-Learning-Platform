@@ -37,58 +37,78 @@ const mongoose_1 = __importStar(require("mongoose"));
 const LectureSchema = new mongoose_1.Schema({
     title: {
         type: String,
-        required: true
+        required: true,
     },
     description: {
         type: String,
-        required: true
+        required: true,
     },
-    videoUrl: {
+    url: {
         type: String,
-        required: true
+        required: true,
     },
     duration: {
         type: String,
-        required: true
+        required: true,
     },
     order: {
-        type: Number
-    }
+        type: Number,
+    },
+    type: {
+        type: String,
+    },
+});
+const chapterSchema = new mongoose_1.Schema({
+    title: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String,
+    },
+    lectures: [LectureSchema],
+});
+const moduleSchema = new mongoose_1.Schema({
+    title: { type: String, required: true },
+    description: { type: String },
+    chapters: [chapterSchema],
 });
 const courseSchema = new mongoose_1.Schema({
     title: {
         type: String,
-        required: true
+        required: true,
     },
     description: {
         type: String,
-        required: true
+        required: true,
     },
     category: {
         type: String,
-        required: true
+        required: true,
     },
     price: {
         type: Number,
-        required: true
+        required: true,
     },
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
     },
     thumbnail: { type: String },
-    lectures: [LectureSchema],
+    modules: [moduleSchema],
     instructor: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Instructor',
-        required: false
+        ref: "Instructor",
+        required: false,
     },
-    enrolledStudents: [{
+    enrolledStudents: [
+        {
             type: mongoose_1.default.Schema.Types.ObjectId,
-            ref: 'User',
-            default: []
-        }]
+            ref: "User",
+            default: [],
+        },
+    ],
 }, {
-    timestamps: true
+    timestamps: true,
 });
 exports.default = mongoose_1.default.model("Course", courseSchema);

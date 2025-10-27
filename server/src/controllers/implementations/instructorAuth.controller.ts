@@ -7,11 +7,14 @@ import cloudinary from "../../config/cloudinary.config";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../../utils/jwt";
 import { IMessageService } from "../../services/interfaces/message.interface";
+import { IQuiz, Question } from "../../models/interfaces/quiz.interface";
+import { ILiveSessionService } from "../../services/interfaces/livesession.interface";
 
 export class InstructorAuthController implements IInstructorController {
   constructor(
     private _instructorAuthService: IInstructorAuthService,
-    private _messageService: IMessageService
+    private _messageService: IMessageService,
+    private _livesessionService: ILiveSessionService
   ) {}
 
   async signup(req: Request, res: Response): Promise<void> {
@@ -161,9 +164,7 @@ export class InstructorAuthController implements IInstructorController {
   async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
-      await this._instructorAuthService.handleForgotPassword(
-        email
-      );
+      await this._instructorAuthService.handleForgotPassword(email);
 
       res.status(httpStatus.OK).json({ message: "OTP Sent Successfully" });
     } catch (err: unknown) {
@@ -223,9 +224,8 @@ export class InstructorAuthController implements IInstructorController {
     try {
       const email = req.instructor?.email;
       if (!email) return;
-      const instructor = await this._instructorAuthService.getProfileService(
-        email
-      );
+      const instructor =
+        await this._instructorAuthService.getProfileService(email);
       res.status(httpStatus.OK).json(instructor);
     } catch (err: unknown) {
       console.error(err);
@@ -479,9 +479,8 @@ export class InstructorAuthController implements IInstructorController {
         return;
       }
 
-      const users = await this._instructorAuthService.getPurchasedUsers(
-        instructorId
-      );
+      const users =
+        await this._instructorAuthService.getPurchasedUsers(instructorId);
       res.status(httpStatus.OK).json(users);
     } catch (err) {
       console.log(err);
@@ -497,9 +496,8 @@ export class InstructorAuthController implements IInstructorController {
           .json({ message: "Instructor not found" });
         return;
       }
-      const stats = await this._instructorAuthService.getCouresStats(
-        instructorId
-      );
+      const stats =
+        await this._instructorAuthService.getCouresStats(instructorId);
       res.status(httpStatus.OK).json(stats);
     } catch (err) {
       console.log(err);
@@ -527,9 +525,8 @@ export class InstructorAuthController implements IInstructorController {
   async getNotifications(req: Request, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
-      const notifications = await this._instructorAuthService.getNotifications(
-        userId
-      );
+      const notifications =
+        await this._instructorAuthService.getNotifications(userId);
       res.status(httpStatus.OK).json(notifications);
     } catch (err) {
       console.log(err);
@@ -539,9 +536,7 @@ export class InstructorAuthController implements IInstructorController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      await this._instructorAuthService.markAsRead(
-        notificationId
-      );
+      await this._instructorAuthService.markAsRead(notificationId);
       res.status(httpStatus.OK).json({ message: "Message Read" });
     } catch (err) {
       console.log(err);
@@ -557,9 +552,8 @@ export class InstructorAuthController implements IInstructorController {
           .json({ message: "Instructor not found" });
         return;
       }
-      const incomeStats = await this._instructorAuthService.getIncomeStats(
-        instructorId
-      );
+      const incomeStats =
+        await this._instructorAuthService.getIncomeStats(instructorId);
       res.status(httpStatus.OK).json(incomeStats);
     } catch (err) {
       console.log(err);
@@ -598,6 +592,173 @@ export class InstructorAuthController implements IInstructorController {
         err instanceof Error ? err.message : "Something went wrong";
 
       res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+    }
+  }
+
+  async createQuiz(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      const { courseId } = req.params;
+
+      if (!instructor) {
+        res.status(httpStatus.UNAUTHORIZED).json({ message: "Not authorized" });
+        return;
+      }
+
+      const transformedQuestions = req.body.questions.map((q: Question) => ({
+        questionText: q.questionText,
+        options: q.options,
+        explanation: q.explanation || "",
+      }));
+
+      const quizData: Partial<IQuiz> = {
+        ...req.body,
+        courseId,
+        instructorId: instructor,
+        questions: transformedQuestions,
+      };
+
+      const quiz = await this._instructorAuthService.createQuiz(
+        instructor,
+        quizData,
+        courseId
+      );
+
+      res
+        .status(httpStatus.CREATED)
+        .json({ message: "Quiz created successfully", quiz });
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+    }
+  }
+
+  async getQuizzes(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      if (!instructor) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+
+      const quiz = await this._instructorAuthService.getQuizzes(instructor);
+
+      res.status(httpStatus.OK).json(quiz);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async deleteQuiz(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      const { quizId } = req.params;
+
+      if (!instructor) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+      await this._instructorAuthService.deleteQuiz(quizId);
+      res.status(httpStatus.OK).json({ message: "Quiz deleted successfully" });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async restoreQuiz(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      const { quizId } = req.params;
+
+      if (!instructor) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+
+      await this._instructorAuthService.restoreQuiz(quizId);
+      res.status(httpStatus.OK).json({ message: "Quiz restored successfully" });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async getQuiz(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      const { quizId } = req.params;
+      if (!instructor) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "Instructor not found" });
+        return;
+      }
+      const quiz = await this._instructorAuthService.getQuiz(quizId);
+      res.status(httpStatus.OK).json(quiz);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async createSession(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor = req.instructor?.id;
+      const { courseId, startTime } = req.body;
+      const session = await this._livesessionService.createSession(
+        courseId,
+        instructor!,
+        startTime
+      );
+      res.status(httpStatus.CREATED).json(session);
+    } catch (error) {
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: (error as Error).message });
+    }
+  }
+
+  async getSessionToken(req: Request, res: Response): Promise<void> {
+    try {
+      const { sessionId, userId, role } = req.query;
+      if (role !== "instructor" && role !== "user") {
+        res.status(400).json({ error: "Invalid role" });
+        return;
+      }
+      const token = await this._livesessionService.generateToken(
+        sessionId as string,
+        userId as string,
+        role as "user" | "instructor"
+      );
+      res.status(httpStatus.OK).json({ token });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  async updateQuiz(req: Request, res: Response): Promise<void> {
+    try {
+      const {quizId}=req.params
+      const instructor=req.instructor?.id
+      const updateData=req.body
+
+      console.log(updateData)
+
+      if(!instructor){
+        res.status(httpStatus.UNAUTHORIZED).json({message:"Instructor not found"})
+        return
+      }
+      await this._instructorAuthService.updateQuiz(quizId,updateData)
+      res.status(httpStatus.OK).json({message:"Quiz Updated Successfull"})
+    } catch (err) {
+      console.log(err)
     }
   }
 }

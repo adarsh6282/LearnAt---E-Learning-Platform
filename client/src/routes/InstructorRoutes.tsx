@@ -24,6 +24,10 @@ import { CallProvider } from "../context/CallContext";
 import CallModal from "../components/CallModal";
 import { NotificationProvider } from "../context/NotificationContext";
 import InstructorNotification from "../pages/Instructor/InstructorNotification";
+import QuizCreation from "../pages/Instructor/createQuiz";
+import InstructorQuizzes from "../pages/Instructor/InstructorQuizzes";
+import QuizManagement from "../pages/Instructor/QuizManagement";
+import InstructorLivePage from "../pages/Instructor/InstructorLiveSession";
 
 const InstructorRoutes = () => {
   return (
@@ -81,26 +85,62 @@ const InstructorRoutes = () => {
         path={INSTRUCTOR_ROUTES.BASE}
         element={
           <InstructorProvider>
-              <NotificationProvider>
-                <CallProvider>
-                  <ProtectedRoute>
-                    <InstructorNavbar />
-                    <CallModal />
-                  </ProtectedRoute>
-                </CallProvider>
-              </NotificationProvider>
+            <NotificationProvider>
+              <CallProvider>
+                <ProtectedRoute>
+                  <InstructorNavbar />
+                  <CallModal />
+                </ProtectedRoute>
+              </CallProvider>
+            </NotificationProvider>
           </InstructorProvider>
         }
       >
-        <Route path={INSTRUCTOR_ROUTES.DASHBOARD} element={<InstructorDashboard />} />
-        <Route path={INSTRUCTOR_ROUTES.CREATE_COURSE} element={<InstructorCreateCourse />} />
-        <Route path={INSTRUCTOR_ROUTES.EDIT_COURSE()} element={<EditCourse />} />
-        <Route path={INSTRUCTOR_ROUTES.PROFILE} element={<InstructorProfile />} />
-        <Route path={INSTRUCTOR_ROUTES.REVIEWS} element={<InstructorReview />} />
+        <Route
+          path={INSTRUCTOR_ROUTES.DASHBOARD}
+          element={<InstructorDashboard />}
+        />
+        <Route
+          path={INSTRUCTOR_ROUTES.CREATE_COURSE}
+          element={<InstructorCreateCourse />}
+        />
+        <Route
+          path={INSTRUCTOR_ROUTES.EDIT_COURSE()}
+          element={<EditCourse />}
+        />
+        <Route
+          path={INSTRUCTOR_ROUTES.PROFILE}
+          element={<InstructorProfile />}
+        />
+        <Route
+          path={INSTRUCTOR_ROUTES.REVIEWS}
+          element={<InstructorReview />}
+        />
         <Route path={INSTRUCTOR_ROUTES.COURSES} element={<Courses />} />
-        <Route path={INSTRUCTOR_ROUTES.EARNINGS} element={<Earnings role="instructors" />} />
+        <Route
+          path="/instructors/courses/create-quiz/:courseId"
+          element={<QuizCreation />}
+        />
+        <Route path="/instructors/quiz/:quizId" element={<QuizManagement />} />
+        <Route path="/instructors/quiz" element={<InstructorQuizzes />} />
+        <Route
+          path="/instructors/live/:sessionId"
+          element={
+            <ProtectedRoute>
+              <InstructorLivePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={INSTRUCTOR_ROUTES.EARNINGS}
+          element={<Earnings role="instructors" />}
+        />
         <Route path={INSTRUCTOR_ROUTES.ENROLLMENTS} element={<Enrollments />} />
-        <Route path={INSTRUCTOR_ROUTES.NOTIFICATIONS} element={<InstructorNotification />} />
+        <Route
+          path={INSTRUCTOR_ROUTES.NOTIFICATIONS}
+          element={<InstructorNotification />}
+        />
       </Route>
     </>
   );

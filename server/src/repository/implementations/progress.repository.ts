@@ -35,16 +35,37 @@ export class ProgressRepository implements IProgressRepository {
   }
 
   async markAsCompleted(userId: string, courseId: string): Promise<void> {
-    await Progress.updateOne({userId:userId,courseId:courseId},{$set:{isCompleted:true}})
+    await Progress.updateOne(
+      { userId: userId, courseId: courseId },
+      { $set: { isCompleted: true } }
+    );
   }
 
-  async CheckStatus(userId: string, courseId: string): Promise<{ isCompleted: boolean; }> {
-    const progress=await Progress.findOne({userId:userId,courseId:courseId})
+  async CheckStatus(
+    userId: string,
+    courseId: string
+  ): Promise<{ isCompleted: boolean }> {
+    const progress = await Progress.findOne({
+      userId: userId,
+      courseId: courseId,
+    });
 
-    if(!progress){
-      return {isCompleted:false}
+    if (!progress) {
+      return { isCompleted: false };
     }
 
-    return {isCompleted:progress.isCompleted}
+    return { isCompleted: progress.isCompleted };
+  }
+
+  async makeCertificateIssued(
+    userId: string,
+    courseId: string,
+    isIssued: boolean
+  ): Promise<void> {
+    await Progress.findOneAndUpdate(
+      { userId, courseId },
+      { $set: { isCertificateIssued: isIssued } },
+      { new: true }
+    );
   }
 }

@@ -30,5 +30,10 @@ export interface IAuthController{
     getCategory(req:Request,res:Response):Promise<void>,
     getUnreadCounts(req: Request, res: Response):Promise<void>,
     markRead(req: Request, res: Response):Promise<void>
+    getQuiz(req: Request, res: Response):Promise<void>
+    submitQuiz(req: Request, res: Response):Promise<void>
+    createCertificate(req: Request, res: Response):Promise<void>
+    getSessionToken(req: Request, res: Response): Promise<void>
+    getLiveSessionByCourseId(req: Request, res: Response): Promise<void>
     logOut(req:Request,res:Response):Promise<void>
 }

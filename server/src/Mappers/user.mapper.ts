@@ -10,6 +10,7 @@ export const toUserDTO=(user:IUser):UserDTO=>(
   phone: user.phone,
   isBlocked: user.isBlocked,
   profilePicture: user.profilePicture,
+  googleId:user.googleId,
   role: user.role,
 })
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Upload, Save, Edit2 } from "lucide-react";
-import type { CourseData, Lecture } from "../../types/course.types";
+import { Trash2, Upload, Save, Edit2 } from "lucide-react";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
@@ -10,6 +9,43 @@ import {
   getCourseById,
 } from "../../services/instructor.services";
 import type { AxiosError } from "axios";
+
+interface ILesson {
+  id?: number;
+  _id?: string;
+  title: string;
+  description: string;
+  duration: string;
+  url?: string;
+  type: "video" | "pdf";
+  file?: File | null;
+}
+
+interface IChapter {
+  id?: number;
+  _id?: string;
+  title: string;
+  description: string;
+  lessons: ILesson[];
+}
+
+interface IModule {
+  id?: number;
+  _id?: string;
+  title: string;
+  description: string;
+  chapters: IChapter[];
+}
+
+interface CourseData {
+  title: string;
+  description: string;
+  isActive: boolean;
+  category: string;
+  price: number;
+  modules: IModule[];
+  thumbnail: string;
+}
 
 const EditCourse: React.FC = () => {
   const navigate = useNavigate();
@@ -26,34 +62,22 @@ const EditCourse: React.FC = () => {
     isActive: true,
     category: "",
     price: 0,
-    lectures: [],
+    modules: [],
+    thumbnail: "",
   });
 
-  const [newLecture, setNewLecture] = useState<Lecture>({
-    title: "",
-    description: "",
-    videoFile: null,
-    duration: "",
-    order: 1,
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [lectureToEdit, setLectureToEdit] = useState<Lecture | null>(null);
-  const [isEditingLecture, setIsEditingLecture] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const categoriesData = await getCategory();
-        console.log(categoriesData.data);
         const activeNames = categoriesData.data
           .filter((cat: { name: string; isDeleted: boolean }) => !cat.isDeleted)
-          .map((cat: { name: string; isDeleted: boolean }) => cat.name);
+          .map((cat: { name: string }) => cat.name);
         setCategories(activeNames);
 
         if (courseId) {
           const courseResponse = await getCourseById(courseId);
-
           if (courseResponse.status === 200) {
             const course = courseResponse.data;
             setCourseData({
@@ -62,324 +86,465 @@ const EditCourse: React.FC = () => {
               isActive: course.isActive ?? true,
               category: course.category || "",
               price: course.price || 0,
-              lectures: course.lectures || [],
+              modules: course.modules || [],
+              thumbnail: course.thumbnail || "",
             });
 
-            if (course.thumbnail) {
-              setCurrentThumbnailUrl(course.thumbnail);
-            }
+            if (course.thumbnail) setCurrentThumbnailUrl(course.thumbnail);
           }
         }
       } catch (err) {
-        console.error("Failed to load data:", err);
+        console.error(err);
         errorToast("Failed to load course data");
         navigate(INSTRUCTOR_ROUTES.COURSES);
       } finally {
         setIsLoading(false);
       }
     };
-
     loadData();
   }, [courseId, navigate]);
 
-  if (!courseId) {
-    return <div>No course id</div>;
-  }
-
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
     if (!courseData.title.trim()) {
-      newErrors.title = "Course title is required";
-    }
-    if (!courseData.description.trim()) {
-      newErrors.description = "Course description is required";
-    }
-    if (!courseData.category) {
-      newErrors.category = "Please select a category";
-    }
-    if (courseData.price <= 0) {
-      newErrors.price = "Price must be greater than 0";
-    }
-    if (courseData.lectures.length === 0) {
-      newErrors.lectures = "At least one lecture is required";
+      errorToast("Course title is required");
+      return false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!courseData.description.trim()) {
+      errorToast("Course description is required");
+      return false;
+    }
+
+    if (!courseData.category.trim()) {
+      errorToast("Please select a category");
+      return false;
+    }
+
+    if (courseData.price < 0 || isNaN(courseData.price)) {
+      errorToast("Price must be a valid number");
+      return false;
+    }
+
+    if (!courseData.modules.length) {
+      errorToast("At least one module is required");
+      return false;
+    }
+
+    for (let mIndex = 0; mIndex < courseData.modules.length; mIndex++) {
+      const module = courseData.modules[mIndex];
+      if (!module.title.trim()) {
+        errorToast(`Module ${mIndex + 1} title is required`);
+        return false;
+      }
+
+      if (!module.description.trim()) {
+        errorToast(`Module ${mIndex + 1} description is required`);
+      }
+
+      if (!module.chapters.length) {
+        errorToast(`Module ${mIndex + 1} must have at least one chapter`);
+        return false;
+      }
+
+      for (let cIndex = 0; cIndex < module.chapters.length; cIndex++) {
+        const chapter = module.chapters[cIndex];
+        if (!chapter.title.trim()) {
+          errorToast(`Chapter ${cIndex + 1} in ${module.title} needs a title`);
+          return false;
+        }
+
+        if (!chapter.description.trim()) {
+          errorToast(
+            `Chapter ${cIndex + 1} in ${module.title} needs a description`
+          );
+          return false;
+        }
+
+        if (!chapter.lessons.length) {
+          errorToast(`Chapter ${chapter.title} must have at least one lesson`);
+          return false;
+        }
+
+        for (let lIndex = 0; lIndex < chapter.lessons.length; lIndex++) {
+          const lesson = chapter.lessons[lIndex];
+
+          if (!lesson.title.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} in chapter ${chapter.title} needs a title`
+            );
+            return false;
+          }
+
+          if (!lesson.description.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} in chapter ${chapter.title} needs a description`
+            );
+            return false;
+          }
+
+          if (!lesson.type) {
+            errorToast(`Please select a type for lesson "${lesson.title}"`);
+            return false;
+          }
+
+          if (!lesson.url && !lesson.file) {
+            errorToast(`Lesson "${lesson.title}" must have a file or URL`);
+            return false;
+          }
+        }
+      }
+    }
+
+    if (!thumbnail && !courseData.thumbnail) {
+      errorToast("Course thumbnail is required");
+      return false;
+    }
+
+    return true;
   };
 
   const handleInputChange = (field: string, value: string | number) => {
+    setCourseData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.size <= 5 * 1024 * 1024) setThumbnail(file);
+    else errorToast("Thumbnail must be under 5MB");
+  };
+
+  const addModule = () => {
     setCourseData((prev) => ({
       ...prev,
-      [field]: value,
+      modules: [
+        ...prev.modules,
+        { id: Date.now(), title: "", description: "", chapters: [] },
+      ],
     }));
   };
 
-  const handleLectureInputChange = (field: string, value: string) => {
-    if (isEditingLecture && lectureToEdit) {
-      setLectureToEdit((prev) => ({
-        ...prev!,
-        [field]: value,
-      }));
-    } else {
-      setNewLecture((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 100 * 1024 * 1024) {
-        errorToast("File size should be less than 100MB");
-        return;
-      }
-
-      if (isEditingLecture && lectureToEdit) {
-        setLectureToEdit((prev) => ({
-          ...prev!,
-          videoFile: file,
-        }));
-      } else {
-        setNewLecture((prev) => ({
-          ...prev,
-          videoFile: file,
-        }));
-      }
-    }
-  };
-
-  const handleThumbnailUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (file && file.size <= 5 * 1024 * 1024) {
-      console.log(file);
-      setThumbnail(file);
-    } else {
-      errorToast("Thumbnail must be under 5MB");
-    }
-  };
-
-  const addLecture = () => {
-    if (!newLecture.title || !newLecture.description || !newLecture.videoFile) {
-      errorToast("Please fill in all lecture details and upload a video");
-      return;
-    }
-
-    const lecture = {
-      ...newLecture,
-      id: Date.now(),
-      order: courseData.lectures.length + 1,
-    };
-
+  const removeModule = (moduleId: number | string) => {
     setCourseData((prev) => ({
       ...prev,
-      lectures: [...prev.lectures, lecture],
-    }));
-
-    setNewLecture({
-      title: "",
-      description: "",
-      videoFile: null,
-      duration: "",
-      order: courseData.lectures.length + 2,
-    });
-  };
-
-  const startEditingLecture = (lecture: Lecture) => {
-    setLectureToEdit({ ...lecture });
-    setIsEditingLecture(true);
-  };
-
-  const saveEditedLecture = () => {
-    if (!lectureToEdit?.title || !lectureToEdit?.description) {
-      errorToast("Please fill in all lecture details");
-      return;
-    }
-
-    if (
-      !lectureToEdit.videoFile &&
-      !lectureToEdit.videoUrl &&
-      lectureToEdit._id
-    ) {
-      const existingLecture = courseData.lectures.find(
-        (lec) => lec._id === lectureToEdit._id
-      );
-      if (existingLecture) {
-        lectureToEdit.videoUrl = existingLecture.videoUrl;
-      }
-    }
-
-    setCourseData((prev) => ({
-      ...prev,
-      lectures: prev.lectures.map((lecture) =>
-        (lecture._id || lecture.id) === (lectureToEdit._id || lectureToEdit.id)
-          ? lectureToEdit
-          : lecture
+      modules: prev.modules.filter(
+        (m) => m.id !== moduleId && m._id !== moduleId
       ),
     }));
-
-    setLectureToEdit(null);
-    setIsEditingLecture(false);
-  };
-  const cancelEditingLecture = () => {
-    setLectureToEdit(null);
-    setIsEditingLecture(false);
   };
 
-  const removeLecture = (lectureId: number) => {
+  const updateModule = (
+    moduleId: number | string,
+    field: keyof IModule,
+    value: string
+  ) => {
     setCourseData((prev) => ({
       ...prev,
-      lectures: prev.lectures.filter((lecture) => lecture.id !== lectureId),
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId ? { ...m, [field]: value } : m
+      ),
     }));
+  };
+
+  const addChapter = (moduleId: number | string) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId
+          ? {
+              ...m,
+              chapters: [
+                ...m.chapters,
+                { id: Date.now(), title: "", description: "", lessons: [] },
+              ],
+            }
+          : m
+      ),
+    }));
+  };
+
+  const removeChapter = (
+    moduleId: number | string,
+    chapterId: number | string
+  ) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId
+          ? {
+              ...m,
+              chapters: m.chapters.filter(
+                (c) => c.id !== chapterId && c._id !== chapterId
+              ),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const updateChapter = (
+    moduleId: string,
+    chapterId: string,
+    field: keyof IChapter,
+    value: string
+  ) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((mod) =>
+        mod._id === moduleId
+          ? {
+              ...mod,
+              chapters: mod.chapters.map((ch) =>
+                ch._id === chapterId ? { ...ch, [field]: value } : ch
+              ),
+            }
+          : mod
+      ),
+    }));
+  };
+
+  const addLesson = (moduleId: number | string, chapterId: number | string) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId
+          ? {
+              ...m,
+              chapters: m.chapters.map((c) =>
+                c.id === chapterId || c._id === chapterId
+                  ? {
+                      ...c,
+                      lessons: [
+                        ...c.lessons,
+                        {
+                          id: Date.now(),
+                          title: "",
+                          description: "",
+                          duration: "",
+                          type: "video",
+                          file: null,
+                        },
+                      ],
+                    }
+                  : c
+              ),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const removeLesson = (
+    moduleId: number | string,
+    chapterId: number | string,
+    lessonId: number | string
+  ) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId
+          ? {
+              ...m,
+              chapters: m.chapters.map((c) =>
+                c.id === chapterId || c._id === chapterId
+                  ? {
+                      ...c,
+                      lessons: c.lessons.filter(
+                        (l) => l.id !== lessonId && l._id !== lessonId
+                      ),
+                    }
+                  : c
+              ),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const updateLesson = (
+    moduleId: number | string,
+    chapterId: number | string,
+    lessonId: number | string,
+    field: keyof ILesson,
+    value: string | File
+  ) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId || m._id === moduleId
+          ? {
+              ...m,
+              chapters: m.chapters.map((c) =>
+                c.id === chapterId || c._id === chapterId
+                  ? {
+                      ...c,
+                      lessons: c.lessons.map((l) =>
+                        l.id === lessonId || l._id === lessonId
+                          ? { ...l, [field]: value }
+                          : l
+                      ),
+                    }
+                  : c
+              ),
+            }
+          : m
+      ),
+    }));
+  };
+
+  const handleFileUpload = (
+    moduleId: number | string,
+    chapterId: number | string,
+    lessonId: number | string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 100 * 1024 * 1024)
+      return errorToast("File must be under 100MB");
+    updateLesson(moduleId, chapterId, lessonId, "file", file);
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsSubmitting(true);
+
     try {
       const formData = new FormData();
-
       formData.append("title", courseData.title);
       formData.append("description", courseData.description);
+      formData.append("isActive", String(courseData.isActive));
       formData.append("category", courseData.category);
-      formData.append("price", courseData.price.toString());
+      formData.append("price", String(courseData.price));
 
-      if (thumbnail) {
-        formData.append("thumbnail", thumbnail);
-      }
+      if (thumbnail) formData.append("thumbnail", thumbnail);
 
-      const existingLectures = courseData.lectures.filter(
-        (lecture) => !lecture.videoFile
-      );
-      const newLectures = courseData.lectures.filter(
-        (lecture) => lecture.videoFile
-      );
+      const modulesPayload = courseData.modules.map((mod) => ({
+        _id: mod._id,
+        title: mod.title,
+        description: mod.description,
+        chapters: mod.chapters.map((ch, cIndex) => ({
+          _id: ch._id,
+          title: ch.title,
+          description: ch.description,
+          lectures: ch.lessons.map((l, lIndex) => ({
+            _id: l._id,
+            title: l.title,
+            description: l.description,
+            duration: l.duration,
+            type: l.type,
+            url: l.url,
+            chapterIndex: cIndex,
+            lectureIndex: lIndex,
+          })),
+        })),
+      }));
 
-      if (existingLectures.length > 0) {
-        formData.append("existingLectures", JSON.stringify(existingLectures));
-      }
+      formData.append("modules", JSON.stringify(modulesPayload));
 
-      if (newLectures.length > 0) {
-        const newLecturesData = newLectures.map(
-          ({ title, description, videoUrl, duration, order, _id, id }) => ({
-            title,
-            description,
-            videoUrl,
-            duration,
-            order,
-            _id,
-            id,
+      courseData.modules.forEach((mod, mIndex) =>
+        mod.chapters.forEach((ch, cIndex) =>
+          ch.lessons.forEach((l, lIndex) => {
+            if (l.file) {
+              formData.append("lectureFiles", l.file);
+              formData.append(
+                "lectureMeta",
+                JSON.stringify({
+                  moduleIndex: mIndex,
+                  chapterIndex: cIndex,
+                  lectureIndex: lIndex,
+                  lectureId: l._id || l.id,
+                })
+              );
+            }
           })
-        );
-        formData.append("newLectures", JSON.stringify(newLecturesData));
+        )
+      );
 
-        newLectures.forEach((lecture) => {
-          if (lecture.videoFile) {
-            formData.append("videos", lecture.videoFile);
-          }
-        });
-      }
-
-      const response = await editCourseS(courseId, formData);
-
+      const response = await editCourseS(courseId!, formData);
       if (response.status === 200) {
-        successToast("Course updated successfully!");
+        successToast("Course updated successfully");
         navigate(INSTRUCTOR_ROUTES.COURSES);
       }
-    } catch (err: unknown) {
+    } catch (err) {
+      console.error(err);
       const error = err as AxiosError<{ message: string }>;
-      errorToast(error.response?.data?.message ?? "Something went wrong");
+      errorToast(error.response?.data?.message || "Failed to update course");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="h-full bg-gray-50 py-8 overflow-y-auto">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-8"></div>
-            <div className="space-y-4">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-xl font-semibold text-slate-600">Loading...</div>
+      </div>
+    );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4 overflow-y-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border border-slate-100 backdrop-blur-sm">
+          <div className="flex items-center space-x-4">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 p-4 rounded-2xl shadow-lg">
+              <Edit2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                Edit Course
+              </h1>
+              <p className="text-slate-600 text-base mt-2 font-medium">
+                Update your course details and content
+              </p>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  const currentLecture = isEditingLecture ? lectureToEdit : newLecture;
+        {/* Course Details Card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border border-slate-100">
+          <div className="flex items-center mb-8">
+            <div className="w-1.5 h-10 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full mr-4"></div>
+            <h2 className="text-3xl font-bold text-slate-800">
+              Course Details
+            </h2>
+          </div>
 
-  return (
-    <div className="h-full bg-gray-50 py-8 overflow-y-auto">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <div className="border-b border-gray-200 pb-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Edit Course</h1>
-          <p className="text-gray-600 mt-2">
-            Modify your course details and content
-          </p>
-        </div>
-
-        <div className="space-y-6">
-          {/* Course Details Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Course Title
               </label>
               <input
                 type="text"
                 value={courseData.title}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="Enter course title"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter an engaging course title"
+                className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium"
               />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-              )}
             </div>
 
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Course Description
               </label>
               <textarea
                 value={courseData.description}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                placeholder="Provide a detailed description of your course"
+                placeholder="Describe what students will learn in this course"
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium resize-none"
               />
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.description}
-                </p>
-              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Category
                 </label>
                 <select
@@ -387,282 +552,437 @@ const EditCourse: React.FC = () => {
                   onChange={(e) =>
                     handleInputChange("category", e.target.value)
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 bg-white transition-all duration-200 text-slate-800 font-medium cursor-pointer"
                 >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
                     </option>
                   ))}
                 </select>
-                {errors.category && (
-                  <p className="mt-1 text-sm text-red-600">{errors.category}</p>
-                )}
               </div>
 
+              {/* Price */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Price ($)
                 </label>
                 <input
                   type="number"
-                  min="0"
                   value={courseData.price}
-                  onKeyDown={(e) => {
-                    if (e.repeat) e.preventDefault();
-                  }}
                   onChange={(e) =>
-                    handleInputChange("price", parseFloat(e.target.value))
+                    handleInputChange("price", Number(e.target.value))
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium"
                 />
-                {errors.price && (
-                  <p className="mt-1 text-sm text-red-600">{errors.price}</p>
-                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Course Thumbnail
-                </label>
-                <div className="flex items-center space-x-4">
-                  <label className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                    <Upload className="w-4 h-4" />
-                    <span>Choose New Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleThumbnailUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  {thumbnail ? (
-                    <span className="text-sm text-gray-600">
-                      {thumbnail.name}
-                    </span>
-                  ) : currentThumbnailUrl ? (
-                    <span className="text-sm text-gray-600">
-                      Current thumbnail uploaded
-                    </span>
-                  ) : null}
-                </div>
-                {errors.thumbnail && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.thumbnail}
+            {/* Thumbnail */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Course Thumbnail
+              </label>
+              <label className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                <Upload className="w-5 h-5 mr-3" />
+                <span>Upload Thumbnail</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailUpload}
+                  className="hidden"
+                />
+              </label>
+              {currentThumbnailUrl && !thumbnail && (
+                <div className="mt-4">
+                  <p className="text-sm text-slate-600 mb-2 font-medium">
+                    Current Thumbnail:
                   </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 pt-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              {isEditingLecture ? "Edit Lecture" : "Add New Lecture"}
-            </h2>
-
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Lecture Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={currentLecture?.title || ""}
-                      onChange={(e) =>
-                        handleLectureInputChange("title", e.target.value)
-                      }
-                      onKeyDown={(e) => {
-                        if (e.repeat) e.preventDefault();
-                      }}
-                      placeholder="Enter lecture title"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Duration (minutes) *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={currentLecture?.duration || ""}
-                      onChange={(e) =>
-                        handleLectureInputChange("duration", e.target.value)
-                      }
-                      onKeyDown={(e) => {
-                        if (e.repeat) e.preventDefault();
-                      }}
-                      placeholder="e.g., 30"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lecture Description *
-                  </label>
-                  <textarea
-                    value={currentLecture?.description || ""}
-                    onChange={(e) =>
-                      handleLectureInputChange("description", e.target.value)
-                    }
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
-                    placeholder="Describe what students will learn in this lecture"
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  <img
+                    src={currentThumbnailUrl}
+                    alt="Current Thumbnail"
+                    className="w-40 h-40 object-cover rounded-2xl border-2 border-slate-200 shadow-md"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video File {!isEditingLecture && "*"}
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                      <Upload className="w-4 h-4" />
-                      <span>
-                        {isEditingLecture
-                          ? "Change Video File"
-                          : "Choose Video File"}
-                      </span>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                    {currentLecture?.videoFile && (
-                      <span className="text-sm text-gray-600">
-                        {currentLecture.videoFile.name}
-                      </span>
-                    )}
-                    {isEditingLecture && !currentLecture?.videoFile && (
-                      <span className="text-sm text-gray-600">
-                        Current video will be kept
-                      </span>
-                    )}
-                  </div>
+              )}
+              {thumbnail && (
+                <div className="mt-3 px-4 py-3 bg-green-50 border-2 border-green-200 rounded-xl">
+                  <p className="text-sm text-green-700 font-semibold flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    New thumbnail selected: {thumbnail.name}
+                  </p>
                 </div>
-
-                <div className="flex space-x-2">
-                  {isEditingLecture ? (
-                    <>
-                      <button
-                        onClick={saveEditedLecture}
-                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        <Save className="w-4 h-4" />
-                        <span>Save Changes</span>
-                      </button>
-                      <button
-                        onClick={cancelEditingLecture}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={addLecture}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Add Lecture</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* added lectures list */}
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Course Lectures ({courseData.lectures.length})
-              </h3>
-              {courseData.lectures.map((lecture, index) => (
-                <div
-                  key={lecture.id}
-                  className="bg-white border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">
-                          Lecture {index + 1}
-                        </span>
-                        {lecture.duration && (
-                          <span className="text-sm text-gray-500">
-                            {lecture.duration} minutes
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="font-semibold text-gray-900 mb-2">
-                        {lecture.title}
-                      </h4>
-                      <p className="text-gray-600 text-sm mb-2">
-                        {lecture.description}
-                      </p>
-                      {lecture.videoFile ? (
-                        <p className="text-xs text-blue-600">
-                          New Video: {lecture.videoFile.name}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-green-600">
-                          Existing video file
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => startEditingLecture(lecture)}
-                        disabled={isEditingLecture}
-                        className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => removeLecture(lecture.id!)}
-                        disabled={isEditingLecture}
-                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {errors.lectures && (
-                <p className="mt-1 text-sm text-red-600">{errors.lectures}</p>
               )}
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              onClick={() => navigate(INSTRUCTOR_ROUTES.COURSES)}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || isEditingLecture}
-              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-              <span>{isSubmitting ? "Updating..." : "Update Course"}</span>
-            </button>
+        {/* Course Content Card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border border-slate-100">
+          <div className="flex items-center mb-8">
+            <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-600 to-violet-600 rounded-full mr-4"></div>
+            <h2 className="text-3xl font-bold text-slate-800">
+              Course Content
+            </h2>
           </div>
+
+          <div className="space-y-8">
+            {courseData.modules.map((mod, modIndex) => (
+              <div
+                key={mod.id || mod._id}
+                className="border-2 border-slate-200 rounded-3xl p-8 bg-gradient-to-br from-slate-50 to-blue-50 shadow-md hover:shadow-xl transition-all duration-300"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-lg">
+                        {modIndex + 1}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-2xl text-slate-800">
+                      Module {modIndex + 1}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => removeModule(mod.id || mod._id!)}
+                    className="flex items-center px-5 py-3 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-all duration-200 border-2 border-red-200"
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    Remove
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Module Title
+                    </label>
+                    <input
+                      placeholder="Enter module title"
+                      value={mod.title}
+                      onChange={(e) =>
+                        updateModule(
+                          mod.id || mod._id!,
+                          "title",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-5 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 font-semibold text-slate-800 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Module Description
+                    </label>
+                    <textarea
+                      placeholder="Describe what this module covers"
+                      value={mod.description}
+                      onChange={(e) =>
+                        updateModule(
+                          mod.id || mod._id!,
+                          "description",
+                          e.target.value
+                        )
+                      }
+                      rows={2}
+                      className="w-full px-5 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 bg-white resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Chapters */}
+                <div className="space-y-6">
+                  {(mod.chapters || []).map((ch, chIndex) => (
+                    <div
+                      key={ch.id || ch._id}
+                      className="border-l-4 border-indigo-400 pl-6 bg-white rounded-2xl p-6 shadow-sm"
+                    >
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <span className="text-indigo-600 font-bold text-sm">
+                              {chIndex + 1}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-lg text-indigo-600">
+                            Chapter {chIndex + 1}
+                          </h4>
+                        </div>
+                        <button
+                          onClick={() =>
+                            removeChapter(mod.id || mod._id!, ch.id || ch._id!)
+                          }
+                          className="flex items-center px-4 py-2 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-all duration-200"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 mb-5">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                            Chapter Title
+                          </label>
+                          <input
+                            placeholder="Enter chapter title"
+                            value={ch.title}
+                            onChange={(e) =>
+                              updateChapter(
+                                mod._id!,
+                                ch._id!,
+                                "title",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-200 font-semibold text-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                            Chapter Description
+                          </label>
+                          <textarea
+                            placeholder="Describe what this chapter covers"
+                            value={ch.description}
+                            onChange={(e) =>
+                              updateChapter(
+                                mod._id!,
+                                ch._id!,
+                                "description",
+                                e.target.value
+                              )
+                            }
+                            rows={2}
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-200 text-slate-800 resize-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Lessons */}
+                      <div className="space-y-4">
+                        {(ch.lessons || []).map((l, lIndex) => (
+                          <div
+                            key={l.id || l._id}
+                            className="border-2 border-slate-200 rounded-2xl p-5 bg-slate-50 hover:bg-white transition-all duration-200 hover:shadow-md"
+                          >
+                            <div className="flex justify-between items-center mb-4">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-6 h-6 bg-slate-200 rounded-md flex items-center justify-center">
+                                  <span className="text-slate-600 font-bold text-xs">
+                                    {lIndex + 1}
+                                  </span>
+                                </div>
+                                <span className="font-bold text-slate-700">
+                                  Lesson {lIndex + 1}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  removeLesson(
+                                    mod.id || mod._id!,
+                                    ch.id || ch._id!,
+                                    l.id || l._id!
+                                  )
+                                }
+                                className="flex items-center text-red-600 font-semibold hover:bg-red-50 px-3 py-2 rounded-lg transition-all duration-200"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Remove
+                              </button>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                  Lesson Title
+                                </label>
+                                <input
+                                  placeholder="Enter lesson title"
+                                  value={l.title}
+                                  onChange={(e) =>
+                                    updateLesson(
+                                      mod.id || mod._id!,
+                                      ch.id || ch._id!,
+                                      l.id || l._id!,
+                                      "title",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 font-semibold text-slate-800"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                  Lesson Description
+                                </label>
+                                <textarea
+                                  placeholder="Describe what this lesson covers"
+                                  value={l.description}
+                                  onChange={(e) =>
+                                    updateLesson(
+                                      mod.id || mod._id!,
+                                      ch.id || ch._id!,
+                                      l.id || l._id!,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  rows={2}
+                                  className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 text-slate-800 resize-none"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Duration
+                                  </label>
+                                  <input
+                                    placeholder="e.g., 10m"
+                                    value={l.duration}
+                                    onChange={(e) =>
+                                      updateLesson(
+                                        mod.id || mod._id!,
+                                        ch.id || ch._id!,
+                                        l.id || l._id!,
+                                        "duration",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 text-slate-800"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                    Content Type
+                                  </label>
+                                  <select
+                                    value={l.type}
+                                    onChange={(e) =>
+                                      updateLesson(
+                                        mod.id || mod._id!,
+                                        ch.id || ch._id!,
+                                        l.id || l._id!,
+                                        "type",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 text-slate-800 cursor-pointer"
+                                  >
+                                    <option value="video">Video</option>
+                                    <option value="pdf">PDF</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                  Lesson File
+                                </label>
+                                <input
+                                  type="file"
+                                  onChange={(e) =>
+                                    handleFileUpload(
+                                      mod.id || mod._id!,
+                                      ch.id || ch._id!,
+                                      l.id || l._id!,
+                                      e
+                                    )
+                                  }
+                                  className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-600 file:font-semibold hover:file:bg-blue-100 cursor-pointer transition-all duration-200"
+                                />
+                                {l.url && !l.file && (
+                                  <p className="text-xs mt-2 text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-300">
+                                    📄 Existing file:{" "}
+                                    {l.url.split("/").pop() || "View File"}
+                                  </p>
+                                )}
+
+                                {l.file && (
+                                  <p className="text-xs mt-2 text-green-700 bg-green-50 px-2 py-1 rounded border border-green-200">
+                                    📎 New file selected: {l.file.name}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        <button
+                          onClick={() =>
+                            addLesson(mod.id || mod._id!, ch.id || ch._id!)
+                          }
+                          className="w-full mt-3 px-4 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-all duration-200 border-2 border-blue-200 hover:border-blue-300"
+                        >
+                          + Add Lesson
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={() => addChapter(mod.id || mod._id!)}
+                    className="w-full mt-4 px-5 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-all duration-200 border-2 border-indigo-200 hover:border-indigo-300"
+                  >
+                    + Add Chapter
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={addModule}
+            className="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] text-lg"
+          >
+            + Add Module
+          </button>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-10 py-5 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 text-lg"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Updating Course...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <Save className="w-5 h-5 mr-2" />
+                Update Course
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </div>

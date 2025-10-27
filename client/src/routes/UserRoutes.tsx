@@ -27,6 +27,8 @@ import PurchasedCourses from "../pages/User/PurchasedCourses";
 import ChangePassword from "../pages/User/ChangePassword";
 import UserCertificates from "../pages/User/Certificates";
 import PublicLandingPage from "../pages/User/UserLandingPage";
+import UserQuizPage from "../pages/User/UserQuiz";
+import StudentLivePage from "../pages/User/UserLiveSession";
 
 const UserRoutes = () => {
   return (
@@ -36,8 +38,14 @@ const UserRoutes = () => {
         <Route path={USER_ROUTES.HOME} element={<LandingPage />} />
         <Route path={USER_ROUTES.REGISTER} element={<UserRegister />} />
         <Route path={USER_ROUTES.COURSE_VIEW()} element={<CourseView />} />
-        <Route path={USER_ROUTES.NOTIFICATIONS} element={<UserNotification />} />
-        <Route path={USER_ROUTES.PURCHASE_HISTORY} element={<PurchaseHistory />} />
+        <Route
+          path={USER_ROUTES.NOTIFICATIONS}
+          element={<UserNotification />}
+        />
+        <Route
+          path={USER_ROUTES.PURCHASE_HISTORY}
+          element={<PurchaseHistory />}
+        />
         <Route path={USER_ROUTES.LOGIN} element={<UserLogin />} />
         <Route
           path={USER_ROUTES.VERIFY_OTP}
@@ -51,8 +59,14 @@ const UserRoutes = () => {
           <Route path=":chatId" element={<ChatWindow />} />
         </Route>
         <Route path={USER_ROUTES.VIDEO_CALL()} element={<VideoCall />} />
-        <Route path={USER_ROUTES.PURCHASED_COURSES} element={<PurchasedCourses />} />
-        <Route path={USER_ROUTES.CHANGE_PASSWORD} element={<ChangePassword />} />
+        <Route
+          path={USER_ROUTES.PURCHASED_COURSES}
+          element={<PurchasedCourses />}
+        />
+        <Route
+          path={USER_ROUTES.CHANGE_PASSWORD}
+          element={<ChangePassword />}
+        />
         <Route path={USER_ROUTES.CERTIFICATES} element={<UserCertificates />} />
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
@@ -87,7 +101,25 @@ const UserRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/users/quiz/:courseId"
+          element={
+            <ProtectedRoute>
+              <UserQuizPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
+
+      <Route
+        path="/users/live/:sessionId"
+        element={
+          <ProtectedRoute>
+            <StudentLivePage />
+          </ProtectedRoute>
+        }
+      />
     </>
   );
 };
@@ -95,12 +127,12 @@ const UserRoutes = () => {
 const UserProviderWrapper = () => {
   return (
     <UserProvider>
-        <NotificationProvider>
-          <CallProvider>
-            <Outlet />
-            <CallModal />
-          </CallProvider>
-        </NotificationProvider>
+      <NotificationProvider>
+        <CallProvider>
+          <Outlet />
+          <CallModal />
+        </CallProvider>
+      </NotificationProvider>
     </UserProvider>
   );
 };

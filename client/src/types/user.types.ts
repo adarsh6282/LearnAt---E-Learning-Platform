@@ -26,6 +26,7 @@ export interface IUserProfile {
   username: string;
   email: string;
   phone: string;
+  googleId:string
   role:string;
   profilePicture?: string;
 }
@@ -58,17 +59,32 @@ export type CourseViewType = {
     name: string;
   };
   description?: string;
-  lectures?: Lecture[];
+  modules?: Module[];
+};
+
+export type Chapter = {
+  _id: string;
+  title: string;
+  description: string;
+  lessons: Lecture[];
 };
 
 export type Lecture = {
   _id: string;
   title: string;
   description: string;
-  videoUrl: string;
+  url: string;
   duration: string;
   order?: number;
+  type:"video"|"pdf"
 };
+
+export type Module={
+  _id:string,
+  title:string,
+  description:string,
+  chapters:Chapter[]
+}
 
 export type SortOption =
   | "title"

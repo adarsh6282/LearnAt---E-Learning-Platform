@@ -130,5 +130,8 @@ class CourseRepository extends base_repository_1.BaseRepository {
         });
         return Array.from(userIds);
     }
+    async findCourseByIdAndInstructor(courseId, instructorId) {
+        return await courseModel_1.default.findOne({ _id: courseId, instructor: instructorId });
+    }
 }
 exports.CourseRepository = CourseRepository;

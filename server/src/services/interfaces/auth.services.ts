@@ -6,6 +6,7 @@ import { ProgressDTO } from "../../DTO/progress.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
+import { IQuiz } from "../../models/interfaces/quiz.interface";
 import { IPurchase, PurchasedCourse } from "../../repository/implementations/order.repository";
 
 export interface IAuthService {
@@ -59,4 +60,6 @@ export interface IAuthService {
   getCertificates(userId:string,page:number,limit:number):Promise<{_id:string,user:string,course:string,courseTitle:string,certificateUrl:string,issuedDate:Date}[]>
   getCategory():Promise<string[]|null>
   purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
+  getQuiz(courseId:string):Promise<IQuiz|null>
+  submitQuiz(quizId:string,userId:string,courseId:string,answers:{[key:string]:string}):Promise<{ score: number; percentage: number; passed: boolean;isCertificateIssued: boolean; }>
 }

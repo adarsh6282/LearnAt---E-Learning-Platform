@@ -3,6 +3,7 @@ import { errorToast } from "../../components/Toast";
 import { useAuth } from "../../hooks/useAuth";
 import { getCertificatesS } from "../../services/user.services";
 import type { AxiosError } from "axios";
+import { Download } from "lucide-react";
 
 interface Certificate {
   _id: string;
@@ -25,11 +26,11 @@ const UserCertificates = () => {
     const fetchCertificates = async () => {
       setLoading(true);
       try {
-        const res = await getCertificatesS(authUser._id!)
+        const res = await getCertificatesS(authUser._id!);
         setCertificates(res.data);
       } catch (err: unknown) {
         const error = err as AxiosError<{ message: string }>;
-      errorToast(error.response?.data?.message ?? "Something went wrong");
+        errorToast(error.response?.data?.message ?? "Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -37,6 +38,8 @@ const UserCertificates = () => {
 
     fetchCertificates();
   }, [authUser]);
+
+  console.log(certificates)
 
   if (loading) return <p>Loading certificates...</p>;
 
@@ -52,6 +55,14 @@ const UserCertificates = () => {
             <p className="text-sm text-slate-400">
               Issued on: {new Date(cert.issuedDate).toLocaleDateString()}
             </p>
+            <a
+              href={cert.certificateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:underline flex items-center gap-1"
+            >
+              <Download className="w-7 h-7" />
+            </a>
             <a
               href={cert.certificateUrl}
               target="_blank"

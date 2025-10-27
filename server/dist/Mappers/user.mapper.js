@@ -9,6 +9,7 @@ const toUserDTO = (user) => ({
     phone: user.phone,
     isBlocked: user.isBlocked,
     profilePicture: user.profilePicture,
+    googleId: user.googleId,
     role: user.role,
 });
 exports.toUserDTO = toUserDTO;

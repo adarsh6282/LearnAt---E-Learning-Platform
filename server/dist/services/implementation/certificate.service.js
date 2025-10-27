@@ -1,30 +1,26 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CertificateService = void 0;
-const cloudinary_config_1 = require("../../config/cloudinary.config");
-const certificate_mapper_1 = require("../../Mappers/certificate.mapper");
-const generateCertificate_1 = require("../../utils/generateCertificate");
+const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.config"));
 class CertificateService {
     constructor(_certificateRepository) {
         this._certificateRepository = _certificateRepository;
     }
-    async createCertificateForUser(user, course) {
-        const pdfBuffer = await (0, generateCertificate_1.generateCertificate)({
-            name: user.name,
-            course: course.title,
-            date: new Date(),
+    async createCertificate(data) {
+        const base64 = `data:${data.file.mimetype};base64,${data.file.buffer.toString("base64")}`;
+        const uploadResult = await cloudinary_config_1.default.uploader.upload(base64, {
+            folder: "certificates",
+            format: "pdf",
         });
-        const cloudinaryResponse = (await (0, cloudinary_config_1.uploadBufferToCloudinary)(pdfBuffer, `${user.id}_${course.id}_certificate`));
-        const newCertificate = await this._certificateRepository.createCertificate({
-            user: user.id,
-            course: course.id,
-            certificateUrl: cloudinaryResponse.secure_url,
-            issuedDate: new Date(),
+        const cert = await this._certificateRepository.createCertificate({
+            user: data.user,
+            course: data.course,
+            certificateUrl: uploadResult.secure_url,
         });
-        if (!newCertificate) {
-            throw new Error("failed to create certificate");
-        }
-        return (0, certificate_mapper_1.toCertificateDTO)(newCertificate);
+        return cert;
     }
 }
 exports.CertificateService = CertificateService;

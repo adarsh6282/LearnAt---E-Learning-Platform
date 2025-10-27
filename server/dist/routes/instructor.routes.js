@@ -33,5 +33,13 @@ router.get("/notifications/:userId", instructor_dependencyhandler_1.instructorAu
 router.put("/notifications/read/:notificationId", instructor_dependencyhandler_1.instructorAuthController.markAsRead.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.get("/chats/unread-counts", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getUnreadCounts.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.post("/messages/mark-as-read/:chatId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.markRead.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.post("/quiz/create-quiz/:courseId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.createQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.get("/quiz", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getQuizzes.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.patch("/delete/quiz/:quizId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.deleteQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.put("/quiz/:quizId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.updateQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.patch("/restore/quiz/:quizId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.restoreQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.get("/quiz/:quizId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.post("/live/create-session", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.createSession.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.get("/live/token", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getSessionToken.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.post("/logout", instructor_dependencyhandler_1.instructorAuthController.logOut.bind(instructor_dependencyhandler_1.instructorAuthController));
 exports.default = router;

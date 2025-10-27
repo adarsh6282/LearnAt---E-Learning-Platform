@@ -113,8 +113,36 @@ router.put(
   "/notifications/read/:notificationId",
   instructorAuthController.markAsRead.bind(instructorAuthController)
 );
-router.get("/chats/unread-counts",authRole(["instructor"]),instructorAuthController.getUnreadCounts.bind(instructorAuthController))
-router.post("/messages/mark-as-read/:chatId",authRole(["instructor"]),instructorAuthController.markRead.bind(instructorAuthController))
+router.get(
+  "/chats/unread-counts",
+  authRole(["instructor"]),
+  instructorAuthController.getUnreadCounts.bind(instructorAuthController)
+);
+router.post(
+  "/messages/mark-as-read/:chatId",
+  authRole(["instructor"]),
+  instructorAuthController.markRead.bind(instructorAuthController)
+);
+router.post(
+  "/quiz/create-quiz/:courseId",
+  authRole(["instructor"]),
+  instructorAuthController.createQuiz.bind(instructorAuthController)
+);
+router.get(
+  "/quiz",
+  authRole(["instructor"]),
+  instructorAuthController.getQuizzes.bind(instructorAuthController)
+);
+router.patch(
+  "/delete/quiz/:quizId",
+  authRole(["instructor"]),
+  instructorAuthController.deleteQuiz.bind(instructorAuthController)
+);
+router.put("/quiz/:quizId",authRole(["instructor"]),instructorAuthController.updateQuiz.bind(instructorAuthController))
+router.patch("/restore/quiz/:quizId",authRole(["instructor"]),instructorAuthController.restoreQuiz.bind(instructorAuthController))
+router.get("/quiz/:quizId",authRole(["instructor"]),instructorAuthController.getQuiz.bind(instructorAuthController))
+router.post("/live/create-session",authRole(["instructor"]),instructorAuthController.createSession.bind(instructorAuthController))
+router.get("/live/token",authRole(["instructor"]),instructorAuthController.getSessionToken.bind(instructorAuthController))
 router.post(
   "/logout",
   instructorAuthController.logOut.bind(instructorAuthController)

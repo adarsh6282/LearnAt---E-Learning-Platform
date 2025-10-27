@@ -7,15 +7,30 @@ export interface CourseDTO {
     category: string;
     price: number;
     isActive: boolean;
-    lectures: ILecture[];
+    modules: Module[];
     instructor?: Types.ObjectId;
     thumbnail:string,
 }
 
 interface ILecture {
-    _id:string
+    _id?:string
     title: string;
     description: string;
-    videoUrl: string;
+    url: string;
     duration: string;
+    type:string
 } 
+
+interface Chapter{
+    _id?:string
+    title:string;
+    description:string;
+    lessons:ILecture[]
+}
+
+interface Module{
+    _id?:string
+    title:string,
+    description:string,
+    chapters:Chapter[]
+}

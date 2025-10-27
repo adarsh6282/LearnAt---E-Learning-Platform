@@ -12,7 +12,7 @@ router.post(
   "/",
   authRole(["instructor"]),
   upload.fields([
-    { name: "videos", maxCount: 10 },
+    { name: "lessonFiles", maxCount: 50 },
     { name: "thumbnail", maxCount: 1 },
   ]),
   courseController.createCourse.bind(courseController)
@@ -21,7 +21,7 @@ router.put(
   "/editcourse/:courseId",
   authRole(["instructor"]),
   upload.fields([
-    { name: "videos", maxCount: 10 },
+    { name: "lectureFiles", maxCount: 50 },
     { name: "thumbnail", maxCount: 1 },
   ]),
   courseController.updateCourse.bind(courseController)

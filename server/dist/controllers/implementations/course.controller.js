@@ -8,27 +8,38 @@ class CourseController {
     }
     async createCourse(req, res) {
         try {
-            const videoFiles = req.files?.videos || [];
+            const instructorId = req.instructor?.id;
             const thumbnailFile = req.files?.thumbnail?.[0];
-            if (!videoFiles.length || !thumbnailFile) {
+            const lessonFiles = req.files?.lessonFiles || [];
+            if (!instructorId) {
                 res
                     .status(statusCodes_1.httpStatus.BAD_REQUEST)
-                    .json({ message: "Missing required files" });
+                    .json({ message: "Missing instructor" });
                 return;
             }
-            const instructorId = req.instructor?.id;
+            if (!thumbnailFile) {
+                res
+                    .status(statusCodes_1.httpStatus.BAD_REQUEST)
+                    .json({ message: "Thumbnail is required" });
+                return;
+            }
+            const modules = JSON.parse(req.body.modules);
+            const lessonMeta = Array.isArray(req.body.lessonMeta)
+                ? req.body.lessonMeta.map((m) => JSON.parse(m))
+                : [JSON.parse(req.body.lessonMeta)];
             const courseData = {
                 ...req.body,
                 instructorId,
-                lectures: JSON.parse(req.body.lectures),
-                videos: videoFiles,
+                modules,
+                lessonFiles,
+                lessonMeta,
                 thumbnail: thumbnailFile,
             };
             const course = await this._courseService.createCourse(courseData);
             res.status(statusCodes_1.httpStatus.CREATED).json(course);
         }
         catch (err) {
-            console.error(err);
+            console.error("Error creating course:", err);
             const message = err instanceof Error ? err.message : "Something went wrong";
             res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
         }
@@ -37,25 +48,57 @@ class CourseController {
         try {
             const { courseId } = req.params;
             const instructorId = req.instructor?.id;
-            const videoFiles = (req.files)?.videos || [];
-            const thumbnailFile = (req.files)?.thumbnail?.[0];
-            const existingLectures = JSON.parse(req.body.existingLectures || "[]");
-            const newLectures = JSON.parse(req.body.newLectures || "[]");
+            // ✅ Properly parse modules
+            let modulesRaw = [];
+            if (req.body.modules) {
+                modulesRaw =
+                    typeof req.body.modules === "string"
+                        ? JSON.parse(req.body.modules)
+                        : req.body.modules;
+            }
+            // ✅ Parse lecture metadata safely
+            const lectureMeta = req.body.lectureMeta
+                ? Array.isArray(req.body.lectureMeta)
+                    ? req.body.lectureMeta.map((m) => JSON.parse(m))
+                    : [JSON.parse(req.body.lectureMeta)]
+                : [];
+            const lectureFiles = req.files?.lectureFiles || [];
+            const thumbnailFile = req.files?.thumbnail?.[0];
+            // ✅ Pair files with their meta
+            const lectureFilesWithMeta = lectureFiles.map((file, i) => ({
+                file,
+                meta: lectureMeta[i],
+            }));
+            // ✅ Prepare update payload
             const updateData = {
-                ...req.body,
-                instructorId,
-                existingLectures,
-                newLectures,
-                videos: videoFiles,
+                title: req.body.title,
+                description: req.body.description,
+                category: req.body.category,
+                price: req.body.price,
+                isActive: req.body.isActive,
+                modules: modulesRaw.map((mod) => ({
+                    _id: mod._id,
+                    title: mod.title,
+                    description: mod.description,
+                    chapters: (mod.chapters || []).map((ch) => ({
+                        _id: ch._id,
+                        title: ch.title,
+                        description: ch.description,
+                        existingLectures: (ch.lectures || []).filter((lec) => lec._id),
+                        newLectures: (ch.lectures || []).filter((lec) => !lec._id),
+                    })),
+                })),
+                lectureFiles: lectureFilesWithMeta,
                 thumbnail: thumbnailFile,
             };
             const updatedCourse = await this._courseService.updateCourse(courseId, updateData);
-            res.status(statusCodes_1.httpStatus.OK).json(updatedCourse);
+            res.status(200).json(updatedCourse);
         }
         catch (err) {
             console.error(err);
-            const message = err instanceof Error ? err.message : "Something went wrong";
-            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+            res.status(500).json({
+                message: err instanceof Error ? err.message : "Something went wrong",
+            });
         }
     }
 }

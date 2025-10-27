@@ -5,6 +5,7 @@ export interface UserDTO {
   email: string;
   phone: string;
   profilePicture?: string;
+  googleId?:string
   role: "admin" | "user" | "instructor";
   isBlocked: boolean;
 }

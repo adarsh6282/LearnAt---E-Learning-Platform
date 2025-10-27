@@ -73,7 +73,7 @@ const InstructorChart = ({ type }: ChartProps) => {
               borderColor: type === "income" ? "#10b981" : undefined,
               fill: type === "income",
               tension: 0.4,
-              borderRadius: type === "course" ? 8 : 0,
+              borderRadius: 8,
             },
           ],
         });

@@ -15,8 +15,12 @@ class CourseService {
     async uploadToCloudinary(file, type) {
         return new Promise((resolve, reject) => {
             const uploadStream = cloudinary_config_1.default.uploader.upload_stream({
-                resource_type: type,
-                folder: type === "image" ? "courses/thumbnails" : "courses/lectures",
+                resource_type: type === "image" ? "image" : type === "video" ? "video" : "raw",
+                folder: type === "image"
+                    ? "courses/thumbnails"
+                    : type == "video"
+                        ? "courses/lectures/videos"
+                        : "courses/lectures/pdf",
                 public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
             }, (error, result) => {
                 if (error) {
@@ -34,14 +38,35 @@ class CourseService {
             if (courseData.thumbnail) {
                 thumbnailUrl = await this.uploadToCloudinary(courseData.thumbnail, "image");
             }
-            const videoUploadPromises = courseData.videos.map((file) => this.uploadToCloudinary(file, "video"));
-            const videoUrls = await Promise.all(videoUploadPromises);
-            const lectures = courseData.lectures.map((lecture, index) => ({
-                title: lecture.title,
-                description: lecture.description,
-                videoUrl: videoUrls[index],
-                duration: lecture.duration,
-                order: lecture.order,
+            const lessonUrls = await Promise.all((courseData.lessonFiles || []).map((file, i) => {
+                const meta = courseData.lessonMeta[i];
+                if (!meta)
+                    throw new Error(`Missing metadata for lesson file ${i}`);
+                return this.uploadToCloudinary(file, meta.type === "video" ? "video" : "pdf");
+            }));
+            const modules = courseData.modules.map((mod, modIdx) => ({
+                title: mod.title,
+                description: mod.description ?? "",
+                chapters: mod.chapters.map((chap, chapIdx) => ({
+                    title: chap.title,
+                    description: chap.description ?? "",
+                    lectures: chap.lessons.map((les, lesIdx) => {
+                        const metaIndex = courseData.lessonMeta.findIndex((m) => m.moduleIndex === modIdx &&
+                            m.chapterIndex === chapIdx &&
+                            m.lessonIndex === lesIdx);
+                        const fileUrl = metaIndex !== -1 ? lessonUrls[metaIndex] : undefined;
+                        if (!fileUrl)
+                            throw new Error(`URL missing for lesson ${les.title}`);
+                        return {
+                            title: les.title,
+                            description: les.description ?? "",
+                            duration: les.duration ?? "",
+                            order: les.order ?? 0,
+                            type: les.type,
+                            url: fileUrl,
+                        };
+                    }),
+                })),
             }));
             const course = await this._courseRepository.createCourse({
                 title: courseData.title,
@@ -49,60 +74,107 @@ class CourseService {
                 category: courseData.category,
                 price: courseData.price,
                 instructor: new mongoose_1.Types.ObjectId(courseData.instructorId),
-                isActive: courseData.isActive ?? true,
                 thumbnail: thumbnailUrl,
-                lectures,
+                modules,
+                isActive: true,
             });
-            if (!course) {
-                throw new Error("failed to create new course");
-            }
             return (0, course_mapper_1.toCourseDTO)(course);
         }
         catch (error) {
-            console.error("Course creation error:", error);
+            console.error("Course creation failed:", error);
             throw error;
         }
     }
     async updateCourse(courseId, courseData) {
-        try {
-            let thumbnailUrl;
-            if (courseData.thumbnail) {
-                thumbnailUrl = await this.uploadToCloudinary(courseData.thumbnail, "image");
+        let thumbnailUrl;
+        if (courseData.thumbnail) {
+            thumbnailUrl = await this.uploadToCloudinary(courseData.thumbnail, "image");
+        }
+        const existingCourse = await this._courseRepository.findCourseById(courseId);
+        if (!existingCourse)
+            throw new Error("Course not found");
+        const updatedModules = await Promise.all((courseData.modules || []).map(async (mod, modIndex) => {
+            const existingModule = mod._id
+                ? existingCourse.modules.find((m) => m._id.toString() === mod._id)
+                : null;
+            if (!existingModule) {
+                const newChapters = await Promise.all((mod.chapters || []).map(async (ch, chIndex) => {
+                    const newLectures = await Promise.all((ch.newLectures || []).map(async (lec, lecIndex) => {
+                        const fileMeta = courseData.lectureFiles?.find((lf) => lf.meta.moduleIndex === modIndex &&
+                            lf.meta.chapterIndex === chIndex &&
+                            lf.meta.lectureIndex === lecIndex);
+                        if (fileMeta) {
+                            const resourceType = fileMeta.file.mimetype.includes("pdf")
+                                ? "pdf"
+                                : "video";
+                            lec.url = await this.uploadToCloudinary(fileMeta.file, resourceType);
+                        }
+                        return lec;
+                    }));
+                    return {
+                        title: ch.title,
+                        description: ch.description,
+                        lectures: newLectures,
+                    };
+                }));
+                return {
+                    title: mod.title,
+                    description: mod.description,
+                    chapters: newChapters,
+                };
             }
-            let newVideoUrls = [];
-            if (courseData.videos && courseData.videos.length > 0) {
-                const uploadPromises = courseData.videos.map((file) => this.uploadToCloudinary(file, "video"));
-                newVideoUrls = await Promise.all(uploadPromises);
-            }
-            const newLectures = courseData.newLectures.map((lecture, index) => ({
-                title: lecture.title,
-                description: lecture.description,
-                videoUrl: newVideoUrls[index],
-                duration: lecture.duration,
-                order: lecture.order,
+            const updatedChapters = await Promise.all((mod.chapters || []).map(async (ch, chIndex) => {
+                const updatedExistingLectures = await Promise.all((ch.existingLectures || []).map(async (lec) => {
+                    const fileMeta = courseData.lectureFiles?.find((lf) => lf.meta.lectureId === lec._id);
+                    if (fileMeta) {
+                        const resourceType = fileMeta.file.mimetype.includes("pdf")
+                            ? "pdf"
+                            : "video";
+                        lec.url = await this.uploadToCloudinary(fileMeta.file, resourceType);
+                    }
+                    return lec;
+                }));
+                const updatedNewLectures = await Promise.all((ch.newLectures || []).map(async (lec, lecIndex) => {
+                    const fileMeta = courseData.lectureFiles?.find((lf) => !lf.meta.lectureId &&
+                        lf.meta.moduleIndex === modIndex &&
+                        lf.meta.chapterIndex === chIndex &&
+                        lf.meta.lectureIndex === lecIndex);
+                    if (fileMeta) {
+                        const resourceType = fileMeta.file.mimetype.includes("pdf")
+                            ? "pdf"
+                            : "video";
+                        lec.url = await this.uploadToCloudinary(fileMeta.file, resourceType);
+                    }
+                    return lec;
+                }));
+                return {
+                    _id: ch._id,
+                    title: ch.title,
+                    description: ch.description,
+                    lectures: [...updatedExistingLectures, ...updatedNewLectures],
+                };
             }));
-            const allLectures = [...courseData.existingLectures, ...newLectures];
-            const updatedData = {
-                title: courseData.title,
-                description: courseData.description,
-                category: courseData.category,
-                price: courseData.price,
-                isActive: courseData.isActive ?? true,
-                lectures: allLectures,
+            return {
+                _id: mod._id,
+                title: mod.title,
+                description: mod.description,
+                chapters: updatedChapters,
             };
-            if (thumbnailUrl) {
-                updatedData.thumbnail = thumbnailUrl;
-            }
-            const updatedCourse = await this._courseRepository.updateCourseById(courseId, updatedData);
-            if (!updatedCourse) {
-                throw new Error("Course not found");
-            }
-            return (0, course_mapper_1.toCourseDTO)(updatedCourse);
-        }
-        catch (error) {
-            console.error("Error updating course:", error);
-            throw error;
-        }
+        }));
+        const updatedCourseData = {
+            title: courseData.title ?? existingCourse.title,
+            description: courseData.description ?? existingCourse.description,
+            category: courseData.category ?? existingCourse.category,
+            price: courseData.price ?? existingCourse.price,
+            isActive: courseData.isActive ?? existingCourse.isActive,
+            modules: updatedModules,
+        };
+        if (thumbnailUrl)
+            updatedCourseData.thumbnail = thumbnailUrl;
+        const updatedCourse = await this._courseRepository.updateCourseById(courseId, updatedCourseData);
+        if (!updatedCourse)
+            throw new Error("Course not found");
+        return (0, course_mapper_1.toCourseDTO)(updatedCourse);
     }
 }
 exports.CourseService = CourseService;

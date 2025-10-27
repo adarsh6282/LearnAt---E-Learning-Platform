@@ -10,9 +10,10 @@ const cloudinary_config_1 = __importDefault(require("../../config/cloudinary.con
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const jwt_1 = require("../../utils/jwt");
 class InstructorAuthController {
-    constructor(_instructorAuthService, _messageService) {
+    constructor(_instructorAuthService, _messageService, _livesessionService) {
         this._instructorAuthService = _instructorAuthService;
         this._messageService = _messageService;
+        this._livesessionService = _livesessionService;
     }
     async signup(req, res) {
         try {
@@ -468,6 +469,147 @@ class InstructorAuthController {
             console.error(err);
             const message = err instanceof Error ? err.message : "Something went wrong";
             res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async createQuiz(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            const { courseId } = req.params;
+            if (!instructor) {
+                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "Not authorized" });
+                return;
+            }
+            const transformedQuestions = req.body.questions.map((q) => ({
+                questionText: q.questionText,
+                options: q.options,
+                explanation: q.explanation || "",
+            }));
+            const quizData = {
+                ...req.body,
+                courseId,
+                instructorId: instructor,
+                questions: transformedQuestions,
+            };
+            const quiz = await this._instructorAuthService.createQuiz(instructor, quizData, courseId);
+            res
+                .status(statusCodes_1.httpStatus.CREATED)
+                .json({ message: "Quiz created successfully", quiz });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getQuizzes(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            if (!instructor) {
+                res
+                    .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                    .json({ message: "Instructor not found" });
+                return;
+            }
+            const quiz = await this._instructorAuthService.getQuizzes(instructor);
+            res.status(statusCodes_1.httpStatus.OK).json(quiz);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async deleteQuiz(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            const { quizId } = req.params;
+            if (!instructor) {
+                res
+                    .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                    .json({ message: "Instructor not found" });
+                return;
+            }
+            await this._instructorAuthService.deleteQuiz(quizId);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Quiz deleted successfully" });
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async restoreQuiz(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            const { quizId } = req.params;
+            if (!instructor) {
+                res
+                    .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                    .json({ message: "Instructor not found" });
+                return;
+            }
+            await this._instructorAuthService.restoreQuiz(quizId);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Quiz restored successfully" });
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async getQuiz(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            const { quizId } = req.params;
+            if (!instructor) {
+                res
+                    .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                    .json({ message: "Instructor not found" });
+                return;
+            }
+            const quiz = await this._instructorAuthService.getQuiz(quizId);
+            res.status(statusCodes_1.httpStatus.OK).json(quiz);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async createSession(req, res) {
+        try {
+            const instructor = req.instructor?.id;
+            const { courseId, startTime } = req.body;
+            const session = await this._livesessionService.createSession(courseId, instructor, startTime);
+            res.status(statusCodes_1.httpStatus.CREATED).json(session);
+        }
+        catch (error) {
+            res
+                .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                .json({ error: error.message });
+        }
+    }
+    async getSessionToken(req, res) {
+        try {
+            const { sessionId, userId, role } = req.query;
+            if (role !== "instructor" && role !== "user") {
+                res.status(400).json({ error: "Invalid role" });
+                return;
+            }
+            const token = await this._livesessionService.generateToken(sessionId, userId, role);
+            res.status(statusCodes_1.httpStatus.OK).json({ token });
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+    async updateQuiz(req, res) {
+        try {
+            const { quizId } = req.params;
+            const instructor = req.instructor?.id;
+            const updateData = req.body;
+            console.log(updateData);
+            if (!instructor) {
+                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "Instructor not found" });
+                return;
+            }
+            await this._instructorAuthService.updateQuiz(quizId, updateData);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Quiz Updated Successfull" });
+        }
+        catch (err) {
+            console.log(err);
         }
     }
 }

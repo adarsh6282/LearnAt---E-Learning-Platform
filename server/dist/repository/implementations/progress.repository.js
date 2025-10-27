@@ -23,11 +23,17 @@ class ProgressRepository {
         await progressModel_1.default.updateOne({ userId: userId, courseId: courseId }, { $set: { isCompleted: true } });
     }
     async CheckStatus(userId, courseId) {
-        const progress = await progressModel_1.default.findOne({ userId: userId, courseId: courseId });
+        const progress = await progressModel_1.default.findOne({
+            userId: userId,
+            courseId: courseId,
+        });
         if (!progress) {
             return { isCompleted: false };
         }
         return { isCompleted: progress.isCompleted };
+    }
+    async makeCertificateIssued(userId, courseId, isIssued) {
+        await progressModel_1.default.findOneAndUpdate({ userId, courseId }, { $set: { isCertificateIssued: isIssued } }, { new: true });
     }
 }
 exports.ProgressRepository = ProgressRepository;

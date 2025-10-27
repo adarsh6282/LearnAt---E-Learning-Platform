@@ -20,8 +20,13 @@ const courseProgressSchema: Schema<IProgress> = new Schema(
         type: String,
       },
     ],
-    
+
     isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    
+    isCertificateIssued: {
       type: Boolean,
       default: false,
     },

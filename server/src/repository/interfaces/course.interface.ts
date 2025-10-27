@@ -37,4 +37,5 @@ export interface ICourseRepository {
   getCourseStatsOfInstructor(
     instructorId: string
   ): Promise<{ title: string; enrolledCount: number }[]>;
+  findCourseByIdAndInstructor(courseId: string, instructorId: string):Promise<ICourse|null>
 }

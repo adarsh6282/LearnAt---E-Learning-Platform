@@ -37,7 +37,7 @@ interface ApiMessage {
     readerId: string;
     readerModel: "User" | "Instructor";
   }[];
-  isDeleted:boolean;
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,7 +48,7 @@ interface Message {
   sender: string;
   image?: string;
   content?: string;
-  isDeleted:boolean
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -135,10 +135,6 @@ export const verifyResS = async (data: {
   return await api.post<VerifyResponse>("/users/orders/verify", data);
 };
 
-// export const markOrderAsFailed=async(orderId:string)=>{
-//   return await api.post("/users/fail-payment",{orderId})
-// }
-
 export const getReviewsS = async (courseId: string) => {
   return await api.get<{ reviews: Review[] }>(
     `/users/reviews/courses/${courseId}`
@@ -213,9 +209,10 @@ export const purchaseHistoryS = async (page: number, limit: number) => {
 };
 
 export const getProgressS = async (courseId: string) => {
-  return await api.get<{ watchedLectures: string[] }>(
-    `/users/course-view/progress/${courseId}`
-  );
+  return await api.get<{
+    watchedLectures: string[];
+    isCertificateIssued: boolean;
+  }>(`/users/course-view/progress/${courseId}`);
 };
 
 export const markLectureWatchedS = async (
@@ -300,7 +297,7 @@ export const getMessageS = async (
     chatId: msg.chat,
     sender: msg.senderId,
     content: msg.content,
-    isDeleted:msg.isDeleted,
+    isDeleted: msg.isDeleted,
     image: msg.image,
     createdAt: msg.createdAt,
     updatedAt: msg.updatedAt,
@@ -368,6 +365,30 @@ export const getInstructor = async (instructorId: string) => {
   );
 };
 
-export const getCategory=async()=>{
-  return await api.get<string[]>("/users/category")
-}
+export const getCategory = async () => {
+  return await api.get<string[]>("/users/category");
+};
+
+export const getQuizS = async (courseId: string) => {
+  return await api.get(`/users/quiz/${courseId}`);
+};
+
+export const submitQuizS = async (
+  quizId: string,
+  courseId: string,
+  answers: { [key: string]: string }
+) => {
+  return await api.post(`/users/submitquiz/${quizId}`, { courseId, answers });
+};
+
+export const makeCertificate = async (formData: FormData) => {
+  return await api.post("/users/create-certificate", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getLiveToken = async (sessionId: string, role: string) => {
+  return await api.get(`/users/live/token?sessionId=${sessionId}&role=${role}`);
+};
