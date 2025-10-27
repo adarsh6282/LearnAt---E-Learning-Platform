@@ -24,10 +24,10 @@ import { CallProvider } from "../context/CallContext";
 import CallModal from "../components/CallModal";
 import { NotificationProvider } from "../context/NotificationContext";
 import InstructorNotification from "../pages/Instructor/InstructorNotification";
-import QuizCreation from "../pages/Instructor/createQuiz";
 import InstructorQuizzes from "../pages/Instructor/InstructorQuizzes";
 import QuizManagement from "../pages/Instructor/QuizManagement";
 import InstructorLivePage from "../pages/Instructor/InstructorLiveSession";
+import QuizCreation from "../pages/Instructor/createQuiz";
 
 const InstructorRoutes = () => {
   return (
