@@ -54,5 +54,9 @@ const courseProgressSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    isCertificateIssued: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 exports.default = mongoose_1.default.model("CourseProgress", courseProgressSchema);

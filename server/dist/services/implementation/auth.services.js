@@ -53,7 +53,7 @@ const progress_mapper_1 = require("../../Mappers/progress.mapper");
 const notification_mapper_1 = require("../../Mappers/notification.mapper");
 const complaint_mapper_1 = require("../../Mappers/complaint.mapper");
 class AuthService {
-    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _certificateService, _categoryRepository) {
+    constructor(_userRepository, _otpRepository, _adminRepository, _instructorRepository, _courseRepository, _orderRepsitory, _progressRepository, _walletRepository, _complaintRepository, _notificationRepository, _certificateRepository, _categoryRepository, _quizRepository, _quizResultRepository, _livesessionRepository) {
         this._userRepository = _userRepository;
         this._otpRepository = _otpRepository;
         this._adminRepository = _adminRepository;
@@ -65,8 +65,10 @@ class AuthService {
         this._complaintRepository = _complaintRepository;
         this._notificationRepository = _notificationRepository;
         this._certificateRepository = _certificateRepository;
-        this._certificateService = _certificateService;
         this._categoryRepository = _categoryRepository;
+        this._quizRepository = _quizRepository;
+        this._quizResultRepository = _quizResultRepository;
+        this._livesessionRepository = _livesessionRepository;
     }
     async registerUser(email) {
         const existingAdmin = await this._adminRepository.findAdminByEmail(email);
@@ -311,17 +313,14 @@ class AuthService {
             progress = await this._progressRepository.addWatchedLecture(userId, courseId, lectureId);
         }
         const course = await this._courseRepository.findCourseById(courseId);
-        const totalLectures = course?.lectures.length;
+        const totalLectures = course?.modules?.reduce((moduleAcc, mod) => {
+            const chapterLectures = mod.chapters?.reduce((chapAcc, chap) => chapAcc + (chap.lectures?.length ?? 0), 0);
+            return moduleAcc + (chapterLectures ?? 0);
+        }, 0) ?? 0;
         if (totalLectures &&
             progress?.watchedLectures.length === totalLectures &&
             !progress?.isCompleted) {
             await this._progressRepository.markAsCompleted(userId, courseId);
-            const user = await this._userRepository.findById(userId);
-            const course = await this._courseRepository.findCourseById(courseId);
-            if (user && course) {
-                console.log("entered course completion certificate creation");
-                await this._certificateService.createCertificateForUser({ id: userId, name: user.name }, { id: courseId, title: course.title });
-            }
         }
         if (!progress) {
             throw new Error("failed to update progress");
@@ -400,6 +399,44 @@ class AuthService {
     }
     async getCertificates(userId) {
         return await this._certificateRepository.getCertificates(userId);
+    }
+    async getQuiz(courseId) {
+        if (!courseId) {
+            throw new Error("no course found");
+        }
+        const quiz = await this._quizRepository.findQuizByCouseId(courseId);
+        if (!quiz) {
+            throw new Error("Quiz not found");
+        }
+        return quiz;
+    }
+    async submitQuiz(quizId, userId, courseId, answers) {
+        const quiz = await this._quizRepository.findQuizById(quizId);
+        if (!quiz)
+            throw new Error("Quiz not found");
+        let score = 0;
+        quiz.questions.forEach((q) => {
+            const selected = answers[q._id];
+            const correct = q.options.find((o) => o.isCorrect);
+            if (selected && correct && selected === correct.text) {
+                score++;
+            }
+        });
+        const percentage = Math.floor((score / quiz.questions.length) * 100);
+        const passed = percentage >= quiz.passPercentage;
+        const isCertificateIssued = passed;
+        await this._quizResultRepository.create({
+            quizId,
+            userId,
+            courseId,
+            answers,
+            score,
+            percentage,
+            passed,
+            isCertificateIssued: passed,
+        });
+        await this._progressRepository.makeCertificateIssued(userId, courseId, isCertificateIssued);
+        return { score, percentage, passed, isCertificateIssued };
     }
 }
 exports.AuthService = AuthService;

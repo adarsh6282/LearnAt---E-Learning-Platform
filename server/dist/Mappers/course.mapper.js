@@ -8,15 +8,26 @@ const toCourseDTO = (course) => ({
     category: course.category,
     price: course.price,
     isActive: course.isActive,
-    lectures: course.lectures.map((lecture) => ({
-        _id: lecture._id.toString(),
-        title: lecture.title,
-        description: lecture.description,
-        videoUrl: lecture.videoUrl,
-        duration: lecture.duration,
-    })),
+    thumbnail: course.thumbnail ?? "",
     instructor: course.instructor,
-    thumbnail: course.thumbnail,
+    modules: course.modules.map((module) => ({
+        _id: module._id?.toString() || "",
+        title: module.title,
+        description: module.description,
+        chapters: module.chapters.map((chapter) => ({
+            _id: chapter._id?.toString() || "",
+            title: chapter.title,
+            description: chapter.description,
+            lessons: chapter.lectures.map((lecture) => ({
+                _id: lecture._id.toString(),
+                title: lecture.title,
+                description: lecture.description,
+                url: lecture.url ?? "",
+                duration: lecture.duration,
+                type: lecture.type,
+            })),
+        })),
+    })),
 });
 exports.toCourseDTO = toCourseDTO;
 const toCourseDTOList = (courses) => {

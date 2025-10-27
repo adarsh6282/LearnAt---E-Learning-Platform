@@ -1,8 +1,6 @@
-import { CertificateDTO } from "../../DTO/certificate.dto";
+// import { CertificateDTO } from "../../DTO/certificate.dto";
+import { ICertificate } from "../../models/interfaces/certificate.interface";
 
 export interface ICertificateService {
-  createCertificateForUser(
-    user: { id: string; name: string },
-    course: { id: string; title: string }
-  ): Promise<CertificateDTO>;
+  createCertificate(data: { user: string; course: string; file: Express.Multer.File }):Promise<ICertificate|null>
 }

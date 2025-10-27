@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Star, Users, Clock, BookOpen, User, X } from "lucide-react";
+import {
+  Star,
+  Users,
+  Clock,
+  BookOpen,
+  User,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Layers,
+} from "lucide-react";
 import { loadRazorpayScript } from "../../utils/loadRazorpay";
 import { errorToast, successToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
@@ -21,6 +31,8 @@ import Navbar from "../../components/Navbar";
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseViewType | null>(null);
+  const [openModules, setOpenModules] = useState<number[]>([]);
+  const [openChapters, setOpenChapters] = useState<string[]>([]);
   const instructorId = course?.instructor?._id;
   const [instructor, setInstructor] = useState<IInstructorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +46,19 @@ const CourseDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "curriculum" | "instructor" | "reviews"
   >("overview");
+
+  const toggleModule = (index: number) => {
+    setOpenModules((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
+
+  const toggleChapter = (moduleIndex: number, chapterIndex: number) => {
+    const key = `${moduleIndex}-${chapterIndex}`;
+    setOpenChapters((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
 
   useEffect(() => {
     const fetchIsCourseCompleted = async () => {
@@ -58,7 +83,6 @@ const CourseDetail: React.FC = () => {
 
     try {
       const { data: order } = await CreateOrderS(courseId);
-      console.log(order);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -133,8 +157,9 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         const res = await getSpecificCourseS(courseId);
         setCourse(res.data.course);
+        console.log(course)
         setIsEnrolled(res.data.isEnrolled);
-        
+
         const resReviews = await getReviewsS(courseId);
         const normalizedReviews: Review[] = resReviews.data.reviews || [];
         setReviews(normalizedReviews);
@@ -160,6 +185,38 @@ const CourseDetail: React.FC = () => {
       console.log(err);
     }
   };
+
+  const totalLessons =
+    course?.modules?.reduce((acc, module) => {
+      return (
+        acc +
+        (module.chapters?.reduce(
+          (chapterAcc, chapter) => chapterAcc + (chapter.lessons?.length || 0),
+          0
+        ) || 0)
+      );
+    }, 0) ?? 0;
+
+  const totalDuration =
+    course?.modules?.reduce((moduleTotal, module) => {
+      return (
+        moduleTotal +
+        (module.chapters?.reduce((chapterTotal, chapter) => {
+          return (
+            chapterTotal +
+            (chapter.lessons?.reduce((lecSum, lecture) => {
+              const minutes = parseInt(lecture.duration) || 0;
+              return lecSum + minutes;
+            }, 0) || 0)
+          );
+        }, 0) || 0)
+      );
+    }, 0) || 0;
+
+  const firstLectureVideo =
+    course?.modules?.[0]?.chapters?.[0]?.lessons?.find(
+      (lec) => lec.type === "video"
+    )?.url || course?.modules?.[0]?.chapters?.[0]?.lessons?.[0]?.url;
 
   if (loading) {
     return (
@@ -206,13 +263,6 @@ const CourseDetail: React.FC = () => {
       </div>
     );
   }
-
-  const totalLessons = course.lectures?.length || 0;
-  const totalDuration =
-    course.lectures?.reduce((total, lecture) => {
-      const minutes = parseInt(lecture.duration) || 0;
-      return total + minutes;
-    }, 0) || 0;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -263,11 +313,11 @@ const CourseDetail: React.FC = () => {
             </div>
 
             <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow overflow-hidden mb-6">
-              {course.lectures && course.lectures.length > 0 ? (
+              {firstLectureVideo ? (
                 <video
                   controls
                   className="w-full h-56 sm:h-72 object-cover"
-                  src={course.lectures[0].videoUrl}
+                  src={firstLectureVideo}
                 />
               ) : (
                 <p className="p-4 text-center text-slate-400">
@@ -317,26 +367,103 @@ const CourseDetail: React.FC = () => {
                     <h3 className="text-lg text-cyan-300 font-semibold mb-6">
                       Course Curriculum
                     </h3>
-                    {course.lectures && course.lectures.length > 0 ? (
-                      <div className="space-y-4">
-                        {course.lectures.map((chapter, chapterIndex) => (
-                          <div
-                            key={`${chapter.title}-${chapterIndex}`}
-                            className="border rounded-lg border-cyan-400/10 bg-slate-900/60"
-                          >
-                            <div className="px-4 py-3">
-                              <h4 className="font-medium text-slate-100">
-                                Chapter {chapterIndex + 1}: {chapter.title}
+                    {course.modules?.map((module, moduleIndex) => (
+                      <div
+                        key={module._id}
+                        className="border rounded-lg mb-4 border-cyan-400/20 bg-slate-900/60"
+                      >
+                        {/* Module header */}
+                        <button
+                          onClick={() => toggleModule(moduleIndex)}
+                          className="w-full flex items-center justify-between px-5 py-4 text-left bg-gradient-to-r from-cyan-500/10 to-purple-500/10"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Layers className="h-5 w-5 text-cyan-400" />
+                            <div>
+                              <h4 className="font-semibold text-slate-100 text-lg">
+                                Module {moduleIndex + 1}: {module.title}
                               </h4>
+                              <p className="text-sm text-slate-400 mt-1">
+                                {module.description}
+                              </p>
                             </div>
                           </div>
-                        ))}
+                          {openModules.includes(moduleIndex) ? (
+                            <ChevronDown className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-cyan-400 flex-shrink-0" />
+                          )}
+                        </button>
+
+                        {/* Chapters list */}
+                        {openModules.includes(moduleIndex) && (
+                          <div className="px-4 pb-4 pt-2">
+                            {module.chapters?.map((chapter, chapterIndex) => (
+                              <div
+                                key={chapter._id}
+                                className="border rounded-lg mb-2 border-cyan-400/10 bg-slate-800/40"
+                              >
+                                {/* Chapter header */}
+                                <button
+                                  onClick={() =>
+                                    toggleChapter(moduleIndex, chapterIndex)
+                                  }
+                                  className="w-full flex items-center justify-between px-4 py-3 text-left"
+                                >
+                                  <div>
+                                    <h5 className="font-medium text-slate-100">
+                                      Chapter {chapterIndex + 1}: {chapter.title}
+                                    </h5>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                      {chapter.description}
+                                    </p>
+                                  </div>
+                                  {openChapters.includes(
+                                    `${moduleIndex}-${chapterIndex}`
+                                  ) ? (
+                                    <ChevronDown className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-cyan-400 flex-shrink-0" />
+                                  )}
+                                </button>
+
+                                {/* Lectures list */}
+                                {openChapters.includes(
+                                  `${moduleIndex}-${chapterIndex}`
+                                ) && (
+                                  <ul className="px-6 pb-4 space-y-2">
+                                    {chapter.lessons.map((lecture) => (
+                                      <li
+                                        key={lecture._id}
+                                        className="text-slate-300 text-sm flex flex-col bg-slate-900/30 p-3 rounded"
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center">
+                                            <BookOpen className="h-4 w-4 mr-2 text-cyan-400" />
+                                            <span className="font-medium">
+                                              {lecture.title}
+                                            </span>
+                                          </div>
+                                          <span className="text-xs text-slate-400 ml-2">
+                                            {lecture.duration} min
+                                          </span>
+                                        </div>
+                                        <p className="ml-6 text-slate-400 text-xs mt-1">
+                                          {lecture.description}
+                                        </p>
+                                        <span className="ml-6 text-xs text-cyan-400 mt-1">
+                                          Type: {lecture.type}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-slate-400">
-                        Curriculum information not available.
-                      </p>
-                    )}
+                    ))}
                   </div>
                 )}
 

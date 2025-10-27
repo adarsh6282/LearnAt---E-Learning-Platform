@@ -8,9 +8,11 @@ const statusCodes_1 = require("../../constants/statusCodes");
 const jwt_1 = require("../../utils/jwt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class Authcontroller {
-    constructor(_authService, _messageService) {
+    constructor(_authService, _messageService, _certificateService, _livesessionService) {
         this._authService = _authService;
         this._messageService = _messageService;
+        this._certificateService = _certificateService;
+        this._livesessionService = _livesessionService;
     }
     async signup(req, res) {
         try {
@@ -81,7 +83,7 @@ class Authcontroller {
             path: "/api/users",
             secure: process.env.NOD_ENV === "production",
             sameSite: "strict",
-            maxAge: Number(process.env.COOKIE_MAXAGE)
+            maxAge: Number(process.env.COOKIE_MAXAGE),
         });
         const redirectUrl = process.env.GOOGLE_VERIFY_URL;
         res.redirect(`${redirectUrl}?token=${token}`);
@@ -507,6 +509,89 @@ class Authcontroller {
             console.error(err);
             const message = err instanceof Error ? err.message : "Something went wrong";
             res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async getQuiz(req, res) {
+        try {
+            const { courseId } = req.params;
+            const quiz = await this._authService.getQuiz(courseId);
+            res.status(statusCodes_1.httpStatus.OK).json({ quiz });
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async submitQuiz(req, res) {
+        try {
+            const { quizId } = req.params;
+            const { answers, courseId } = req.body;
+            const userId = req.user?.id;
+            if (!userId) {
+                throw new Error("no user found");
+            }
+            const result = await this._authService.submitQuiz(quizId, userId, courseId, answers);
+            res.status(statusCodes_1.httpStatus.OK).json({
+                score: result.score,
+                percentage: result.percentage,
+                passed: result.passed,
+                isCertificateIssued: result.isCertificateIssued,
+            });
+        }
+        catch (err) {
+            console.error(err);
+            const message = err instanceof Error ? err.message : "Something went wrong";
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
+        }
+    }
+    async createCertificate(req, res) {
+        try {
+            const { userId, courseId } = req.body;
+            const file = req.file;
+            if (!userId || !courseId || !file) {
+                res.status(400).json({ message: "Missing required data" });
+                return;
+            }
+            const certificate = await this._certificateService.createCertificate({
+                user: userId,
+                course: courseId,
+                file: file
+            });
+            res.status(201).json({ certificate });
+        }
+        catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Server error" });
+        }
+    }
+    async getSessionToken(req, res) {
+        try {
+            const { sessionId, role } = req.query;
+            const userId = req.user?.id;
+            if (role !== "instructor" && role !== "user") {
+                res.status(400).json({ error: "Invalid role" });
+                return;
+            }
+            const token = await this._livesessionService.generateToken(sessionId, userId, role);
+            res.status(statusCodes_1.httpStatus.OK).json({ token });
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+    async getLiveSessionByCourseId(req, res) {
+        try {
+            const { courseId } = req.params;
+            const liveSession = await this._livesessionService.getLiveSessionByCourseId(courseId);
+            if (!liveSession) {
+                res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "No active live session found." });
+                return;
+            }
+            res.status(statusCodes_1.httpStatus.OK).json(liveSession);
+        }
+        catch (error) {
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({
+                error: error.message,
+            });
         }
     }
 }

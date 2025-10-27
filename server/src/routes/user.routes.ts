@@ -3,6 +3,10 @@ import passport from "../config/passport.config";
 import upload from "../utils/multer";
 import authRole from "../middlewares/authRole";
 import { authController } from "../dependencyHandlers/user.dependencyhandler";
+import multer from "multer";
+
+const storage = multer.memoryStorage();
+const uploadCertificate = multer({ storage });
 
 const router = Router();
 
@@ -109,6 +113,11 @@ router.get("/courseinstructor/:instructorId",authRole(["user"]),authController.c
 router.get("/certificates/:id",authRole(["user"]),authController.getCertificates.bind(authController))
 router.get("/chats/unread-counts",authRole(["user"]),authController.getUnreadCounts.bind(authController))
 router.post("/messages/mark-as-read/:chatId",authRole(["user"]),authController.markRead.bind(authController))
+router.get("/quiz/:courseId",authRole(["user"]),authController.getQuiz.bind(authController))
+router.post("/submitquiz/:quizId",authRole(["user"]),authController.submitQuiz.bind(authController))
+router.post("/create-certificate",uploadCertificate.single("certificate"),authController.createCertificate.bind(authController))
+router.get("/live/token",authRole(["user"]),authController.getSessionToken.bind(authController))
+router.get("/course/live/:courseId",authRole(["user"]),authController.getLiveSessionByCourseId.bind(authController))
 router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

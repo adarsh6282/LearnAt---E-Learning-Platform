@@ -6,4 +6,5 @@ export interface ProgressDTO{
       courseId: Types.ObjectId|string;
       watchedLectures: string[];
       isCompleted:boolean;
+      isCertificateIssued:boolean
 }

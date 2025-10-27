@@ -3,10 +3,26 @@ export interface Lecture {
   id?: number;
   title: string;
   description: string;
-  videoFile?: File | null;
-  videoUrl?:string
+  file?: File | null;
+  url?:string
   duration: string;
   order: number;
+  type:"video"|"pdf"
+}
+
+interface Module {
+  id?: number;
+  _id?: string;
+  title: string;
+  description: string;
+  chapters: Chapter[];
+}
+
+export interface Chapter{
+  _id?:string,
+  title:string,
+  description:string,
+  lessons:Lecture[]
 }
 
 export interface CourseData {
@@ -15,7 +31,7 @@ export interface CourseData {
   isActive: boolean;
   category: string;
   price: number;
-  lectures: Lecture[];
+  modules: Module[];
   thumbnail?:string
 }
 
@@ -27,13 +43,15 @@ export interface CourseResponse {
   price: number;
   isActive: boolean;
   instructor: string;
-  lectures: {
+  chapters:{
+    lectures: {
     title: string;
     description: string;
     videoUrl: string;
     duration: string;
     order: number;
   }[];
+  }[]
   createdAt: Date;
   updatedAt: Date;
 }

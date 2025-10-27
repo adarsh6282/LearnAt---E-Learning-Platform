@@ -27,11 +27,19 @@ import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { toReviewDTOList } from "../../Mappers/review.mapper";
 import { NotificationDTO } from "../../DTO/notification.dto";
-import { toNotificationDTO, toNotificationDTOList } from "../../Mappers/notification.mapper";
+import {
+  toNotificationDTO,
+  toNotificationDTOList,
+} from "../../Mappers/notification.mapper";
 import { CategoryDTO } from "../../DTO/category.dto";
 import { toCategoryDTOList } from "../../Mappers/category.mapper";
 import { UserDTO } from "../../DTO/user.dto";
 import { toUserDTOList } from "../../Mappers/user.mapper";
+import {
+  InstructorQuizResponse,
+  IQuiz,
+} from "../../models/interfaces/quiz.interface";
+import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 
 interface Dashboard {
   totalUsers: number;
@@ -49,7 +57,8 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     private _orderRepository: IOrderRepository,
     private _walletRepository: IWalletRepository,
     private _categoryRepository: ICategoryRepository,
-    private _notificationRepository: INotificationRepository
+    private _notificationRepository: INotificationRepository,
+    private _quizRepository: IQuizRepository
   ) {}
 
   async registerInstructor(email: string): Promise<void> {
@@ -111,7 +120,11 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       "instructor"
     );
 
-    return { instructor:toInstructorDTO(instructor), token, instructorRefreshToken };
+    return {
+      instructor: toInstructorDTO(instructor),
+      token,
+      instructorRefreshToken,
+    };
   }
 
   async reApplyS(email: string, resume: string): Promise<InstructorDTO> {
@@ -130,10 +143,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       instructor.email,
       updatedData
     );
-    if(!updated){
-      throw new Error("failed to reapply")
+    if (!updated) {
+      throw new Error("failed to reapply");
     }
-    return toInstructorDTO(updated)
+    return toInstructorDTO(updated);
   }
 
   async loginInstructor(
@@ -167,7 +180,11 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       "instructor"
     );
 
-    return { instructor:toInstructorDTO(instructor), token, instructorRefreshToken };
+    return {
+      instructor: toInstructorDTO(instructor),
+      token,
+      instructorRefreshToken,
+    };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -433,9 +450,9 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
   async markAsRead(notificationId: string): Promise<NotificationDTO> {
     const notification =
       await this._notificationRepository.updateNotification(notificationId);
-      if(!notification){
-        throw new Error("failed to update notification")
-      }
+    if (!notification) {
+      throw new Error("failed to update notification");
+    }
     return toNotificationDTO(notification);
   }
 
@@ -446,6 +463,104 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     if (!userIds.length) return [];
 
     const users = await this._userRepository.findUsersByIds(userIds);
-    return toUserDTOList(users)
+    return toUserDTOList(users);
+  }
+
+  async createQuiz(
+    instructorId: string,
+    quiz: Partial<IQuiz>,
+    courseID: string
+  ): Promise<IQuiz | null> {
+    const course = await this._courseRepository.findCourseByIdAndInstructor(
+      courseID,
+      instructorId
+    );
+
+    const Quiz = await this._quizRepository.findQuizByCouseId(courseID);
+
+    if (Quiz) {
+      throw new Error("Quiz is already created for this course");
+    }
+
+    if (!course) {
+      throw new Error("You are not allowed to create a quiz for this course");
+    }
+
+    const quizData: Partial<IQuiz> = {
+      ...quiz,
+      courseId: courseID,
+      instructorId: instructorId,
+    };
+
+    const createdQuiz = await this._quizRepository.createQuiz(quizData);
+    return createdQuiz;
+  }
+
+  async updateQuiz(
+    quizId: string,
+    updateData: Partial<IQuiz>
+  ): Promise<IQuiz | null> {
+    const existing = await this._quizRepository.findQuizById(quizId);
+    if (!existing) {
+      throw new Error("quiz not found");
+    }
+
+    if (!updateData.questions || !Array.isArray(updateData.questions)) {
+      throw new Error("Invalid questions data");
+    }
+    const updatedQuiz = await this._quizRepository.updateQuizById(quizId, updateData);
+    return updatedQuiz;
+  }
+
+  async getQuizzes(
+    instructor: string
+  ): Promise<InstructorQuizResponse[] | null> {
+    const quizzes = await this._quizRepository.findByInstructorId(instructor);
+
+    if (!quizzes) {
+      throw new Error("No quizzes found");
+    }
+
+    return quizzes.map((q) => ({
+      _id: q._id?.toString() || "",
+      title: q.title,
+      courseTitle:
+        typeof q.courseId === "object" && "title" in q.courseId
+          ? q.courseId.title
+          : "Untitled Course",
+      totalQuestions: q.questions.length,
+      isDeleted: q.isDeleted,
+      createdAt: q.createdAt,
+    }));
+  }
+
+  async deleteQuiz(quizId: string): Promise<IQuiz | null> {
+    const quiz = await this._quizRepository.findQuizById(quizId);
+
+    if (!quiz) {
+      throw new Error("No quiz found");
+    }
+
+    return await this._quizRepository.changeStatus(quizId, true);
+  }
+
+  async restoreQuiz(quizId: string): Promise<IQuiz | null> {
+    const quiz = await this._quizRepository.findQuizById(quizId);
+
+    if (!quiz) {
+      throw new Error("No quiz found");
+    }
+
+    return await this._quizRepository.changeStatus(quizId, false);
+  }
+
+  async getQuiz(quizId: string): Promise<IQuiz | null> {
+    const quiz = await this._quizRepository.findQuizById(quizId);
+
+    if (!quiz) {
+      throw new Error("No quiz found");
+    }
+
+    return quiz;
   }
 }

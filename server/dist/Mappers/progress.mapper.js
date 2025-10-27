@@ -7,5 +7,6 @@ const toProgressDTO = (progress) => ({
     courseId: progress.courseId,
     watchedLectures: progress.watchedLectures || [],
     isCompleted: progress.isCompleted,
+    isCertificateIssued: progress.isCertificateIssued
 });
 exports.toProgressDTO = toProgressDTO;

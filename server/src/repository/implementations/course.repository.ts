@@ -199,4 +199,8 @@ export class CourseRepository
 
     return Array.from(userIds);
   }
+
+  async findCourseByIdAndInstructor(courseId: string, instructorId: string):Promise<ICourse|null> {
+    return await Course.findOne({ _id: courseId, instructor: instructorId });
+  }
 }

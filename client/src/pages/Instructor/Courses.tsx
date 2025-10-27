@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import type { ICourse } from "../../types/course.types";
-import { getInstructorCoursesS } from "../../services/instructor.services";
+import { createLiveSessionS, getInstructorCoursesS } from "../../services/instructor.services";
 import Pagination from "../../components/Pagination";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 
@@ -17,6 +17,8 @@ const Courses: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [debounce, setDebounce] = useState<string>("");
   const token = localStorage.getItem("instructorsToken");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -47,12 +49,24 @@ const Courses: React.FC = () => {
     fetchInstructorCourses();
   }, [currentPage, itemsPerPage, debounce]);
 
+  const handleCreateLiveSession = async (courseId: string) => {
+  try {
+    const res = await createLiveSessionS(courseId);
+    const session = res.data;
+
+    navigate(`/instructors/live/${session._id}`);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to start live session");
+  }
+};
+
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
     setCurrentPage(pageParam);
   }, [searchParams]);
 
-  if (!token) return;
+  if (!token) return null;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -85,8 +99,7 @@ const Courses: React.FC = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <Link
-                to={INSTRUCTOR_ROUTES.EDIT_COURSE(course._id)}
+              <div
                 key={course._id}
                 className="border p-4 rounded shadow hover:shadow-lg transition"
               >
@@ -105,8 +118,31 @@ const Courses: React.FC = () => {
                 <p className="text-sm text-gray-700 font-medium">
                   ₹{course.price?.toFixed(2) || "Free"}
                 </p>
-                <p className="mt-2 text-sm text-blue-600">View Details →</p>
-              </Link>
+
+                <div className="mt-4 flex flex-col gap-2">
+                  <div className="flex justify-between">
+                    <Link
+                      to={INSTRUCTOR_ROUTES.EDIT_COURSE(course._id)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit Course
+                    </Link>
+
+                    <Link
+                      to={`/instructors/courses/create-quiz/${course._id}`}
+                      className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                    >
+                      Create Quiz
+                    </Link>
+                  </div>
+                  <button
+                    onClick={() => handleCreateLiveSession(course._id)}
+                    className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 w-full"
+                  >
+                    Create Live Session
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
 

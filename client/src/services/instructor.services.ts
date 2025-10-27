@@ -8,8 +8,28 @@ import type { INotification } from "../context/NotificationContext";
 import type { Category } from "../types/category.types";
 import type { User } from "../types/user.types";
 import { createApi } from "./newApiService";
+import type { Option, Question } from "../pages/Instructor/createQuiz";
 
 const api=createApi("instructor")
+
+interface Quiz {
+  title: string;
+  description: string;
+  passPercentage: number;
+  questions: Question[];
+}
+
+interface UpdateQuiz {
+  title: string;
+  description: string;
+  passPercentage: number;
+  questions: QuestionUpdate[];
+}
+
+interface QuestionUpdate{
+    questionText: string;
+    options: Option[];
+}
 
 interface Review {
   _id: string;
@@ -351,4 +371,37 @@ export const resentOtpS = async (email: string) => {
   });
   console.log("email")
   return otp
+};
+
+export const createQuiz=async(courseId:string,quiz:Quiz)=>{
+  return await api.post(`/instructors/quiz/create-quiz/${courseId}`,quiz)
+}
+
+export const updateQuiz=async(quizId:string,updateData:UpdateQuiz)=>{
+  const updated = await api.put(`/instructors/quiz/${quizId}`,updateData)
+  console.log(updateData)
+  return updated
+}
+
+export const getInstructorQuizzes=async()=>{
+  return await api.get(`/instructors/quiz`)
+}
+
+export const deleteQuiz=async(quizId:string)=>{
+  return api.patch(`/instructors/delete/quiz/${quizId}`)
+}
+
+export const restoreQuiz=async(quizId:string)=>{
+  return api.patch(`/instructors/restore/quiz/${quizId}`)
+}
+
+export const getQuiz=async(quizId:string)=>{
+  return await api.get(`/instructors/quiz/${quizId}`);
+}
+
+export const createLiveSessionS = async (courseId: string) => {
+  return await api.post("/instructors/live/create-session", {
+    courseId,
+    startTime: new Date(),
+  });
 };

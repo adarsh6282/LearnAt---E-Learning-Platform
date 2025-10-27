@@ -5,6 +5,7 @@ import { NotificationDTO } from "../../DTO/notification.dto";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
+import { InstructorQuizResponse, IQuiz } from "../../models/interfaces/quiz.interface";
 import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
 import { IEnrollment } from "../../types/enrollment.types";
 interface Dashboard{
@@ -44,5 +45,11 @@ export interface IInstructorAuthService{
     getNotifications(userId:string):Promise<NotificationDTO[]>
     markAsRead(notificationId:string):Promise<NotificationDTO>
     getPurchasedUsers(instructorId:string):Promise<UserDTO[]>
+    createQuiz(instructorId:string,quiz:Partial<IQuiz>,courseID:string):Promise<IQuiz|null>
+    getQuizzes(instructor:string):Promise<InstructorQuizResponse[]|null>
+    deleteQuiz(quizId:string):Promise<IQuiz|null>
+    restoreQuiz(quizId:string):Promise<IQuiz|null>
+    getQuiz(quizId:string):Promise<IQuiz|null>
+    updateQuiz(quizId:string,updateData:Partial<IQuiz>):Promise<IQuiz|null>
     getDashboard(instructorId:string):Promise<Dashboard|null>
 }

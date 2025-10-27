@@ -24,5 +24,13 @@ export interface IInstructorController{
     getNotifications(req:Request,res:Response):Promise<void>,
     markAsRead(req:Request,res:Response):Promise<void>,
     markRead(req:Request,res:Response):Promise<void>
+    createQuiz(req:Request,res:Response):Promise<void>
+    updateQuiz(req:Request,res:Response):Promise<void>
+    getQuizzes(req:Request,res:Response):Promise<void>
+    deleteQuiz(req:Request,res:Response):Promise<void>
+    restoreQuiz(req:Request,res:Response):Promise<void>
+    getQuiz(req:Request,res:Response):Promise<void>
+    createSession(req:Request,res:Response):Promise<void>
+    getSessionToken(req: Request, res: Response): Promise<void>
     logOut(req:Request,res:Response):Promise<void>
 }

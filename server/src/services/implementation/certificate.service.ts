@@ -1,43 +1,29 @@
-import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
-import { CertificateDTO } from "../../DTO/certificate.dto";
-import { toCertificateDTO } from "../../Mappers/certificate.mapper";
+import cloudinary from "../../config/cloudinary.config";
+// import { CertificateDTO } from "../../DTO/certificate.dto";
+// import { toCertificateDTO } from "../../Mappers/certificate.mapper";
+import { ICertificate } from "../../models/interfaces/certificate.interface";
 import { ICertificateReopsitory } from "../../repository/interfaces/certificate.interface";
-import { generateCertificate } from "../../utils/generateCertificate";
 import { ICertificateService } from "../interfaces/certificate.interface";
 
-interface CloudinaryUploadResult {
-  secure_url: string;
-  public_id: string;
-}
 export class CertificateService implements ICertificateService {
   constructor(private _certificateRepository: ICertificateReopsitory) {}
 
-  async createCertificateForUser(
-    user: { id: string; name: string },
-    course: { id: string; title: string }
-  ): Promise<CertificateDTO> {
-    const pdfBuffer = await generateCertificate({
-      name: user.name,
-      course: course.title,
-      date: new Date(),
+  async createCertificate(
+    data: { user: string; course: string; file: Express.Multer.File }
+  ): Promise<ICertificate | null> {
+    const base64 = `data:${data.file.mimetype};base64,${data.file.buffer.toString("base64")}`;
+
+    const uploadResult = await cloudinary.uploader.upload(base64, {
+      folder: "certificates",
+      format: "pdf",
     });
 
-    const cloudinaryResponse = (await uploadBufferToCloudinary(
-      pdfBuffer,
-      `${user.id}_${course.id}_certificate`
-    )) as CloudinaryUploadResult
-
-    const newCertificate = await this._certificateRepository.createCertificate({
-      user: user.id,
-      course: course.id,
-      certificateUrl: cloudinaryResponse.secure_url,
-      issuedDate: new Date(),
+    const cert = await this._certificateRepository.createCertificate({
+      user: data.user,
+      course: data.course,
+      certificateUrl: uploadResult.secure_url,
     });
 
-    if(!newCertificate){
-      throw new Error("failed to create certificate")
-    }
-
-    return toCertificateDTO(newCertificate);
+    return cert;
   }
 }

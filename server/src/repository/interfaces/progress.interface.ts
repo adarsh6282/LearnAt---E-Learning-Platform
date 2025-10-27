@@ -17,4 +17,9 @@ export interface IProgressRepository {
 
   markAsCompleted(userId: string, courseId: string): Promise<void>;
   CheckStatus(userId: string, courseId: string): Promise<{isCompleted:boolean}>;
+  makeCertificateIssued(
+    userId: string,
+    courseId: string,
+    isIssued: boolean
+  ): Promise<void>
 }

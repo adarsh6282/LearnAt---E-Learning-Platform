@@ -12,18 +12,10 @@ import UserCertificates from "./Certificates";
 import { useLocation } from "react-router-dom";
 import type { AxiosError } from "axios";
 
-const tabs = [
-  "Profile",
-  "Course History",
-  "My Courses",
-  "Certificates",
-  "Change Password",
-];
-
 const UserProfile = () => {
   const context = useContext(UserContext);
   const { user, setUser } = context || {};
-  const location=useLocation()
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState(
     location.state?.activeTab || "Profile"
   );
@@ -35,6 +27,14 @@ const UserProfile = () => {
     name: user?.name || "",
     phone: user?.phone || "",
   });
+
+  const tabs = [
+    "Profile",
+    "Course History",
+    "My Courses",
+    "Certificates",
+    ...(user?.googleId ? [] : ["Change Password"]),
+  ];
 
   useEffect(() => {
     if (user) {

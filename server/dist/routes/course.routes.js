@@ -11,11 +11,11 @@ const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage });
 const router = (0, express_1.Router)();
 router.post("/", (0, authRole_1.default)(["instructor"]), upload.fields([
-    { name: "videos", maxCount: 10 },
+    { name: "lessonFiles", maxCount: 50 },
     { name: "thumbnail", maxCount: 1 },
 ]), course_dependencyhandler_1.courseController.createCourse.bind(course_dependencyhandler_1.courseController));
 router.put("/editcourse/:courseId", (0, authRole_1.default)(["instructor"]), upload.fields([
-    { name: "videos", maxCount: 10 },
+    { name: "lectureFiles", maxCount: 50 },
     { name: "thumbnail", maxCount: 1 },
 ]), course_dependencyhandler_1.courseController.updateCourse.bind(course_dependencyhandler_1.courseController));
 exports.default = router;

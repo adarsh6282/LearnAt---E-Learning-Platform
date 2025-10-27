@@ -24,7 +24,7 @@ import {
   PurchasedCourse,
 } from "../../repository/implementations/order.repository";
 import { ICertificateReopsitory } from "../../repository/interfaces/certificate.interface";
-import { ICertificateService } from "../interfaces/certificate.interface";
+import { IQuizResultRepository } from "../../repository/interfaces/quizresult.interface";
 import { ICategoryRepository } from "../../repository/interfaces/category.interface";
 import { sendNotificationToUser } from "../../socket/socket";
 import { UserDTO } from "../../DTO/user.dto";
@@ -38,9 +38,15 @@ import { toOrderDTO } from "../../Mappers/order.mapper";
 import { ProgressDTO } from "../../DTO/progress.dto";
 import { toProgressDTO } from "../../Mappers/progress.mapper";
 import { NotificationDTO } from "../../DTO/notification.dto";
-import { toNotificationDTO, toNotificationDTOList } from "../../Mappers/notification.mapper";
+import {
+  toNotificationDTO,
+  toNotificationDTOList,
+} from "../../Mappers/notification.mapper";
 import { ComplaintDTO } from "../../DTO/complaint.dto";
 import { toComplaintDTO } from "../../Mappers/complaint.mapper";
+import { IQuiz } from "../../models/interfaces/quiz.interface";
+import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
+import { ILiveSessionRepository } from "../../repository/interfaces/livesession.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -55,8 +61,10 @@ export class AuthService implements IAuthService {
     private _complaintRepository: IComplaintRepository,
     private _notificationRepository: INotificationRepository,
     private _certificateRepository: ICertificateReopsitory,
-    private _certificateService: ICertificateService,
-    private _categoryRepository: ICategoryRepository
+    private _categoryRepository: ICategoryRepository,
+    private _quizRepository: IQuizRepository,
+    private _quizResultRepository: IQuizResultRepository,
+    private _livesessionRepository: ILiveSessionRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -66,9 +74,8 @@ export class AuthService implements IAuthService {
         "This email is used by admin. Please register with new one"
       );
     }
-    const existingInstructor = await this._instructorRepository.findByEmail(
-      email
-    );
+    const existingInstructor =
+      await this._instructorRepository.findByEmail(email);
     if (existingInstructor) {
       throw new Error(
         "This email is used by instrcutor. Please register with new one"
@@ -135,7 +142,7 @@ export class AuthService implements IAuthService {
     const token = generateToken(user._id, user.email, "user");
     const userRefreshToken = generateRefreshToken(user._id, user.email, "user");
 
-    return { user:toUserDTO(user), token, userRefreshToken };
+    return { user: toUserDTO(user), token, userRefreshToken };
   }
 
   async handleForgotPassword(email: string): Promise<void> {
@@ -232,9 +239,9 @@ export class AuthService implements IAuthService {
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
   ): Promise<UserDTO> {
     const updateFields: Partial<{
-      name:string,
-      phone:string,
-      profilePicture:string
+      name: string;
+      phone: string;
+      profilePicture: string;
     }> = { name, phone };
 
     if (profilePicture?.path) {
@@ -265,16 +272,17 @@ export class AuthService implements IAuthService {
     minPrice: number,
     maxPrice: number
   ): Promise<{ courses: CourseDTO[]; total: number; totalPages: number }> {
-    const {courses,total,totalPages} = await this._courseRepository.findCourses(
-      page,
-      limit,
-      search,
-      category,
-      minPrice,
-      maxPrice
-    );
+    const { courses, total, totalPages } =
+      await this._courseRepository.findCourses(
+        page,
+        limit,
+        search,
+        category,
+        minPrice,
+        maxPrice
+      );
 
-    return {courses:toCourseDTOList(courses),total,totalPages}
+    return { courses: toCourseDTOList(courses), total, totalPages };
   }
 
   async getCategory(): Promise<string[] | null> {
@@ -336,8 +344,8 @@ export class AuthService implements IAuthService {
       status: "created",
     });
 
-    if(!order){
-      throw new Error("failed to create order")
+    if (!order) {
+      throw new Error("failed to create order");
     }
 
     return toOrderDTO(order);
@@ -362,9 +370,8 @@ export class AuthService implements IAuthService {
       throw new Error("Invalid signature");
     }
 
-    const order = await this._orderRepsitory.getOrderByRazorpayId(
-      razorpay_order_id
-    );
+    const order =
+      await this._orderRepsitory.getOrderByRazorpayId(razorpay_order_id);
     if (!order) throw new Error("Order not found");
 
     await this._orderRepsitory.markOrderAsPaid(order._id!);
@@ -468,7 +475,15 @@ export class AuthService implements IAuthService {
       );
     }
     const course = await this._courseRepository.findCourseById(courseId);
-    const totalLectures = course?.lectures.length;
+    
+    const totalLectures =
+      course?.modules?.reduce((moduleAcc, mod) => {
+        const chapterLectures = mod.chapters?.reduce(
+          (chapAcc, chap) => chapAcc + (chap.lectures?.length ?? 0),
+          0
+        );
+        return moduleAcc + (chapterLectures ?? 0);
+      }, 0) ?? 0;
 
     if (
       totalLectures &&
@@ -476,21 +491,10 @@ export class AuthService implements IAuthService {
       !progress?.isCompleted
     ) {
       await this._progressRepository.markAsCompleted(userId, courseId);
-
-      const user = await this._userRepository.findById(userId);
-      const course = await this._courseRepository.findCourseById(courseId);
-
-      if (user && course) {
-        console.log("entered course completion certificate creation");
-        await this._certificateService.createCertificateForUser(
-          { id: userId, name: user.name },
-          { id: courseId, title: course.title }
-        );
-      }
     }
 
-    if(!progress){
-      throw new Error("failed to update progress")
+    if (!progress) {
+      throw new Error("failed to update progress");
     }
 
     return toProgressDTO(progress);
@@ -504,18 +508,15 @@ export class AuthService implements IAuthService {
       userId,
       courseId
     );
-    if(!progress){
-      throw new Error("failed to fetch progress")
+    if (!progress) {
+      throw new Error("failed to fetch progress");
     }
     return toProgressDTO(progress);
   }
 
-  async fetchPurchasedInstructors(
-    userId: string
-  ): Promise<InstructorDTO[]> {
-    const instructorIds = await this._courseRepository.findByPurchasedUser(
-      userId
-    );
+  async fetchPurchasedInstructors(userId: string): Promise<InstructorDTO[]> {
+    const instructorIds =
+      await this._courseRepository.findByPurchasedUser(userId);
 
     if (!instructorIds.length) return [];
 
@@ -523,16 +524,16 @@ export class AuthService implements IAuthService {
   }
 
   async getNotifications(userId: string): Promise<NotificationDTO[]> {
-    const notification = await this._notificationRepository.getAllNotifications(userId);
-    return toNotificationDTOList(notification)
+    const notification =
+      await this._notificationRepository.getAllNotifications(userId);
+    return toNotificationDTOList(notification);
   }
 
   async markAsRead(notificationId: string): Promise<NotificationDTO> {
-    const notification = await this._notificationRepository.updateNotification(
-      notificationId
-    );
-    if(!notification){
-      throw new Error("failed to update notification")
+    const notification =
+      await this._notificationRepository.updateNotification(notificationId);
+    if (!notification) {
+      throw new Error("failed to update notification");
     }
     return toNotificationDTO(notification);
   }
@@ -550,10 +551,10 @@ export class AuthService implements IAuthService {
 
   async submitComplaint(data: Partial<IComplaint>): Promise<ComplaintDTO> {
     const complaint = await this._complaintRepository.createComplaint(data);
-    if(!complaint){
-      throw new Error("failed to submit complaint")
+    if (!complaint) {
+      throw new Error("failed to submit complaint");
     }
-    return toComplaintDTO(complaint)
+    return toComplaintDTO(complaint);
   }
 
   async getPurchases(
@@ -628,5 +629,67 @@ export class AuthService implements IAuthService {
     }[]
   > {
     return await this._certificateRepository.getCertificates(userId);
+  }
+
+  async getQuiz(courseId: string): Promise<IQuiz | null> {
+    if (!courseId) {
+      throw new Error("no course found");
+    }
+
+    const quiz = await this._quizRepository.findQuizByCouseId(courseId);
+    if (!quiz) {
+      throw new Error("Quiz not found");
+    }
+
+    return quiz;
+  }
+
+  async submitQuiz(
+    quizId: string,
+    userId: string,
+    courseId: string,
+    answers: { [key: string]: string }
+  ): Promise<{
+    score: number;
+    percentage: number;
+    passed: boolean;
+    isCertificateIssued: boolean;
+  }> {
+    const quiz = await this._quizRepository.findQuizById(quizId);
+    if (!quiz) throw new Error("Quiz not found");
+
+    let score = 0;
+
+    quiz.questions.forEach((q: any) => {
+      const selected = answers[q._id];
+      const correct = q.options.find((o: any) => o.isCorrect);
+      if (selected && correct && selected === correct.text) {
+        score++;
+      }
+    });
+
+    const percentage = Math.floor((score / quiz.questions.length) * 100);
+    const passed = percentage >= quiz.passPercentage;
+
+    const isCertificateIssued = passed;
+
+    await this._quizResultRepository.create({
+      quizId,
+      userId,
+      courseId,
+      answers,
+      score,
+      percentage,
+      passed,
+      isCertificateIssued: passed,
+    });
+
+    await this._progressRepository.makeCertificateIssued(
+      userId,
+      courseId,
+      isCertificateIssued
+    );
+
+    return { score, percentage, passed, isCertificateIssued };
   }
 }
