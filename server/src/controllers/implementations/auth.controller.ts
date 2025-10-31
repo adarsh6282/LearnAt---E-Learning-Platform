@@ -611,7 +611,7 @@ export class Authcontroller implements IAuthController {
       const chatId = req.params.chatId;
       const { userId, userModel } = req.body;
       await this._messageService.markRead(chatId, userId, userModel);
-      res.sendStatus(200);
+      res.sendStatus(httpStatus.OK);
     } catch (err: unknown) {
       console.error(err);
       const message =
@@ -700,10 +700,10 @@ export class Authcontroller implements IAuthController {
       file:file
     });
 
-    res.status(201).json({ certificate });
+    res.status(httpStatus.CREATED).json({ certificate });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
   }
   }
 
@@ -715,14 +715,14 @@ export class Authcontroller implements IAuthController {
         res.status(400).json({ error: "Invalid role" });
         return;
       }
-      const token = await this._livesessionService.generateToken(
+      const {token,appId, roomId, courseId} = await this._livesessionService.generateToken(
         sessionId as string,
         userId as string,
         role as "user"|"instructor"
       );
-      res.status(httpStatus.OK).json({ token });
+      res.status(httpStatus.OK).json({ token,appId, roomId, userId, courseId });
     } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message });
     }
   }
 

@@ -143,6 +143,7 @@ router.patch("/restore/quiz/:quizId",authRole(["instructor"]),instructorAuthCont
 router.get("/quiz/:quizId",authRole(["instructor"]),instructorAuthController.getQuiz.bind(instructorAuthController))
 router.post("/live/create-session",authRole(["instructor"]),instructorAuthController.createSession.bind(instructorAuthController))
 router.get("/live/token",authRole(["instructor"]),instructorAuthController.getSessionToken.bind(instructorAuthController))
+router.patch("/live/end-live",authRole(["instructor"]),instructorAuthController.endSession.bind(instructorAuthController))
 router.post(
   "/logout",
   instructorAuthController.logOut.bind(instructorAuthController)

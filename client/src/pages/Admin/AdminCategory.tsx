@@ -121,7 +121,7 @@ const AdminCategory = () => {
           <div className="flex flex-wrap gap-4 mb-6">
             <input
               type="text"
-              placeholder="Search complaints..."
+              placeholder="Search categories..."
               value={searchTerm}
               onKeyDown={(e) => {
                 if (e.repeat) e.preventDefault();

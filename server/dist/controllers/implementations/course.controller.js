@@ -47,8 +47,6 @@ class CourseController {
     async updateCourse(req, res) {
         try {
             const { courseId } = req.params;
-            const instructorId = req.instructor?.id;
-            // ✅ Properly parse modules
             let modulesRaw = [];
             if (req.body.modules) {
                 modulesRaw =
@@ -56,7 +54,6 @@ class CourseController {
                         ? JSON.parse(req.body.modules)
                         : req.body.modules;
             }
-            // ✅ Parse lecture metadata safely
             const lectureMeta = req.body.lectureMeta
                 ? Array.isArray(req.body.lectureMeta)
                     ? req.body.lectureMeta.map((m) => JSON.parse(m))
@@ -64,12 +61,10 @@ class CourseController {
                 : [];
             const lectureFiles = req.files?.lectureFiles || [];
             const thumbnailFile = req.files?.thumbnail?.[0];
-            // ✅ Pair files with their meta
             const lectureFilesWithMeta = lectureFiles.map((file, i) => ({
                 file,
                 meta: lectureMeta[i],
             }));
-            // ✅ Prepare update payload
             const updateData = {
                 title: req.body.title,
                 description: req.body.description,
@@ -92,11 +87,11 @@ class CourseController {
                 thumbnail: thumbnailFile,
             };
             const updatedCourse = await this._courseService.updateCourse(courseId, updateData);
-            res.status(200).json(updatedCourse);
+            res.status(statusCodes_1.httpStatus.OK).json(updatedCourse);
         }
         catch (err) {
             console.error(err);
-            res.status(500).json({
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({
                 message: err instanceof Error ? err.message : "Something went wrong",
             });
         }

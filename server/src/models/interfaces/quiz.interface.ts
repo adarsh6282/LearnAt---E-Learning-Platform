@@ -11,6 +11,7 @@ export interface Option {
 }
 
 export interface Question {
+  _id?:string,
   questionText: string;
   options: Option[];
   explanation?: string;

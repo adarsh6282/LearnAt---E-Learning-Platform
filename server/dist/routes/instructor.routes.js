@@ -41,5 +41,6 @@ router.patch("/restore/quiz/:quizId", (0, authRole_1.default)(["instructor"]), i
 router.get("/quiz/:quizId", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getQuiz.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.post("/live/create-session", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.createSession.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.get("/live/token", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.getSessionToken.bind(instructor_dependencyhandler_1.instructorAuthController));
+router.patch("/live/end-live", (0, authRole_1.default)(["instructor"]), instructor_dependencyhandler_1.instructorAuthController.endSession.bind(instructor_dependencyhandler_1.instructorAuthController));
 router.post("/logout", instructor_dependencyhandler_1.instructorAuthController.logOut.bind(instructor_dependencyhandler_1.instructorAuthController));
 exports.default = router;

@@ -15,7 +15,7 @@ import { X } from "lucide-react";
 interface Message {
   _id?: string;
   chatId: string;
-  sender: string;
+  senderId: string;
   content?: string;
   image?: string;
   isDeleted?: boolean;
@@ -34,21 +34,32 @@ const UserChatWindow = () => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  console.log();
+
   useEffect(() => {
     if (!chatId) return;
 
     socket.emit("joinChat", chatId);
 
     const handleMessage = (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
+      if (msg.chatId == chatId) {
+        const normalized: Message = {
+          _id: msg._id,
+          chatId: msg.chatId,
+          senderId: msg.senderId,
+          content: msg.content,
+          image: msg.image,
+          isDeleted: msg.isDeleted,
+          createdAt: msg.createdAt,
+        };
+        setMessages((prev) => [...prev, normalized]);
+      }
     };
 
     const handleDelete = (messageId: string) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === messageId
-            ? { ...msg, isDeleted: true, }
-            : msg
+          msg._id === messageId ? { ...msg, isDeleted: true } : msg
         )
       );
     };
@@ -58,7 +69,7 @@ const UserChatWindow = () => {
 
     return () => {
       socket.off("receiveMessage", handleMessage);
-      socket.off("messageDeleted",handleDelete)
+      socket.off("messageDeleted", handleDelete);
     };
   }, [chatId]);
 
@@ -66,6 +77,7 @@ const UserChatWindow = () => {
     if (!chatId) {
       return;
     }
+    console.log(messageId);
     socket.emit("deleteMessage", { messageId, chatId, userId: authUser?._id });
     setMessages((prev) =>
       prev.map((msg) =>
@@ -129,13 +141,13 @@ const UserChatWindow = () => {
       }
     }
 
-    const newMessage: Message = {
-      chatId,
-      sender: authUser._id,
-      content: text.trim(),
-      ...(imageUrl && { image: imageUrl }),
-      createdAt: new Date().toISOString(),
-    };
+    // const newMessage: Message = {
+    //   chatId,
+    //   sender: authUser._id,
+    //   content: text.trim(),
+    //   ...(imageUrl && { image: imageUrl }),
+    //   createdAt: new Date().toISOString(),
+    // };
 
     socket.emit("sendMessage", {
       chat: chatId,
@@ -145,7 +157,7 @@ const UserChatWindow = () => {
       ...(imageUrl && { image: imageUrl }),
     });
 
-    setMessages((prev) => [...prev, newMessage]);
+    // setMessages((prev) => [...prev, newMessage]);
     setText("");
     setFile(null);
   };
@@ -176,7 +188,7 @@ const UserChatWindow = () => {
             key={i}
             className={`group relative p-3 rounded-xl text-sm max-w-sm break-words transition-all
         ${
-          msg.sender === authUser?._id
+          msg.senderId === authUser?._id
             ? "ml-auto bg-gradient-to-br from-cyan-700 to-cyan-500 text-white shadow-md"
             : "bg-[#1a1a1d] text-gray-300 shadow-inner"
         }`}
@@ -204,7 +216,7 @@ const UserChatWindow = () => {
               })}
             </span>
 
-            {msg.sender === authUser?._id && (
+            {msg.senderId === authUser?._id && (
               <button
                 onClick={() => handleDeleteMessage(msg._id!)}
                 className="absolute top-1 right-1 text-xs bg-red-600 hover:bg-red-500 px-1 py-1 rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"

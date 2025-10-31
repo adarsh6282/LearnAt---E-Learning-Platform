@@ -45,7 +45,7 @@ interface ApiMessage {
 interface Message {
   _id: string;
   chatId: string;
-  sender: string;
+  senderId: string;
   image?: string;
   content?: string;
   isDeleted: boolean;
@@ -295,7 +295,7 @@ export const getMessageS = async (
   const normalized: Message[] = res.data.map((msg) => ({
     _id: msg._id,
     chatId: msg.chat,
-    sender: msg.senderId,
+    senderId: msg.senderId,
     content: msg.content,
     isDeleted: msg.isDeleted,
     image: msg.image,

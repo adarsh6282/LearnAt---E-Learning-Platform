@@ -42,7 +42,10 @@ export const INSTRUCTOR_ROUTES = {
   REVIEWS:`/instructors/reviews`,
   EARNINGS:`/instructors/earnings`,
   ENROLLMENTS:`/instructors/enrollments`,
-  NOTIFICATIONS:`/instructors/notifications`
+  NOTIFICATIONS:`/instructors/notifications`,
+  CREATEQUIZ:(courseId:string = ":courseId")=>`/instructors/courses/create-quiz/${courseId}`,
+  MANAGE_QUIZ:(quizId:string = ":quizId")=>`/instructors/quiz/${quizId}`,
+  QUIZ:`/instructors/quiz`
 } as const;
 
 export const ADMIN_ROUTES = {

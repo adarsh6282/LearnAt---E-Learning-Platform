@@ -585,7 +585,7 @@ class InstructorAuthController {
         try {
             const { sessionId, userId, role } = req.query;
             if (role !== "instructor" && role !== "user") {
-                res.status(400).json({ error: "Invalid role" });
+                res.status(statusCodes_1.httpStatus.BAD_REQUEST).json({ error: "Invalid role" });
                 return;
             }
             const token = await this._livesessionService.generateToken(sessionId, userId, role);
@@ -607,6 +607,16 @@ class InstructorAuthController {
             }
             await this._instructorAuthService.updateQuiz(quizId, updateData);
             res.status(statusCodes_1.httpStatus.OK).json({ message: "Quiz Updated Successfull" });
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async endSession(req, res) {
+        try {
+            const { isLive, sessionId } = req.body;
+            await this._livesessionService.endSession(isLive, sessionId);
+            res.status(statusCodes_1.httpStatus.OK).json({ message: "Session Ended" });
         }
         catch (err) {
             console.log(err);

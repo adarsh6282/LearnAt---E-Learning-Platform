@@ -29,6 +29,8 @@ import UserCertificates from "../pages/User/Certificates";
 import PublicLandingPage from "../pages/User/UserLandingPage";
 import UserQuizPage from "../pages/User/UserQuiz";
 import StudentLivePage from "../pages/User/UserLiveSession";
+import AboutPage from "../pages/User/AboutUs";
+import ContactPage from "../pages/User/ContactUs";
 
 const UserRoutes = () => {
   return (
@@ -77,6 +79,8 @@ const UserRoutes = () => {
           path={USER_ROUTES.RESET_PASSWORD}
           element={<ResetPassword role="users" />}
         />
+        <Route path="/users/about" element={<AboutPage/>}/>
+        <Route path="/users/contact" element={<ContactPage/>}/>
         <Route
           path={USER_ROUTES.PROFILE}
           element={

@@ -44,7 +44,7 @@ import {
 } from "../../Mappers/notification.mapper";
 import { ComplaintDTO } from "../../DTO/complaint.dto";
 import { toComplaintDTO } from "../../Mappers/complaint.mapper";
-import { IQuiz } from "../../models/interfaces/quiz.interface";
+import { IQuiz, Option, Question } from "../../models/interfaces/quiz.interface";
 import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 import { ILiveSessionRepository } from "../../repository/interfaces/livesession.interface";
 
@@ -660,9 +660,10 @@ export class AuthService implements IAuthService {
 
     let score = 0;
 
-    quiz.questions.forEach((q: any) => {
+    quiz.questions.forEach((q: Question) => {
+      if (!q._id) return;
       const selected = answers[q._id];
-      const correct = q.options.find((o: any) => o.isCorrect);
+      const correct = q.options.find((o: Option) => o.isCorrect);
       if (selected && correct && selected === correct.text) {
         score++;
       }

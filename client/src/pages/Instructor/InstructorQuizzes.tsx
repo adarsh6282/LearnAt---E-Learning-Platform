@@ -6,6 +6,7 @@ import {
   getInstructorQuizzes,
   restoreQuiz,
 } from "../../services/instructor.services";
+import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
 
 interface Quiz {
   _id: string;
@@ -60,7 +61,7 @@ const InstructorQuizzes = () => {
   };
 
   const handleEdit = (quizId: string) => {
-    navigate(`/instructors/quiz/${quizId}`);
+    navigate(INSTRUCTOR_ROUTES.MANAGE_QUIZ(quizId));
   };
 
   return (

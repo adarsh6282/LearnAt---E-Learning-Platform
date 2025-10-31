@@ -42,7 +42,7 @@ const AdminUsers = () => {
       }
     };
     fetchUsers();
-  }, [currentPage, itemsPerPage, debounce]);
+  }, [currentPage, itemsPerPage,debounce]);
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");

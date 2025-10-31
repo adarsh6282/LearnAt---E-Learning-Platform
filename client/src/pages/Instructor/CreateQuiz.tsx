@@ -49,7 +49,12 @@ const QuizCreation: React.FC = () => {
     }
 
     if (quiz.questions.length === 0) {
-      errorToast("At least one question is required");
+      errorToast("Please do include a question");
+      return false;
+    }
+
+    if (quiz.questions.length === 1) {
+      errorToast("At least two question is required");
       return false;
     }
 
@@ -64,6 +69,10 @@ const QuizCreation: React.FC = () => {
       if (q.options.length < 2) {
         errorToast(`Question ${i + 1} must have at least two options`);
         return false;
+      }
+
+      if(q.options.length>4){
+        errorToast(`Question ${i + 1} must not have more than 4 options`)
       }
 
       for (let j = 0; j < q.options.length; j++) {

@@ -23,6 +23,7 @@ class MessageRepository {
             lastMessage: new Date(),
             lastMessageContent: message.content,
         });
+        console.log(message);
         return message;
     }
     async getChatMessages(chatId) {

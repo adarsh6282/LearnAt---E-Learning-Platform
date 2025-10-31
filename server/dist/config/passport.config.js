@@ -27,10 +27,15 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             return done(null, user);
         }
         else {
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            const baseName = profile.displayName?.split(" ")[0]?.toLowerCase() ||
+                email.split("@")[0].toLowerCase();
+            const username = `${baseName}_${randomSuffix}`;
             const newUser = new userModel_1.default({
                 name: profile.displayName,
                 email,
                 googleId: profile.id,
+                username,
             });
             await newUser.save();
             return done(null, newUser);

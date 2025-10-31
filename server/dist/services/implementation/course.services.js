@@ -168,6 +168,7 @@ class CourseService {
             price: courseData.price ?? existingCourse.price,
             isActive: courseData.isActive ?? existingCourse.isActive,
             modules: updatedModules,
+            thumbnail: existingCourse.thumbnail
         };
         if (thumbnailUrl)
             updatedCourseData.thumbnail = thumbnailUrl;

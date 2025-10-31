@@ -36,7 +36,9 @@ export const initSocket = (server: HTTPServer): void => {
     socket.on("sendMessage", async (message) => {
       try {
         const saved = await messageService.sendMessage(message);
-        socket.to(message.chat).emit("receiveMessage", saved);
+        // socket.to(message.chat).emit("receiveMessage", saved);
+        io.to(message.chat).emit("receiveMessage", saved);
+
         const chat = await Chat.findById(message.chat);
         let receiverId;
         if (message.senderId === chat?.user.toString()) {
@@ -71,8 +73,9 @@ export const initSocket = (server: HTTPServer): void => {
     });
 
     socket.on("deleteMessage",async({chatId,messageId,userId})=>{
+      console.log("Delete request received:", { chatId, messageId, userId });
       await messageService.deleteMessage(messageId,userId)
-      socket.to(chatId).emit("messageDeleted",messageId)
+      io.to(chatId).emit("messageDeleted", messageId);
     })
 
     socket.on("join-video-room", (chatId: string) => {
