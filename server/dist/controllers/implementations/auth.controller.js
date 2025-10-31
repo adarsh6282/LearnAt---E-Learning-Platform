@@ -491,7 +491,7 @@ class Authcontroller {
             const chatId = req.params.chatId;
             const { userId, userModel } = req.body;
             await this._messageService.markRead(chatId, userId, userModel);
-            res.sendStatus(200);
+            res.sendStatus(statusCodes_1.httpStatus.OK);
         }
         catch (err) {
             console.error(err);
@@ -556,11 +556,11 @@ class Authcontroller {
                 course: courseId,
                 file: file
             });
-            res.status(201).json({ certificate });
+            res.status(statusCodes_1.httpStatus.CREATED).json({ certificate });
         }
         catch (err) {
             console.error(err);
-            res.status(500).json({ message: "Server error" });
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
         }
     }
     async getSessionToken(req, res) {
@@ -571,11 +571,11 @@ class Authcontroller {
                 res.status(400).json({ error: "Invalid role" });
                 return;
             }
-            const token = await this._livesessionService.generateToken(sessionId, userId, role);
-            res.status(statusCodes_1.httpStatus.OK).json({ token });
+            const { token, appId, roomId, courseId } = await this._livesessionService.generateToken(sessionId, userId, role);
+            res.status(statusCodes_1.httpStatus.OK).json({ token, appId, roomId, userId, courseId });
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ error: error.message });
         }
     }
     async getLiveSessionByCourseId(req, res) {

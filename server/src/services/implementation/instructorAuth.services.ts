@@ -40,6 +40,8 @@ import {
   IQuiz,
 } from "../../models/interfaces/quiz.interface";
 import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
+import { QuizDTO } from "../../DTO/quiz.dto";
+import { toQuizDTO } from "../../Mappers/quiz.mapper";
 
 interface Dashboard {
   totalUsers: number;
@@ -470,7 +472,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     instructorId: string,
     quiz: Partial<IQuiz>,
     courseID: string
-  ): Promise<IQuiz | null> {
+  ): Promise<QuizDTO> {
     const course = await this._courseRepository.findCourseByIdAndInstructor(
       courseID,
       instructorId
@@ -493,13 +495,16 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     };
 
     const createdQuiz = await this._quizRepository.createQuiz(quizData);
-    return createdQuiz;
+    if(!createdQuiz){
+      throw new Error("failed to create quiz")
+    }
+    return toQuizDTO(createdQuiz);
   }
 
   async updateQuiz(
     quizId: string,
     updateData: Partial<IQuiz>
-  ): Promise<IQuiz | null> {
+  ): Promise<QuizDTO> {
     const existing = await this._quizRepository.findQuizById(quizId);
     if (!existing) {
       throw new Error("quiz not found");
@@ -509,7 +514,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
       throw new Error("Invalid questions data");
     }
     const updatedQuiz = await this._quizRepository.updateQuizById(quizId, updateData);
-    return updatedQuiz;
+    if(!updatedQuiz){
+      throw new Error("failed to update the quiz")
+    }
+    return toQuizDTO(updatedQuiz);
   }
 
   async getQuizzes(
@@ -534,33 +542,41 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }));
   }
 
-  async deleteQuiz(quizId: string): Promise<IQuiz | null> {
+  async deleteQuiz(quizId: string): Promise<QuizDTO> {
     const quiz = await this._quizRepository.findQuizById(quizId);
 
     if (!quiz) {
       throw new Error("No quiz found");
     }
 
-    return await this._quizRepository.changeStatus(quizId, true);
+    const updated = await this._quizRepository.changeStatus(quizId, true);
+    if(!updated){
+      throw new Error("failed to delete the quiz")
+    }
+    return toQuizDTO(updated)
   }
 
-  async restoreQuiz(quizId: string): Promise<IQuiz | null> {
+  async restoreQuiz(quizId: string): Promise<QuizDTO> {
     const quiz = await this._quizRepository.findQuizById(quizId);
 
     if (!quiz) {
       throw new Error("No quiz found");
     }
 
-    return await this._quizRepository.changeStatus(quizId, false);
+    const updated = await this._quizRepository.changeStatus(quizId, false);
+    if(!updated){
+      throw new Error("failed to delete the quiz")
+    }
+    return toQuizDTO(updated)
   }
 
-  async getQuiz(quizId: string): Promise<IQuiz | null> {
+  async getQuiz(quizId: string): Promise<QuizDTO> {
     const quiz = await this._quizRepository.findQuizById(quizId);
 
     if (!quiz) {
       throw new Error("No quiz found");
     }
 
-    return quiz;
+    return toQuizDTO(quiz);
   }
 }

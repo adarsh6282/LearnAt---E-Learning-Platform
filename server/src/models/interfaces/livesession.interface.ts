@@ -1,6 +1,7 @@
-import { Document, Types } from "mongoose";
+import { Types } from "mongoose";
 
-export interface ILiveSession extends Document {
+export interface ILiveSession {
+  _id?:string
   courseId: string|Types.ObjectId;
   instructorId: string|Types.ObjectId;
   roomId: string;

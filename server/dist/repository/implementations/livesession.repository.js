@@ -24,5 +24,8 @@ class LiveSessionRepository {
             endTime: { $exists: false },
         });
     }
+    async endSession(isLive, sessionId) {
+        return await liveSessionModel_1.default.findByIdAndUpdate(sessionId, { isLive: isLive, endTime: new Date() }, { new: true });
+    }
 }
 exports.LiveSessionRepository = LiveSessionRepository;

@@ -25,10 +25,7 @@ const AdminDashboard = () => {
         setLoading(false);
       }
     };
-
-    setTimeout(() => {
-      fetchDashboard();
-    }, 1500);
+    fetchDashboard()
   }, []);
 
   if (loading) {

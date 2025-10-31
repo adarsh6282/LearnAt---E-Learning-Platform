@@ -1,29 +1,32 @@
 import React, { useEffect, useRef, useState } from "react";
-import AgoraRTC from "agora-rtc-sdk-ng";
-import { useParams } from "react-router-dom";
-import { createApi } from "../../services/newApiService";
+import AgoraRTC, {
+  type ICameraVideoTrack,
+  type IMicrophoneAudioTrack,
+} from "agora-rtc-sdk-ng";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { endLiveSession, startLiveSession } from "../../services/instructor.services";
 
 const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
 const InstructorLivePage: React.FC = () => {
   const { sessionId } = useParams();
   const { authUser } = useAuth();
+  const navigate = useNavigate();
   const userId = authUser?._id;
   const role = "instructor";
 
   const [isLive, setIsLive] = useState(false);
   const localContainer = useRef<HTMLDivElement>(null);
-  const localTracksRef = useRef<any[]>([]);
+  const localTracksRef = useRef<(ICameraVideoTrack | IMicrophoneAudioTrack)[]>(
+    []
+  );
 
   const startLive = async () => {
     try {
-      const api = createApi("instructor");
-      const { data } = await api.get(
-        `/instructors/live/token?sessionId=${sessionId}&userId=${userId}&role=${role}`
-      );
+      const { data } = await startLiveSession(sessionId!,userId!,role)
       const { token } = data;
-      console.log(token,userId)
+
       const appId = token.appId;
       const roomId = token.roomId;
       const agoraToken = token.token;
@@ -31,11 +34,13 @@ const InstructorLivePage: React.FC = () => {
       await client.setClientRole("host");
       await client.join(appId, roomId, agoraToken, userId);
 
-      const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
-      localTracksRef.current = tracks;
+      const micTrack = await AgoraRTC.createMicrophoneAudioTrack();
+      const camTrack = await AgoraRTC.createCameraVideoTrack();
+      camTrack.play(localContainer.current!);
 
-      tracks[1].play(localContainer.current!);
-      await client.publish(tracks);
+      await client.publish([micTrack, camTrack]);
+
+      localTracksRef.current = [micTrack, camTrack];
       setIsLive(true);
 
       console.log("Instructor is live!");
@@ -49,6 +54,12 @@ const InstructorLivePage: React.FC = () => {
     localTracksRef.current.forEach((t) => t.close());
     await client.leave();
     setIsLive(false);
+    try {
+      await endLiveSession(false, sessionId!);
+      navigate("/instructors/courses");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
@@ -60,10 +71,13 @@ const InstructorLivePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+    <div className="flex flex-col items-center justify-center h-full bg-gray-900 text-white">
       <h2 className="text-2xl font-semibold mb-4">Instructor Live Session</h2>
 
-      <div ref={localContainer} className="w-96 h-64 bg-gray-800 rounded-lg" />
+      <div
+        ref={localContainer}
+        className="w-full max-w-3xl aspect-video bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+      ></div>
 
       <div className="mt-6 flex gap-4">
         {!isLive ? (

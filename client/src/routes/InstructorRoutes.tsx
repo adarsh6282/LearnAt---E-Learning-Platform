@@ -118,11 +118,11 @@ const InstructorRoutes = () => {
         />
         <Route path={INSTRUCTOR_ROUTES.COURSES} element={<Courses />} />
         <Route
-          path="/instructors/courses/create-quiz/:courseId"
+          path={INSTRUCTOR_ROUTES.CREATEQUIZ()}
           element={<QuizCreation />}
         />
-        <Route path="/instructors/quiz/:quizId" element={<QuizManagement />} />
-        <Route path="/instructors/quiz" element={<InstructorQuizzes />} />
+        <Route path={INSTRUCTOR_ROUTES.MANAGE_QUIZ()} element={<QuizManagement />} />
+        <Route path={INSTRUCTOR_ROUTES.QUIZ} element={<InstructorQuizzes />} />
         <Route
           path="/instructors/live/:sessionId"
           element={

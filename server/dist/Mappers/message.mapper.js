@@ -4,13 +4,13 @@ exports.toMessageDTOList = exports.toMessageDTO = void 0;
 const toMessageDTO = (message) => {
     return {
         _id: message._id?.toString(),
-        chat: message.chat,
-        senderId: message.senderId,
+        chatId: message.chat.toString(),
+        senderId: message.senderId.toString(),
         senderRole: message.senderRole,
         image: message.image,
         isDeleted: message.isDeleted,
         content: message.content,
-        createdAt: message.createdAt
+        createdAt: message.createdAt,
     };
 };
 exports.toMessageDTO = toMessageDTO;

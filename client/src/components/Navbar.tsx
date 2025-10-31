@@ -77,18 +77,18 @@ export default function Navbar() {
           >
             Courses
           </Link>
-          <a
-            href="#about"
-            className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded"
+          <Link
+            to="/users/about"
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/about"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
           >
             About
-          </a>
-          <a
-            href="#contact"
-            className="hover:text-cyan-400 transition-colors duration-200 px-2 py-1 rounded"
+          </Link>
+          <Link
+            to="/users/contact"
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/contact"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
           >
             Contact Us
-          </a>
+          </Link>
           <Link
             to={USER_ROUTES.CHAT_PAGE}
             className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/chat"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}

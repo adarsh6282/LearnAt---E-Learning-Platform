@@ -1,79 +1,87 @@
 import React, { useEffect, useRef, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
-import { useParams } from "react-router-dom";
+import type { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng";
+import { useNavigate, useParams } from "react-router-dom";
 import { getLiveToken } from "../../services/user.services";
 
 const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
 const StudentLivePage: React.FC = () => {
   const { sessionId } = useParams();
+  const navigate=useNavigate()
   const role = "user";
-
-  const [isJoined, setIsJoined] = useState(false);
   const [isWaiting, setIsWaiting] = useState(true);
   const remoteContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let joined = false;
+
     const joinLive = async () => {
       try {
-        const res=await getLiveToken(sessionId!,role)
-        const { token } = res.data;
-        const appId = token.appId;
-        const roomId = token.roomId;
-        const agoraToken = token.token;
-        const userId = token.userId;
-
-        await client.setClientRole("audience");
+        const res = await getLiveToken(sessionId!, role);
+        const { token, appId, roomId, courseId, userId } = res.data;
         if (
           client.connectionState === "CONNECTED" ||
           client.connectionState === "CONNECTING"
         ) {
-          console.warn("Already connected to Agora, skipping join.");
           return;
         }
-        await client.join(appId, roomId, agoraToken, userId);
 
-        client.on("user-published", async (user, mediaType) => {
-          console.log("User published:", user.uid, mediaType);
-          await client.subscribe(user, mediaType);
-          if (mediaType === "video" && remoteContainer.current) {
-            user.videoTrack?.play(remoteContainer.current);
-            setIsJoined(true);
-            setIsWaiting(false);
-            console.log("Video is playing!");
+        await client.setClientRole("audience");
+        await client.join(appId, roomId, token, userId);
+        joined = true;
+        client.on(
+          "user-published",
+          async (user: IAgoraRTCRemoteUser, mediaType) => {
+            await client.subscribe(user, mediaType);
+
+            if (mediaType === "audio") {
+              user.audioTrack?.play();
+            }
+
+            if (mediaType === "video") {
+              const container = remoteContainer.current;
+              if (container) {
+                container.innerHTML = "";
+                user.videoTrack?.play(container);
+              }
+            }
           }
-        });
+        );
 
-        client.on("user-unpublished", () => {
-          setIsJoined(false);
+        const handleInstructorLeft = async () => {
           setIsWaiting(true);
-        });
+          await client.leave();
+          navigate(`/users/course-view/${courseId}`);
+        };
+        client.on("user-unpublished", handleInstructorLeft);
       } catch (err) {
-        console.error("Error joining live:", err);
+        console.error("❌ Error joining live:", err);
       }
     };
 
     joinLive();
 
     return () => {
-      client.leave();
+      if (joined) client.leave();
+      client.removeAllListeners();
     };
-  }, [sessionId]);
+  }, [sessionId,navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
-      <h2 className="text-2xl font-semibold mb-4">Live Class</h2>
+      <h2 className="text-2xl font-semibold mb-4">🎥 Live Class</h2>
 
-      {isWaiting && !isJoined ? (
-        <div className="text-gray-400">
-          ⏳ Waiting for instructor to go live...
-        </div>
-      ) : (
-        <div
-          ref={remoteContainer}
-          className="w-96 h-64 bg-gray-800 rounded-lg"
-        />
-      )}
+      <div
+        ref={remoteContainer}
+        className="relative w-[640px] h-[360px] bg-black rounded-lg overflow-hidden shadow-lg"
+      >
+        {isWaiting && (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-black/70">
+            ⏳ Waiting for instructor to go live...
+          </div>
+        )}
+      </div>
     </div>
   );
 };

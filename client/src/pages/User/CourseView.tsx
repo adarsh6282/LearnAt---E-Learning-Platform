@@ -316,23 +316,49 @@ const CoursePage = () => {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-6xl mx-auto p-8">
             <div className="mb-6">
-              <h3 className="text-4xl font-bold mb-3 bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-                {selectedLesson?.title || "Select a lesson to begin"}
-              </h3>
-              {selectedLesson?.duration && (
-                <div className="flex items-center space-x-4 text-gray-400">
-                  <span className="flex items-center text-sm">
-                    <Clock className="w-4 h-4 mr-1.5" />
-                    Duration: {selectedLesson.duration}
-                  </span>
-                  {selectedLesson.type && (
-                    <span className="flex items-center text-sm">
-                      <FileText className="w-4 h-4 mr-1.5" />
-                      Type: {selectedLesson.type.toUpperCase()}
-                    </span>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-4xl font-bold mb-3 bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+                    {selectedLesson?.title || "Select a lesson to begin"}
+                  </h3>
+                  {selectedLesson?.duration && (
+                    <div className="flex items-center space-x-4 text-gray-400">
+                      <span className="flex items-center text-sm">
+                        <Clock className="w-4 h-4 mr-1.5" />
+                        Duration: {selectedLesson.duration}
+                      </span>
+                      {selectedLesson.type && (
+                        <span className="flex items-center text-sm">
+                          <FileText className="w-4 h-4 mr-1.5" />
+                          Type: {selectedLesson.type.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
+
+                {liveSession?.isLive && (
+                  <div className="relative flex-shrink-0 self-start">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg blur-sm opacity-50 animate-pulse"></div>
+                    <div className="relative bg-gradient-to-br from-red-600 to-pink-600 backdrop-blur-sm border border-red-400/50 rounded-lg shadow-xl px-3 py-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="relative">
+                          <div className="w-2 h-2 bg-white rounded-full animate-ping absolute"></div>
+                          <div className="w-2 h-2 bg-white rounded-full relative"></div>
+                        </div>
+                        <span className="text-white font-bold text-xs uppercase tracking-wide">Instructor is Live Now</span>
+                      </div>
+                      <button
+                        onClick={() => navigate(`/users/live/${liveSession.sessionId}`)}
+                        className="w-full bg-white hover:bg-gray-50 text-red-600 font-semibold text-xs py-1.5 px-3 rounded transition-all duration-200 hover:scale-105 flex items-center justify-center gap-1"
+                      >
+                        <span>Join</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mb-8">
@@ -449,20 +475,6 @@ const CoursePage = () => {
                   </div>
                 </div>
               )}
-
-              {liveSession?.isLive && (
-                <div className="mt-6 p-4 bg-green-700 rounded-lg text-white">
-                  <p>Instructor is live now!</p>
-                  <button
-                    className="mt-2 bg-white text-green-700 px-4 py-2 rounded"
-                    onClick={() =>
-                      navigate(`/users/live/${liveSession.sessionId}`)
-                    }
-                  >
-                    Join Live
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </main>
@@ -471,4 +483,4 @@ const CoursePage = () => {
   );
 };
 
-export default CoursePage;
+export default CoursePage

@@ -7,7 +7,7 @@ import type { CourseViewType } from "../types/user.types";
 import type { INotification } from "../context/NotificationContext";
 import { createApi } from "./newApiService";
 
-const api=createApi("admin")
+const api = createApi("admin");
 
 interface Message {
   message: string;
@@ -177,7 +177,7 @@ export const getReviewForAdminS = async (
   page: number,
   limit: number,
   search: string,
-  rating: number|null,
+  rating: number | null,
   sort?: string
 ) => {
   return await api.get<{
@@ -232,6 +232,8 @@ export const updateComplaint = async (
   });
 };
 
-export const refreshedComplaint=async()=>{
-  return await api.get<{complaints:Complaint[],totalPages:number}>("/admin/complaints");
-}
+export const refreshedComplaint = async () => {
+  return await api.get<{ complaints: Complaint[]; totalPages: number }>(
+    "/admin/complaints"
+  );
+};

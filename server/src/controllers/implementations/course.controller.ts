@@ -74,9 +74,7 @@ export class CourseController implements ICourseController {
   ): Promise<void> {
     try {
       const { courseId } = req.params;
-      const instructorId = req.instructor?.id;
 
-      // ✅ Properly parse modules
       let modulesRaw: any[] = [];
       if (req.body.modules) {
         modulesRaw =
@@ -85,7 +83,6 @@ export class CourseController implements ICourseController {
             : req.body.modules;
       }
 
-      // ✅ Parse lecture metadata safely
       const lectureMeta = req.body.lectureMeta
         ? Array.isArray(req.body.lectureMeta)
           ? req.body.lectureMeta.map((m: string) => JSON.parse(m))
@@ -95,7 +92,6 @@ export class CourseController implements ICourseController {
       const lectureFiles = req.files?.lectureFiles || [];
       const thumbnailFile = req.files?.thumbnail?.[0];
 
-      // ✅ Pair files with their meta
       const lectureFilesWithMeta: LectureFileWithMeta[] = lectureFiles.map(
         (file, i) => ({
           file,
@@ -103,7 +99,6 @@ export class CourseController implements ICourseController {
         })
       );
 
-      // ✅ Prepare update payload
       const updateData: UpdateCourseInput & {
         lectureFiles?: LectureFileWithMeta[];
       } = {
@@ -132,10 +127,10 @@ export class CourseController implements ICourseController {
         courseId,
         updateData
       );
-      res.status(200).json(updatedCourse);
+      res.status(httpStatus.OK).json(updatedCourse);
     } catch (err: unknown) {
       console.error(err);
-      res.status(500).json({
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
         message: err instanceof Error ? err.message : "Something went wrong",
       });
     }

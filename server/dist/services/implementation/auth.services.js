@@ -416,6 +416,8 @@ class AuthService {
             throw new Error("Quiz not found");
         let score = 0;
         quiz.questions.forEach((q) => {
+            if (!q._id)
+                return;
             const selected = answers[q._id];
             const correct = q.options.find((o) => o.isCorrect);
             if (selected && correct && selected === correct.text) {

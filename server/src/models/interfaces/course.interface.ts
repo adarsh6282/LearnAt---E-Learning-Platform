@@ -27,7 +27,7 @@ export interface ILecture {
   description: string;
   url?: string;
   duration: string;
-  order: number;
+  order?: number;
   type: "video" | "pdf";
 }
 

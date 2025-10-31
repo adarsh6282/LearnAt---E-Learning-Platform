@@ -1,9 +1,9 @@
-import passport from "passport"
-import { Profile,Strategy as GoogleStrategy } from "passport-google-oauth20"
-import dotenv from "dotenv"
-import User from "../models/implementations/userModel"
+import passport from "passport";
+import { Profile, Strategy as GoogleStrategy } from "passport-google-oauth20";
+import dotenv from "dotenv";
+import User from "../models/implementations/userModel";
 
-dotenv.config()
+dotenv.config();
 
 passport.use(
   new GoogleStrategy(
@@ -29,15 +29,22 @@ passport.use(
 
           return done(null, user);
         } else {
+          const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+          const baseName =
+            profile.displayName?.split(" ")[0]?.toLowerCase() ||
+            email.split("@")[0].toLowerCase();
+          const username = `${baseName}_${randomSuffix}`;
+
           const newUser = new User({
             name: profile.displayName,
             email,
             googleId: profile.id,
+            username,
           });
 
           await newUser.save();
 
-          return done(null, newUser)
+          return done(null, newUser);
         }
       } catch (error) {
         console.error("Google Auth Error:", error);
@@ -47,4 +54,4 @@ passport.use(
   )
 );
 
-export default passport
+export default passport;

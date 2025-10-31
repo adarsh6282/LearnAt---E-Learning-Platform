@@ -129,7 +129,7 @@ const Courses: React.FC = () => {
                     </Link>
 
                     <Link
-                      to={`/instructors/courses/create-quiz/${course._id}`}
+                      to={INSTRUCTOR_ROUTES.CREATEQUIZ(course._id)}
                       className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
                     >
                       Create Quiz

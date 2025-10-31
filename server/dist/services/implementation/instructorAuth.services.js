@@ -48,6 +48,7 @@ const review_mapper_1 = require("../../Mappers/review.mapper");
 const notification_mapper_1 = require("../../Mappers/notification.mapper");
 const category_mapper_1 = require("../../Mappers/category.mapper");
 const user_mapper_1 = require("../../Mappers/user.mapper");
+const quiz_mapper_1 = require("../../Mappers/quiz.mapper");
 class InstructorAuthSerivce {
     constructor(_instructorAuthRepository, _otpRepository, _adminRepository, _userRepository, _courseRepository, _reviewRepository, _orderRepository, _walletRepository, _categoryRepository, _notificationRepository, _quizRepository) {
         this._instructorAuthRepository = _instructorAuthRepository;
@@ -294,7 +295,10 @@ class InstructorAuthSerivce {
             instructorId: instructorId,
         };
         const createdQuiz = await this._quizRepository.createQuiz(quizData);
-        return createdQuiz;
+        if (!createdQuiz) {
+            throw new Error("failed to create quiz");
+        }
+        return (0, quiz_mapper_1.toQuizDTO)(createdQuiz);
     }
     async updateQuiz(quizId, updateData) {
         const existing = await this._quizRepository.findQuizById(quizId);
@@ -305,7 +309,10 @@ class InstructorAuthSerivce {
             throw new Error("Invalid questions data");
         }
         const updatedQuiz = await this._quizRepository.updateQuizById(quizId, updateData);
-        return updatedQuiz;
+        if (!updatedQuiz) {
+            throw new Error("failed to update the quiz");
+        }
+        return (0, quiz_mapper_1.toQuizDTO)(updatedQuiz);
     }
     async getQuizzes(instructor) {
         const quizzes = await this._quizRepository.findByInstructorId(instructor);
@@ -328,21 +335,29 @@ class InstructorAuthSerivce {
         if (!quiz) {
             throw new Error("No quiz found");
         }
-        return await this._quizRepository.changeStatus(quizId, true);
+        const updated = await this._quizRepository.changeStatus(quizId, true);
+        if (!updated) {
+            throw new Error("failed to delete the quiz");
+        }
+        return (0, quiz_mapper_1.toQuizDTO)(updated);
     }
     async restoreQuiz(quizId) {
         const quiz = await this._quizRepository.findQuizById(quizId);
         if (!quiz) {
             throw new Error("No quiz found");
         }
-        return await this._quizRepository.changeStatus(quizId, false);
+        const updated = await this._quizRepository.changeStatus(quizId, false);
+        if (!updated) {
+            throw new Error("failed to delete the quiz");
+        }
+        return (0, quiz_mapper_1.toQuizDTO)(updated);
     }
     async getQuiz(quizId) {
         const quiz = await this._quizRepository.findQuizById(quizId);
         if (!quiz) {
             throw new Error("No quiz found");
         }
-        return quiz;
+        return (0, quiz_mapper_1.toQuizDTO)(quiz);
     }
 }
 exports.InstructorAuthSerivce = InstructorAuthSerivce;

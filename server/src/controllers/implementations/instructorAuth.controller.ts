@@ -729,7 +729,7 @@ export class InstructorAuthController implements IInstructorController {
     try {
       const { sessionId, userId, role } = req.query;
       if (role !== "instructor" && role !== "user") {
-        res.status(400).json({ error: "Invalid role" });
+        res.status(httpStatus.BAD_REQUEST).json({ error: "Invalid role" });
         return;
       }
       const token = await this._livesessionService.generateToken(
@@ -757,6 +757,16 @@ export class InstructorAuthController implements IInstructorController {
       }
       await this._instructorAuthService.updateQuiz(quizId,updateData)
       res.status(httpStatus.OK).json({message:"Quiz Updated Successfull"})
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async endSession(req: Request, res: Response): Promise<void> {
+    try {
+      const {isLive,sessionId}=req.body
+      await this._livesessionService.endSession(isLive,sessionId)
+      res.status(httpStatus.OK).json({message:"Session Ended"})
     } catch (err) {
       console.log(err)
     }

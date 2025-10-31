@@ -2,6 +2,7 @@ import { CategoryDTO } from "../../DTO/category.dto";
 import { CourseDTO } from "../../DTO/course.dto";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { NotificationDTO } from "../../DTO/notification.dto";
+import { QuizDTO } from "../../DTO/quiz.dto";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
@@ -45,11 +46,11 @@ export interface IInstructorAuthService{
     getNotifications(userId:string):Promise<NotificationDTO[]>
     markAsRead(notificationId:string):Promise<NotificationDTO>
     getPurchasedUsers(instructorId:string):Promise<UserDTO[]>
-    createQuiz(instructorId:string,quiz:Partial<IQuiz>,courseID:string):Promise<IQuiz|null>
+    createQuiz(instructorId:string,quiz:Partial<IQuiz>,courseID:string):Promise<QuizDTO>
     getQuizzes(instructor:string):Promise<InstructorQuizResponse[]|null>
-    deleteQuiz(quizId:string):Promise<IQuiz|null>
-    restoreQuiz(quizId:string):Promise<IQuiz|null>
-    getQuiz(quizId:string):Promise<IQuiz|null>
-    updateQuiz(quizId:string,updateData:Partial<IQuiz>):Promise<IQuiz|null>
+    deleteQuiz(quizId:string):Promise<QuizDTO>
+    restoreQuiz(quizId:string):Promise<QuizDTO>
+    getQuiz(quizId:string):Promise<QuizDTO>
+    updateQuiz(quizId:string,updateData:Partial<IQuiz>):Promise<QuizDTO>
     getDashboard(instructorId:string):Promise<Dashboard|null>
 }

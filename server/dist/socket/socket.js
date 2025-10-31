@@ -33,7 +33,8 @@ const initSocket = (server) => {
         socket.on("sendMessage", async (message) => {
             try {
                 const saved = await messageService.sendMessage(message);
-                socket.to(message.chat).emit("receiveMessage", saved);
+                // socket.to(message.chat).emit("receiveMessage", saved);
+                io.to(message.chat).emit("receiveMessage", saved);
                 const chat = await chatModel_1.default.findById(message.chat);
                 let receiverId;
                 if (message.senderId === chat?.user.toString()) {
@@ -62,8 +63,9 @@ const initSocket = (server) => {
             }
         });
         socket.on("deleteMessage", async ({ chatId, messageId, userId }) => {
+            console.log("Delete request received:", { chatId, messageId, userId });
             await messageService.deleteMessage(messageId, userId);
-            socket.to(chatId).emit("messageDeleted", messageId);
+            io.to(chatId).emit("messageDeleted", messageId);
         });
         socket.on("join-video-room", (chatId) => {
             socket.join(chatId);

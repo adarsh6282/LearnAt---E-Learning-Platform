@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LiveSessionService = void 0;
 const generateAgoraToken_1 = require("../../utils/generateAgoraToken");
 const socket_1 = require("../../socket/socket");
+const livesession_mapper_1 = require("../../Mappers/livesession.mapper");
 class LiveSessionService {
     constructor(_livesessionRepository, _courseRepository) {
         this._livesessionRepository = _livesessionRepository;
@@ -26,18 +27,36 @@ class LiveSessionService {
                 }
             }
         }
-        return session;
+        if (!session) {
+            throw new Error("no such sessions");
+        }
+        return (0, livesession_mapper_1.toLivesessionDTO)(session);
     }
     async generateToken(sessionId, userId, role) {
         const session = await this._livesessionRepository.findById(sessionId);
         if (!session)
             throw new Error("Session not found");
+        const courseId = session.courseId.toString();
         const { token, appId, roomId } = await (0, generateAgoraToken_1.generateAgoraToken)(session.roomId, userId, role);
-        return { token, appId, roomId, userId };
+        return { token, appId, roomId, userId, courseId };
     }
     async getLiveSessionByCourseId(courseId) {
         const session = await this._livesessionRepository.findActiveByCourseId(courseId);
-        return session;
+        if (!session) {
+            throw new Error("No live here");
+        }
+        return (0, livesession_mapper_1.toLivesessionDTO)(session);
+    }
+    async endSession(isLive, sessionId) {
+        const session = await this._livesessionRepository.findById(sessionId);
+        if (!session) {
+            throw new Error("No Session here");
+        }
+        const updated = await this._livesessionRepository.endSession(isLive, sessionId);
+        if (!updated) {
+            throw new Error("no live here");
+        }
+        return (0, livesession_mapper_1.toLivesessionDTO)(updated);
     }
 }
 exports.LiveSessionService = LiveSessionService;

@@ -3,7 +3,7 @@ import {
   CreateCourseInput,
 } from "../interfaces/course.services";
 import { ICourseRepository } from "../../repository/interfaces/course.interface";
-import { UpdateCourseInput } from "../../models/interfaces/course.interface";
+import { IModule, UpdateCourseInput } from "../../models/interfaces/course.interface";
 import { Types } from "mongoose";
 import cloudinary from "../../config/cloudinary.config";
 import streamifier from "streamifier";
@@ -146,7 +146,7 @@ export class CourseService implements ICourseService {
       (courseData.modules || []).map(async (mod, modIndex) => {
         const existingModule = mod._id
           ? existingCourse.modules.find(
-              (m: any) => m._id.toString() === mod._id
+              (m: IModule) => m._id!.toString() === mod._id
             )
           : null;
           
@@ -255,13 +255,14 @@ export class CourseService implements ICourseService {
       })
     );
 
-    const updatedCourseData: any = {
+    const updatedCourseData={
       title: courseData.title ?? existingCourse.title,
       description: courseData.description ?? existingCourse.description,
       category: courseData.category ?? existingCourse.category,
       price: courseData.price ?? existingCourse.price,
       isActive: courseData.isActive ?? existingCourse.isActive,
       modules: updatedModules,
+      thumbnail:existingCourse.thumbnail
     };
 
     if (thumbnailUrl) updatedCourseData.thumbnail = thumbnailUrl;

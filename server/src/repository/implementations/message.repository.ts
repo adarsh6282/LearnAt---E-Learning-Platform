@@ -25,6 +25,8 @@ export class MessageRepository implements IMessageRepository {
       lastMessageContent: message.content,
     });
 
+    console.log(message)
+
     return message;
   }
 

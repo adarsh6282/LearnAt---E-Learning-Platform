@@ -10,7 +10,7 @@ import type { User } from "../types/user.types";
 import { createApi } from "./newApiService";
 import type { Option, Question } from "../pages/Instructor/createQuiz";
 
-const api=createApi("instructor")
+const api = createApi("instructor");
 
 interface Quiz {
   title: string;
@@ -26,9 +26,9 @@ interface UpdateQuiz {
   questions: QuestionUpdate[];
 }
 
-interface QuestionUpdate{
-    questionText: string;
-    options: Option[];
+interface QuestionUpdate {
+  questionText: string;
+  options: Option[];
 }
 
 interface Review {
@@ -66,12 +66,16 @@ interface Message {
   chat: string;
   senderId: string;
   content?: string;
-  isDeleted:boolean
-  image?:string
-  senderRole:"User"|"Instructor"
-  readBy:{_id:string,readerId:string,readerModel:"User"|"Instructor"}[]
+  isDeleted: boolean;
+  image?: string;
+  senderRole: "User" | "Instructor";
+  readBy: {
+    _id: string;
+    readerId: string;
+    readerModel: "User" | "Instructor";
+  }[];
   createdAt: string;
-  updatedAt:string
+  updatedAt: string;
 }
 
 interface Dashboard {
@@ -192,9 +196,7 @@ export const instructorRegisterS = async (formPayload: {
 };
 
 export const getCourseById = async (courseId: string) => {
-  return await api.get<CourseData>(
-    `/instructors/courses/${courseId}`
-  );
+  return await api.get<CourseData>(`/instructors/courses/${courseId}`);
 };
 
 export const reapplyS = async (formData: FormData) => {
@@ -220,10 +222,7 @@ export const getEnrollments = async (
 };
 
 export const instructorRefreshTokenS = async () => {
-  return await api.post<{ token: string }>(
-    "/instructors/refresh-token",
-    {}
-  );
+  return await api.post<{ token: string }>("/instructors/refresh-token", {});
 };
 
 export const getWalletSforInstructor = async (page: number, limit: number) => {
@@ -258,23 +257,15 @@ export const unreadCountS = async (
 };
 
 export const instructorLogout = async () => {
-  return await api.post(
-    "/instructors/logout",
-    {},
-    { withCredentials: true }
-  );
+  return await api.post("/instructors/logout", {}, { withCredentials: true });
 };
 
 export const instructorNotification = async (userId: string) => {
-  return await api.get<INotification[]>(
-    `/instructors/notifications/${userId}`
-  );
+  return await api.get<INotification[]>(`/instructors/notifications/${userId}`);
 };
 
 export const markAsReadInstructor = async (notificationId: string) => {
-  return await api.put(
-    `/instructors/notifications/read/${notificationId}`
-  );
+  return await api.put(`/instructors/notifications/read/${notificationId}`);
 };
 
 export const getCategory = async () => {
@@ -328,13 +319,10 @@ export const markMessagesReadS = async (
   userId: string,
   userModel: "User" | "Instructor"
 ) => {
-  return await api.post(
-    `/instructors/messages/mark-as-read/${chatId}`,
-    {
-      userId: userId,
-      userModel: userModel,
-    }
-  );
+  return await api.post(`/instructors/messages/mark-as-read/${chatId}`, {
+    userId: userId,
+    userModel: userModel,
+  });
 };
 
 export const getMessages = async (chatId: string) => {
@@ -349,59 +337,75 @@ export const sentImageinMessage = async (formData: FormData) => {
   );
 };
 
-export const instructorReviews = async (page:number,limit:number,rating:number|null) => {
+export const instructorReviews = async (
+  page: number,
+  limit: number,
+  rating: number | null
+) => {
   return await api.get<{
     reviews: Review[];
     total: number;
     totalPages: number;
   }>(
-    `/instructors/reviews?page=${page}&limit=${limit}&rating=${
-      rating ?? "0"
-    }`
+    `/instructors/reviews?page=${page}&limit=${limit}&rating=${rating ?? "0"}`
   );
 };
 
-export const getDashboard=async()=>{
+export const getDashboard = async () => {
   return await api.get<Dashboard>("/instructors/dashboard");
-}
+};
 
 export const resentOtpS = async (email: string) => {
   const otp = await api.post(`/instructors/resend-otp`, {
     email,
   });
-  console.log("email")
-  return otp
+  console.log("email");
+  return otp;
 };
 
-export const createQuiz=async(courseId:string,quiz:Quiz)=>{
-  return await api.post(`/instructors/quiz/create-quiz/${courseId}`,quiz)
-}
+export const createQuiz = async (courseId: string, quiz: Quiz) => {
+  return await api.post(`/instructors/quiz/create-quiz/${courseId}`, quiz);
+};
 
-export const updateQuiz=async(quizId:string,updateData:UpdateQuiz)=>{
-  const updated = await api.put(`/instructors/quiz/${quizId}`,updateData)
-  console.log(updateData)
-  return updated
-}
+export const updateQuiz = async (quizId: string, updateData: UpdateQuiz) => {
+  const updated = await api.put(`/instructors/quiz/${quizId}`, updateData);
+  console.log(updateData);
+  return updated;
+};
 
-export const getInstructorQuizzes=async()=>{
-  return await api.get(`/instructors/quiz`)
-}
+export const getInstructorQuizzes = async () => {
+  return await api.get(`/instructors/quiz`);
+};
 
-export const deleteQuiz=async(quizId:string)=>{
-  return api.patch(`/instructors/delete/quiz/${quizId}`)
-}
+export const deleteQuiz = async (quizId: string) => {
+  return api.patch(`/instructors/delete/quiz/${quizId}`);
+};
 
-export const restoreQuiz=async(quizId:string)=>{
-  return api.patch(`/instructors/restore/quiz/${quizId}`)
-}
+export const restoreQuiz = async (quizId: string) => {
+  return api.patch(`/instructors/restore/quiz/${quizId}`);
+};
 
-export const getQuiz=async(quizId:string)=>{
+export const getQuiz = async (quizId: string) => {
   return await api.get(`/instructors/quiz/${quizId}`);
-}
+};
 
 export const createLiveSessionS = async (courseId: string) => {
   return await api.post("/instructors/live/create-session", {
     courseId,
     startTime: new Date(),
   });
+};
+
+export const endLiveSession = async (isLive: boolean, sessionId: string) => {
+  return await api.patch(`/instructors/live/end-live`, { isLive, sessionId });
+};
+
+export const startLiveSession = async (
+  sessionId: string,
+  userId: string,
+  role: string
+) => {
+  return await api.get(
+    `/instructors/live/token?sessionId=${sessionId}&userId=${userId}&role=${role}`
+  );
 };
