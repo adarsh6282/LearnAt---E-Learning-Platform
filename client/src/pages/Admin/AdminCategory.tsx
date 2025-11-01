@@ -18,7 +18,7 @@ const AdminCategory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const itemsPerPage = 4;
+  const itemsPerPage = 1;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
