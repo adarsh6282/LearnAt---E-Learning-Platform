@@ -13,13 +13,13 @@ export default function InstructorLogin() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
-  const instructortoken=localStorage.getItem("instructorsToken")
+  const instructortoken = localStorage.getItem("instructorsToken");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(instructortoken) navigate('/instructors/dashboard')
+    if (instructortoken) navigate("/instructors/dashboard");
   }, [instructortoken, navigate]);
 
   const isFormValid = () => {
@@ -30,8 +30,23 @@ export default function InstructorLogin() {
     const newErrors: { email?: string; password?: string } = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(email.trim())) {
       newErrors.email = "Invalid email format";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password =
+        "Password must contain at least one lowercase letter";
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      newErrors.password =
+        "Password must contain at least one special character";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -83,9 +98,6 @@ export default function InstructorLogin() {
                 name="email"
                 type="email"
                 value={email}
-                onKeyDown={(e) => {
-                        if (e.repeat) e.preventDefault();
-                      }}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full py-2 pl-3 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="you@example.com"
@@ -109,9 +121,6 @@ export default function InstructorLogin() {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onKeyDown={(e) => {
-                        if (e.repeat) e.preventDefault();
-                      }}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full py-2 pl-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="••••••••"
@@ -156,7 +165,10 @@ export default function InstructorLogin() {
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           Don't have an account?{" "}
-          <Link to={"/instructors/register"} className="font-medium text-blue-600 hover:text-blue-500">
+          <Link
+            to={"/instructors/register"}
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
             Sign up
           </Link>
         </p>

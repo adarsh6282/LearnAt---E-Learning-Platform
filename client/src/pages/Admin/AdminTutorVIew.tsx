@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { Tutor } from "../../types/instructor.types";
 import { adminTutorView } from "../../services/admin.services";
 
 const TutorDetail = () => {
   const { tutorId } = useParams();
-  const [tutor, setTutor] = useState<Tutor|null>(null);
-  const navigate=useNavigate()
+  const [tutor, setTutor] = useState<Tutor | null>(null);
+  const [selectedTutorResume, setSelectedTutorResume] = useState<string | null>(
+    null
+  );
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTutorDetails = async () => {
       try {
-        const res = await adminTutorView(tutorId!)
+        const res = await adminTutorView(tutorId!);
         setTutor(res.data);
       } catch (err) {
         console.log(err);
       }
     };
-    fetchTutorDetails()
-  },[tutorId]);
+    fetchTutorDetails();
+  }, [tutorId]);
 
   if (!tutor) {
     return (
@@ -86,8 +89,8 @@ const TutorDetail = () => {
                 tutor.accountStatus === "active"
                   ? "text-green-600"
                   : tutor.accountStatus === "blocked"
-                  ? "text-red-500"
-                  : "text-yellow-500"
+                    ? "text-red-500"
+                    : "text-yellow-500"
               }`}
             >
               {tutor.accountStatus.charAt(0).toUpperCase() +
@@ -108,13 +111,35 @@ const TutorDetail = () => {
 
           <div className="col-span-1 sm:col-span-2">
             <h4 className="text-sm text-gray-500">Resume</h4>
-            <Link
-              to={tutor.resume}
+            <button
+              onClick={() => {
+                setSelectedTutorResume(tutor.resume);
+              }}
               rel="noopener noreferrer"
               className="text-blue-600 underline hover:text-blue-800"
             >
               View Resume
-            </Link>
+            </button>
+            {selectedTutorResume && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 h-[80vh] relative overflow-hidden">
+                  <button
+                    onClick={() => setSelectedTutorResume(null)}
+                    className="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded-full px-2 py-1 text-sm z-10"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="w-full h-full overflow-auto p-4">
+                    <img
+                      src={selectedTutorResume}
+                      alt="Tutor Resume"
+                      className="w-full h-auto object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

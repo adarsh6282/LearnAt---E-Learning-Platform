@@ -38,8 +38,6 @@ const UserCertificates = () => {
     fetchCertificates();
   }, [authUser]);
 
-  console.log(certificates)
-
   if (loading) return <p>Loading certificates...</p>;
 
   if (!certificates.length) return <p>No certificates found.</p>;

@@ -66,7 +66,6 @@ const EditCourse: React.FC = () => {
     thumbnail: "",
   });
 
-
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -110,8 +109,18 @@ const EditCourse: React.FC = () => {
       return false;
     }
 
+    if (courseData.title.length > 25) {
+      errorToast("Course title exceeded 25 charcters");
+      return false;
+    }
+
     if (!courseData.description.trim()) {
       errorToast("Course description is required");
+      return false;
+    }
+
+    if (courseData.description.trim().length > 150) {
+      errorToast("Course description exceeded 150 characters");
       return false;
     }
 
@@ -137,8 +146,19 @@ const EditCourse: React.FC = () => {
         return false;
       }
 
+      if (module.title.length > 20) {
+        errorToast(`Module ${mIndex + 1} title exceed 20 characters`);
+        return false;
+      }
+
       if (!module.description.trim()) {
         errorToast(`Module ${mIndex + 1} description is required`);
+        return false
+      }
+
+      if (module.description.length > 40) {
+        errorToast(`Module ${mIndex + 1} description exceed 40 characters`);
+        return false
       }
 
       if (!module.chapters.length) {
@@ -153,9 +173,23 @@ const EditCourse: React.FC = () => {
           return false;
         }
 
+        if (chapter.title.length > 15) {
+          errorToast(
+            `Chapter ${cIndex + 1} title in ${module.title} has exceed 15 characters`
+          );
+          return false;
+        }
+
         if (!chapter.description.trim()) {
           errorToast(
             `Chapter ${cIndex + 1} in ${module.title} needs a description`
+          );
+          return false;
+        }
+
+        if (chapter.description.length > 50) {
+          errorToast(
+            `Chapter ${cIndex + 1} description in ${module.title} exceed 50 charcters`
           );
           return false;
         }
@@ -175,6 +209,13 @@ const EditCourse: React.FC = () => {
             return false;
           }
 
+          if (lesson.title.length > 15) {
+            errorToast(
+              `Lesson ${lIndex + 1} title in chapter ${chapter.title} exceed 15 characters`
+            );
+            return false;
+          }
+
           if (!lesson.description.trim()) {
             errorToast(
               `Lesson ${lIndex + 1} in chapter ${chapter.title} needs a description`
@@ -182,8 +223,22 @@ const EditCourse: React.FC = () => {
             return false;
           }
 
+          if (lesson.description.length > 45) {
+            errorToast(
+              `Lesson ${lIndex + 1} description in chapter ${chapter.title} exceed 45 characters`
+            );
+            return false;
+          }
+
           if (!lesson.type) {
             errorToast(`Please select a type for lesson "${lesson.title}"`);
+            return false;
+          }
+
+          if (!lesson.duration.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} duration is required in chapter ${cIndex + 1}`
+            );
             return false;
           }
 

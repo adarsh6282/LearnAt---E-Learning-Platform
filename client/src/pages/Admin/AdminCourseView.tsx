@@ -88,7 +88,6 @@ const AdminCourseView: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-80px)] overflow-y-auto pt-20 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-4">
-      {/* Custom Scrollbar Styles */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
@@ -166,7 +165,6 @@ const AdminCourseView: React.FC = () => {
           </div>
         </div>
 
-        {/* Course Content - Scrollable */}
         {course.modules && course.modules.length > 0 ? (
           <div className="space-y-6">
             {course.modules.map((mod, modIndex) => (
@@ -174,7 +172,6 @@ const AdminCourseView: React.FC = () => {
                 key={mod._id || modIndex}
                 className="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200"
               >
-                {/* Module Header */}
                 <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-5">
                   <div className="flex items-start justify-between">
                     <div>

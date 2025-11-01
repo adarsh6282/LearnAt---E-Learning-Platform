@@ -28,6 +28,12 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
       navigate("/instructors/dashboard");
   }, [usertoken, instructortoken, navigate, role]);
 
+  const validateField = () => {
+    if (otp.length < 6 || otp.length > 6) {
+      errorToast("Invalid OTP");
+    }
+  };
+
   useEffect(() => {
     if (timer === 0) {
       setCanResend(true);
@@ -42,6 +48,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateField) return;
     setLoading(true);
     setError("");
 
@@ -75,6 +82,7 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
 
   const handleResend = async () => {
     setError("");
+    if (!validateField) return;
     setCanResend(false);
     setTimer(60);
 
@@ -88,9 +96,9 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
       }
 
       if (role == "users") {
-        await resentOtp(userData.email)
+        await resentOtp(userData.email);
       } else if (role === "instructors") {
-        await resentOtpS(userData.email)
+        await resentOtpS(userData.email);
       }
 
       successToast("OTP resent successfully!");
@@ -119,9 +127,6 @@ const OtpPage: React.FC<OtpPageProps> = ({ role }) => {
             maxLength={6}
             placeholder="Enter OTP"
             value={otp}
-            onKeyDown={(e) => {
-              if (e.repeat) e.preventDefault();
-            }}
             onChange={(e) => setOtp(e.target.value)}
             className="w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             required

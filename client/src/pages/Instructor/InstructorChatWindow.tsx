@@ -10,6 +10,7 @@ import {
   sentImageinMessage,
 } from "../../services/instructor.services";
 import { X } from "lucide-react";
+import { errorToast } from "../../components/Toast";
 
 interface Message {
   _id?: string;
@@ -129,6 +130,11 @@ const InstructorChatWindow = () => {
     if ((!text.trim() && !file) || !authUser || !authUser._id || !chatId)
       return;
 
+    if((text.length>50 && !file)){
+      errorToast("the text has exceeded 50 characters")
+      return
+    }
+
     let imageUrl = "";
 
     if (file) {
@@ -144,14 +150,6 @@ const InstructorChatWindow = () => {
       }
     }
 
-    // const newMessage: Message = {
-    //   chatId,
-    //   sender: authUser._id,
-    //   content: text.trim(),
-    //   ...(imageUrl && { image: imageUrl }),
-    //   createdAt: new Date().toISOString(),
-    // };
-
     socket.emit("sendMessage", {
       chat: chatId,
       senderId: authUser._id,
@@ -160,7 +158,6 @@ const InstructorChatWindow = () => {
       ...(imageUrl && { image: imageUrl }),
     });
 
-    // setMessages((prev) => [...prev, newMessage]);
     setText("");
     setFile(null);
   };

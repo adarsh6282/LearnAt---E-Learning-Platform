@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { editProfileS } from "../../services/instructor.services";
+import { errorToast } from "../../components/Toast";
 
 const InstructorProfile: React.FC = () => {
   const context = useContext(InstructorContext);
@@ -45,6 +46,25 @@ const InstructorProfile: React.FC = () => {
       [name]: value,
     }));
   };
+
+  const validateForm=()=>{
+    if(formData.name.length>20){
+      errorToast("Your name can only be 20 characters")
+      return false
+    }
+
+    if(formData.title.length>15){
+      errorToast("Title cannot exceed 15 characters")
+      return false
+    }
+
+    if(formData.education.length>20){
+      errorToast("Education cannot exceed 20 characters")
+      return false
+    }
+
+    return true
+  }
 
   const isFormValid = () => {
     return (
@@ -84,6 +104,7 @@ const InstructorProfile: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if(!validateForm) return
     try {
       setIsLoading(true);
       const formPayload = new FormData();
@@ -194,7 +215,6 @@ const InstructorProfile: React.FC = () => {
               Personal Information
             </h2>
             <div className="space-y-4">
-              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
@@ -203,9 +223,6 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="text"
                     value={formData.name}
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -214,7 +231,6 @@ const InstructorProfile: React.FC = () => {
                 )}
               </div>
 
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -225,7 +241,6 @@ const InstructorProfile: React.FC = () => {
                 </p>
               </div>
 
-              {/* Username */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Username
@@ -233,7 +248,6 @@ const InstructorProfile: React.FC = () => {
                 <p className="text-gray-900">@{instructor.username}</p>
               </div>
 
-              {/* Phone */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone
@@ -242,9 +256,6 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -266,7 +277,6 @@ const InstructorProfile: React.FC = () => {
               Professional Details
             </h2>
             <div className="space-y-4">
-              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Job Title
@@ -275,9 +285,6 @@ const InstructorProfile: React.FC = () => {
                   <input
                     type="text"
                     value={formData.title}
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -286,7 +293,6 @@ const InstructorProfile: React.FC = () => {
                 )}
               </div>
 
-              {/* Experience */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Years of Experience
@@ -296,9 +302,6 @@ const InstructorProfile: React.FC = () => {
                     type="number"
                     min="0"
                     value={formData.yearsOfExperience}
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
                     onChange={(e) =>
                       handleInputChange(
                         "yearsOfExperience",
@@ -315,7 +318,6 @@ const InstructorProfile: React.FC = () => {
                 )}
               </div>
 
-              {/* Education */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Education
@@ -323,9 +325,6 @@ const InstructorProfile: React.FC = () => {
                 {isEditing ? (
                   <textarea
                     value={formData.education}
-                    onKeyDown={(e) => {
-                      if (e.repeat) e.preventDefault();
-                    }}
                     onChange={(e) =>
                       handleInputChange("education", e.target.value)
                     }

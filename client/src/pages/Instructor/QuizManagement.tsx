@@ -52,6 +52,86 @@ const QuizManagement = () => {
     fetchQuiz();
   }, [quizId]);
 
+  const validateQuiz = (quiz:Quiz):boolean => {
+    if (!quiz.title.trim()) {
+      errorToast("Quiz title is required");
+      return false;
+    }
+    if (quiz.title.trim().length > 50) {
+      errorToast("Quiz title cannot exceed 50 characters");
+      return false;
+    }
+
+    if (!quiz.description.trim()) {
+      errorToast("Quiz description is required");
+      return false;
+    }
+    if (quiz.description.trim().length > 200) {
+      errorToast("Quiz description cannot exceed 200 characters");
+      return false;
+    }
+
+    if (quiz.passPercentage < 1 || quiz.passPercentage > 100) {
+      errorToast("Pass percentage must be between 1 and 100");
+      return false;
+    }
+
+    if (!quiz.questions.length) {
+      errorToast("At least one question is required");
+      return false;
+    }
+
+    for (let qIndex = 0; qIndex < quiz.questions.length; qIndex++) {
+      const question = quiz.questions[qIndex];
+
+      if (!question.questionText.trim()) {
+        errorToast(`Question ${qIndex + 1} text is required`);
+        return false;
+      }
+
+      if (question.questionText.trim().length > 150) {
+        errorToast(`Question ${qIndex + 1} text exceeded 150 characters`);
+        return false;
+      }
+
+      if (question.options.length !== 4) {
+        errorToast(`Question ${qIndex + 1} must have exactly 4 options`);
+        return false;
+      }
+
+      let hasCorrect = false;
+
+      for (let optIndex = 0; optIndex < question.options.length; optIndex++) {
+        const option = question.options[optIndex];
+
+        if (!option.text.trim()) {
+          errorToast(
+            `Option ${optIndex + 1} in question ${qIndex + 1} is required`
+          );
+          return false;
+        }
+
+        if (option.text.trim().length > 100) {
+          errorToast(
+            `Option ${optIndex + 1} in question ${qIndex + 1} exceeded 100 characters`
+          );
+          return false;
+        }
+
+        if (option.isCorrect) hasCorrect = true;
+      }
+
+      if (!hasCorrect) {
+        errorToast(
+          `Question ${qIndex + 1} must have at least one correct answer`
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const addQuestion = () => {
     if (!quiz) return;
     const newQuestion: Question = {
@@ -104,6 +184,10 @@ const QuizManagement = () => {
 
   const saveChanges = async () => {
     try {
+      if (!quiz) return
+
+      if(!validateQuiz(quiz)) return
+      
       if (
         !quiz?.questions &&
         !quiz?.title &&
@@ -119,7 +203,7 @@ const QuizManagement = () => {
         description: quiz?.description,
         passPercentage: quiz?.passPercentage,
       });
-      successToast("Quiz Updated Successfully")
+      successToast("Quiz Updated Successfully");
     } catch (err) {
       console.error("Failed to save quiz:", err);
       alert("❌ Failed to update quiz");

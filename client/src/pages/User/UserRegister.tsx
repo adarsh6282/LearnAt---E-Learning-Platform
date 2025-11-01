@@ -51,9 +51,16 @@ const UserRegister: React.FC = () => {
     if (!/^[A-Za-z\s]+$/.test(formData.name.trim())) {
       newErrors.name = "Name should contain only letters and spaces";
     }
+    if(formData.name.length>20){
+      newErrors.name= "Name cannot exceed 20 characters"
+    }
 
     if (formData.username.length < 4) {
       newErrors.username = "Username must be at least 4 characters";
+    }
+
+    if (formData.username.length > 10) {
+      newErrors.username = "Username must not exceed 10 characters";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
