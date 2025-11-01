@@ -61,12 +61,44 @@ const InstructorRegister: React.FC = () => {
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
-    if (formData.password.length < 6) {
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one lowercase letter";
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one special character";
     }
 
     if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if(formData.name.length>20){
+      newErrors.name="name exceeded 20 characters"
+    }
+
+    if(formData.title.length>20){
+      newErrors.title="Title exceeded 20 characters"
+    }
+
+    if(formData.username.length>10){
+      newErrors.username="Username exceeded 10 characters"
+    }
+
+    if(formData.education.length>20){
+      newErrors.education="Education exceeded 20 characters"
+    }
+
+    if(Number(formData.yearsOfExperience)<=0){
+      newErrors.yearsOfExperience="Experience cannot be zero or less"
     }
 
     setErrors(newErrors);
@@ -130,9 +162,6 @@ const InstructorRegister: React.FC = () => {
                 name="name"
                 type="text"
                 value={formData.name}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -153,9 +182,6 @@ const InstructorRegister: React.FC = () => {
                 name="username"
                 type="text"
                 value={formData.username}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -178,9 +204,6 @@ const InstructorRegister: React.FC = () => {
                 name="email"
                 type="email"
                 value={formData.email}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -201,9 +224,6 @@ const InstructorRegister: React.FC = () => {
                 name="phone"
                 type="tel"
                 value={formData.phone}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -226,9 +246,6 @@ const InstructorRegister: React.FC = () => {
                 name="education"
                 type="text"
                 value={formData.education}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -249,9 +266,6 @@ const InstructorRegister: React.FC = () => {
                 name="title"
                 type="text"
                 value={formData.title}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -275,9 +289,6 @@ const InstructorRegister: React.FC = () => {
                 type="number"
                 min="0"
                 value={formData.yearsOfExperience}
-                onKeyDown={(e) => {
-                  if (e.repeat) e.preventDefault();
-                }}
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -324,9 +335,6 @@ const InstructorRegister: React.FC = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onKeyDown={(e) => {
-                    if (e.repeat) e.preventDefault();
-                  }}
                   onChange={handleChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10"
                 />
@@ -356,9 +364,6 @@ const InstructorRegister: React.FC = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
-                  onKeyDown={(e) => {
-                    if (e.repeat) e.preventDefault();
-                  }}
                   onChange={handleChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 pr-10"
                 />

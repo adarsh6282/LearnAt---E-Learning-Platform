@@ -18,6 +18,9 @@ const AdminTutorRequests = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const [selectedTutorResume, setSelectedTutorResume] = useState<string | null>(
+    null
+  );
   const itemsPerPage = 5;
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null);
   const [rejectingEmail, setRejectingEmail] = useState<string | null>(null);
@@ -152,14 +155,12 @@ const AdminTutorRequests = () => {
                     </p>
                     <p>
                       <strong>Resume:</strong>
-                      <a
-                        href={tutor.resume}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => setSelectedTutorResume(tutor.resume)}
                         className="text-blue-600 underline ml-1"
                       >
                         View Resume
-                      </a>
+                      </button>
                     </p>
 
                     <div className="flex gap-4 mt-4">
@@ -227,6 +228,26 @@ const AdminTutorRequests = () => {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedTutorResume && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 h-[80vh] relative overflow-hidden">
+            <button
+              onClick={() => setSelectedTutorResume(null)}
+              className="absolute top-2 right-2 bg-gray-200 hover:bg-gray-300 rounded-full px-2 py-1 text-sm z-10"
+            >
+              ✕
+            </button>
+
+            <div className="w-full h-full overflow-auto p-4">
+              <img
+                src={selectedTutorResume}
+                alt="Tutor Resume"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </div>
         </div>

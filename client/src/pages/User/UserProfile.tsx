@@ -42,15 +42,28 @@ const UserProfile = () => {
     }
   }, [user]);
 
+  const validateForm=()=>{
+    if(formData.name.length>20){
+      errorToast("Name cannot exceed 20 characters")
+      return false
+    }
+    if (!/^\d{10}$/.test(formData.phone)) {
+    errorToast("Phone number must be exactly 10 digits");
+    return false;
+  }
+    return true
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const isFormValid = () => {
-    return formData.name.trim() !== "" && /^\d{10}$/.test(formData.phone);
+    return formData.name.trim() !== "";
   };
 
   const handleSave = async () => {
+    if(!validateForm()) return
     setIsLoading(true);
     try {
       const formPayload = new FormData();

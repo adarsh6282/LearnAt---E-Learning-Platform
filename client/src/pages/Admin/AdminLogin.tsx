@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { errorToast, successToast } from "../../components/Toast";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,6 @@ import type { AxiosError } from "axios";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const [isFormValid, setIsFormValid] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,15 +17,6 @@ export default function AdminLogin() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
-
-  useEffect(() => {
-    const emailValid =
-      formData.email !== "" && /\S+@\S+\.\S+/.test(formData.email);
-    const passwordValid =
-      formData.password !== "" && formData.password.length >= 6;
-
-    setIsFormValid(emailValid && passwordValid);
-  }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -45,10 +35,19 @@ export default function AdminLogin() {
       newErrors.email = "Please enter a valid email";
     }
 
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
+    } else if (!/[a-z]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one lowercase letter";
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain at least one special character";
     }
 
     setErrors(newErrors);
@@ -142,7 +141,7 @@ export default function AdminLogin() {
                   } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
                   placeholder="Enter your password"
                 />
-                
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -163,7 +162,7 @@ export default function AdminLogin() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isLoading || !isFormValid}
+              disabled={isLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (

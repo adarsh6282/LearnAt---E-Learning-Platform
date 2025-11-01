@@ -53,8 +53,6 @@ const InstructorCreateCourse: React.FC = () => {
     modules: [],
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   useEffect(() => {
     const getCategories = async () => {
       try {
@@ -73,17 +71,143 @@ const InstructorCreateCourse: React.FC = () => {
   }, []);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!courseData.title.trim()) newErrors.title = "Course title is required";
-    if (!courseData.description.trim())
-      newErrors.description = "Course description is required";
-    if (!courseData.category) newErrors.category = "Please select a category";
-    if (courseData.price <= 0) newErrors.price = "Price must be greater than 0";
-    if (courseData.modules.length === 0)
-      newErrors.modules = "At least one module is required";
+    if (!courseData.title.trim()) {
+      errorToast("Course title is required");
+      return false;
+    } else if (courseData.title.trim().length > 100) {
+      errorToast("Course title cannot exceed 100 characters");
+      return false;
+    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!courseData.description.trim()) {
+      errorToast("Course description is required");
+      return false;
+    } else if (courseData.description.trim().length > 500) {
+      errorToast("Course description cannot exceed 500 characters");
+      return false;
+    }
+
+    if (!courseData.category) {
+      errorToast("Please select a category");
+      return false;
+    }
+
+    if (courseData.price <= 0) {
+      errorToast("Price must be greater than 0");
+      return false;
+    }
+
+    if (courseData.modules.length === 0) {
+      errorToast("At least one module is required");
+      return false;
+    }
+
+    for (let mIndex = 0; mIndex < courseData.modules.length; mIndex++) {
+      const module = courseData.modules[mIndex];
+
+      if (!module.title.trim()) {
+        errorToast(`Module ${mIndex + 1} title is required`);
+        return false;
+      } else if (module.title.trim().length > 20) {
+        errorToast(`Module ${mIndex + 1} title cannot exceed 20 characters`);
+        return false;
+      }
+
+      if (!module.description.trim()) {
+        errorToast(`Module ${mIndex + 1} description is required`);
+        return false;
+      } else if (module.description.trim().length > 40) {
+        errorToast(
+          `Module ${mIndex + 1} description cannot exceed 40 characters`
+        );
+        return false;
+      }
+
+      if (module.chapters.length === 0) {
+        errorToast(`Add at least one chapter in module ${mIndex + 1}`);
+        return false;
+      }
+
+      for (let cIndex = 0; cIndex < module.chapters.length; cIndex++) {
+        const chapter = module.chapters[cIndex];
+
+        if (!chapter.title.trim()) {
+          errorToast(
+            `Chapter ${cIndex + 1} title is required in module ${mIndex + 1}`
+          );
+          return false;
+        } else if (chapter.title.trim().length > 15) {
+          errorToast(`Chapter ${cIndex + 1} title cannot exceed 15 characters`);
+          return false;
+        }
+
+        if (!chapter.description.trim()) {
+          errorToast(
+            `Chapter ${cIndex + 1} description is required in module ${mIndex + 1}`
+          );
+          return false;
+        } else if (chapter.description.trim().length > 50) {
+          errorToast(
+            `Chapter ${cIndex + 1} description cannot exceed 50 characters`
+          );
+          return false;
+        }
+
+        if (chapter.lessons.length === 0) {
+          errorToast(`Add at least one lesson in chapter ${cIndex + 1}`);
+          return false;
+        }
+
+        for (let lIndex = 0; lIndex < chapter.lessons.length; lIndex++) {
+          const lesson = chapter.lessons[lIndex];
+
+          if (!lesson.title.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} title is required in chapter ${cIndex + 1}`
+            );
+            return false;
+          } else if (lesson.title.trim().length > 15) {
+            errorToast(
+              `Lesson ${lIndex + 1} title cannot exceed 15 characters`
+            );
+            return false;
+          }
+
+          if (!lesson.description.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} description is required in chapter ${cIndex + 1}`
+            );
+            return false;
+          } else if (lesson.description.trim().length > 45) {
+            errorToast(
+              `Lesson ${lIndex + 1} description cannot exceed 45 characters`
+            );
+            return false;
+          }
+
+          if (!lesson.duration.trim()) {
+            errorToast(
+              `Lesson ${lIndex + 1} duration is required in chapter ${cIndex + 1}`
+            );
+            return false;
+          }
+
+          if (!lesson.file) {
+            errorToast(
+              `Please upload a file for lesson ${lIndex + 1} in chapter ${cIndex + 1}`
+            );
+            return false;
+          }
+        }
+      }
+    }
+
+    if (!thumbnail) {
+      errorToast("Course thumbnail is required");
+      return false;
+    }
+
+    return true;
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -107,7 +231,11 @@ const InstructorCreateCourse: React.FC = () => {
     }));
   };
 
-  const updateModule = (moduleId: number, field: keyof Module, value: string) => {
+  const updateModule = (
+    moduleId: number,
+    field: keyof Module,
+    value: string
+  ) => {
     setCourseData((prev) => ({
       ...prev,
       modules: prev.modules.map((m) =>
@@ -353,11 +481,15 @@ const InstructorCreateCourse: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border border-slate-100">
           <div className="flex items-center mb-8">
             <div className="w-1.5 h-10 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full mr-4"></div>
-            <h2 className="text-3xl font-bold text-slate-800">Course Details</h2>
+            <h2 className="text-3xl font-bold text-slate-800">
+              Course Details
+            </h2>
           </div>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Course Title</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Course Title
+              </label>
               <input
                 type="text"
                 value={courseData.title}
@@ -365,27 +497,33 @@ const InstructorCreateCourse: React.FC = () => {
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium"
               />
-              {errors.title && <p className="text-red-500 text-sm mt-2 font-medium">{errors.title}</p>}
             </div>
-            
+
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Course Description</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Course Description
+              </label>
               <textarea
                 value={courseData.description}
                 placeholder="Describe what students will learn in this course"
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 rows={4}
                 className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium resize-none"
               />
-              {errors.description && <p className="text-red-500 text-sm mt-2 font-medium">{errors.description}</p>}
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Category
+                </label>
                 <select
                   value={courseData.category}
-                  onChange={(e) => handleInputChange("category", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("category", e.target.value)
+                  }
                   className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 bg-white transition-all duration-200 text-slate-800 font-medium cursor-pointer"
                 >
                   <option value="">Select a category</option>
@@ -395,26 +533,30 @@ const InstructorCreateCourse: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                {errors.category && <p className="text-red-500 text-sm mt-2 font-medium">{errors.category}</p>}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Price ($)</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Price ($)
+                </label>
                 <input
                   type="number"
                   value={courseData.price}
-                  onChange={(e) => handleInputChange("price", parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange("price", parseFloat(e.target.value))
+                  }
                   placeholder="0.00"
                   min="0"
                   step="0.01"
                   className="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 placeholder-slate-400 font-medium"
                 />
-                {errors.price && <p className="text-red-500 text-sm mt-2 font-medium">{errors.price}</p>}
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-3">Course Thumbnail</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Course Thumbnail
+              </label>
               <label className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                 <Upload className="w-5 h-5 mr-3" />
                 <span>Upload Thumbnail</span>
@@ -440,21 +582,22 @@ const InstructorCreateCourse: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8 border border-slate-100">
           <div className="flex items-center mb-8">
             <div className="w-1.5 h-10 bg-gradient-to-b from-indigo-600 to-violet-600 rounded-full mr-4"></div>
-            <h2 className="text-3xl font-bold text-slate-800">Course Content</h2>
+            <h2 className="text-3xl font-bold text-slate-800">
+              Course Content
+            </h2>
           </div>
-          
-          {errors.modules && (
-            <div className="mb-6 px-5 py-4 bg-red-50 border-2 border-red-200 rounded-2xl">
-              <p className="text-red-600 font-semibold">{errors.modules}</p>
-            </div>
-          )}
-          
+
           {courseData.modules.map((module, mIndex) => (
-            <div key={module.id} className="border-2 border-slate-200 rounded-3xl p-8 mb-8 bg-gradient-to-br from-slate-50 to-blue-50 shadow-md hover:shadow-xl transition-all duration-300">
+            <div
+              key={module.id}
+              className="border-2 border-slate-200 rounded-3xl p-8 mb-8 bg-gradient-to-br from-slate-50 to-blue-50 shadow-md hover:shadow-xl transition-all duration-300"
+            >
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">{mIndex + 1}</span>
+                    <span className="text-white font-bold text-lg">
+                      {mIndex + 1}
+                    </span>
                   </div>
                   <h3 className="font-bold text-2xl text-slate-800">
                     Module {mIndex + 1}
@@ -468,28 +611,37 @@ const InstructorCreateCourse: React.FC = () => {
                   Remove
                 </button>
               </div>
-              
+
               <div className="space-y-4 mb-6">
                 <input
                   value={module.title}
                   placeholder="Module Title"
-                  onChange={(e) => updateModule(module.id!, "title", e.target.value)}
+                  onChange={(e) =>
+                    updateModule(module.id!, "title", e.target.value)
+                  }
                   className="w-full px-5 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 font-semibold text-slate-800 bg-white"
                 />
                 <input
                   value={module.description}
                   placeholder="Module Description"
-                  onChange={(e) => updateModule(module.id!, "description", e.target.value)}
+                  onChange={(e) =>
+                    updateModule(module.id!, "description", e.target.value)
+                  }
                   className="w-full px-5 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200 text-slate-800 bg-white"
                 />
               </div>
 
               {module.chapters.map((chapter, cIndex) => (
-                <div key={chapter.id} className="border-l-4 border-indigo-400 pl-6 mb-8 bg-white rounded-2xl p-6 shadow-sm">
+                <div
+                  key={chapter.id}
+                  className="border-l-4 border-indigo-400 pl-6 mb-8 bg-white rounded-2xl p-6 shadow-sm"
+                >
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                        <span className="text-indigo-600 font-bold text-sm">{cIndex + 1}</span>
+                        <span className="text-indigo-600 font-bold text-sm">
+                          {cIndex + 1}
+                        </span>
                       </div>
                       <h4 className="font-bold text-lg text-indigo-600">
                         Chapter {cIndex + 1}
@@ -503,13 +655,18 @@ const InstructorCreateCourse: React.FC = () => {
                       Remove
                     </button>
                   </div>
-                  
+
                   <div className="space-y-3 mb-5">
                     <input
                       value={chapter.title}
                       placeholder="Chapter Title"
                       onChange={(e) =>
-                        updateChapter(module.id!, chapter.id!, "title", e.target.value)
+                        updateChapter(
+                          module.id!,
+                          chapter.id!,
+                          "title",
+                          e.target.value
+                        )
                       }
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-200 font-semibold text-slate-800"
                     />
@@ -536,7 +693,9 @@ const InstructorCreateCourse: React.FC = () => {
                       <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center space-x-2">
                           <div className="w-6 h-6 bg-slate-200 rounded-md flex items-center justify-center">
-                            <span className="text-slate-600 font-bold text-xs">{lIndex + 1}</span>
+                            <span className="text-slate-600 font-bold text-xs">
+                              {lIndex + 1}
+                            </span>
                           </div>
                           <span className="font-bold text-slate-700">
                             Lesson {lIndex + 1}
@@ -552,7 +711,7 @@ const InstructorCreateCourse: React.FC = () => {
                           Remove
                         </button>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <input
                           value={lesson.title}
@@ -619,7 +778,9 @@ const InstructorCreateCourse: React.FC = () => {
                           <input
                             type="file"
                             accept={
-                              lesson.type === "video" ? "video/*" : "application/pdf"
+                              lesson.type === "video"
+                                ? "video/*"
+                                : "application/pdf"
                             }
                             onChange={(e) =>
                               handleFileUpload(
@@ -636,7 +797,7 @@ const InstructorCreateCourse: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   <button
                     onClick={() => addLesson(module.id!, chapter.id!)}
                     className="w-full mt-3 px-4 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-all duration-200 border-2 border-blue-200 hover:border-blue-300"
@@ -645,7 +806,7 @@ const InstructorCreateCourse: React.FC = () => {
                   </button>
                 </div>
               ))}
-              
+
               <button
                 onClick={() => addChapter(module.id!)}
                 className="w-full mt-4 px-5 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-all duration-200 border-2 border-indigo-200 hover:border-indigo-300"
@@ -654,7 +815,7 @@ const InstructorCreateCourse: React.FC = () => {
               </button>
             </div>
           ))}
-          
+
           <button
             onClick={addModule}
             className="w-full py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] text-lg"
@@ -671,9 +832,25 @@ const InstructorCreateCourse: React.FC = () => {
           >
             {isSubmitting ? (
               <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Creating Course...
               </span>

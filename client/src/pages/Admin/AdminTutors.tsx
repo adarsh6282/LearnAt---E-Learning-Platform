@@ -101,9 +101,6 @@ const AdminTutors = () => {
             type="text"
             placeholder="Search by course title or instructor..."
             value={searchQuery}
-            onKeyDown={(e) => {
-              if (e.repeat) e.preventDefault();
-            }}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />

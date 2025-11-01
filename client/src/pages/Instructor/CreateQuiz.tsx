@@ -66,6 +66,11 @@ const QuizCreation: React.FC = () => {
         return false;
       }
 
+      if (q.questionText.length>75) {
+        errorToast(`Question ${i + 1} cannot exceed 75 characters`);
+        return false;
+      }
+
       if (q.options.length < 2) {
         errorToast(`Question ${i + 1} must have at least two options`);
         return false;
@@ -78,6 +83,11 @@ const QuizCreation: React.FC = () => {
       for (let j = 0; j < q.options.length; j++) {
         if (!q.options[j].text.trim()) {
           errorToast(`Option ${j + 1} in Question ${i + 1} cannot be empty`);
+          return false;
+        }
+
+        if (q.options[j].text.length>25) {
+          errorToast(`Option ${j + 1} in Question ${i + 1} cannot exceed 25 characters`);
           return false;
         }
       }
@@ -121,12 +131,6 @@ const QuizCreation: React.FC = () => {
 
   const addOption = (qIndex: number): void => {
     const updated = [...quiz.questions];
-    const optionsCount = updated[qIndex].options.length;
-
-    if (optionsCount > 4) {
-      errorToast("You can only add up to 4 options per question");
-      return;
-    }
     updated[qIndex].options.push({ text: "", isCorrect: false });
     setQuiz({ ...quiz, questions: updated });
   };
