@@ -331,17 +331,17 @@ export class Authcontroller implements IAuthController {
 
     const order = await this._authService.getPreviousOrder(userId!, courseId);
     if (!order) {
-      res.status(200).json({ hasOrder: false });
+      res.status(httpStatus.OK).json({ hasOrder: false });
       return
     }
 
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       hasOrder: true,
       order,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to fetch order" });
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to fetch order" });
   }
   }
 
