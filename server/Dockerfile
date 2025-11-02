@@ -22,6 +22,8 @@ RUN npm install --omit=dev
 
 COPY --from=build /app/dist ./dist
 
+RUN mkdir -p /app/uploads
+
 EXPOSE 3000
 
 CMD ["npm", "start"]
