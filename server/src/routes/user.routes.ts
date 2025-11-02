@@ -43,6 +43,9 @@ router.post(
   authRole(["user"]),
   authController.buyCourse.bind(authController)
 );
+router.put("/cancel-order/:orderId",authRole(["user"]),authController.cancelOrder.bind(authController))
+router.get("/course-order/:courseId",authRole(["user"]),authController.getPreviousOrder.bind(authController))
+router.put("/retrypayment/:orderId",authRole(["user"]),authController.retryPayment.bind(authController))
 router.post(
   "/orders/verify",
   authRole(["user"]),

@@ -41,7 +41,45 @@ export class OrderRepository implements IOrderRepository {
     };
   }
 
-  async markOrderAsPaid(orderId: string|Types.ObjectId): Promise<IOrder | null> {
+  async getOrderById(orderId: string): Promise<IOrder | null> {
+    return await Order.findById(orderId);
+  }
+
+  async cancelOrder(orderId: string, status: string): Promise<IOrder | null> {
+    return await Order.findByIdAndUpdate(
+      orderId,
+      { status: status },
+      { new: true }
+    );
+  }
+
+  async updateOrderForRetry(
+    orderId: string,
+    newRazorpayOrderId: string
+  ): Promise<IOrder | null> {
+    return await Order.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          razorpayOrderId: newRazorpayOrderId,
+          status: "created",
+          updatedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+  }
+
+  async getPreviousOrder(
+    userId: string,
+    courseId: string
+  ): Promise<IOrder | null> {
+    return await Order.findOne({ userId, courseId });
+  }
+
+  async markOrderAsPaid(
+    orderId: string | Types.ObjectId
+  ): Promise<IOrder | null> {
     return await Order.findByIdAndUpdate(orderId, { status: "paid" });
   }
 
@@ -208,7 +246,7 @@ export class OrderRepository implements IOrderRepository {
       userId,
       status: "paid",
     })
-      .populate<{courseId:ICourse}>({
+      .populate<{ courseId: ICourse }>({
         path: "courseId",
         select: "title description price createdAt thumbnail",
         match: { isActive: true },
@@ -218,7 +256,7 @@ export class OrderRepository implements IOrderRepository {
       .sort({ createdAt: -1 });
 
     const purchasedCourses: PurchasedCourse[] = courses
-      .filter(order => order.courseId)
+      .filter((order) => order.courseId)
       .map((order) => {
         const course = order.courseId;
         return {

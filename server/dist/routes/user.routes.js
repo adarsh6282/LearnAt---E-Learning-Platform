@@ -26,6 +26,9 @@ router.patch("/profile", (0, authRole_1.default)(["user"]), multer_1.default.sin
 router.get("/courses", user_dependencyhandler_1.authController.getCourses.bind(user_dependencyhandler_1.authController));
 router.get("/category", user_dependencyhandler_1.authController.getCategory.bind(user_dependencyhandler_1.authController));
 router.post("/orders", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.buyCourse.bind(user_dependencyhandler_1.authController));
+router.put("/cancel-order/:orderId", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.cancelOrder.bind(user_dependencyhandler_1.authController));
+router.get("/course-order/:courseId", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.getPreviousOrder.bind(user_dependencyhandler_1.authController));
+router.put("/retrypayment/:orderId", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.retryPayment.bind(user_dependencyhandler_1.authController));
 router.post("/orders/verify", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.verifyOrder.bind(user_dependencyhandler_1.authController));
 router.get("/courses/:courseId", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.findCourseById.bind(user_dependencyhandler_1.authController));
 router.post("/course-view/progress/:courseId", (0, authRole_1.default)(["user"]), user_dependencyhandler_1.authController.markLectureWatched.bind(user_dependencyhandler_1.authController));

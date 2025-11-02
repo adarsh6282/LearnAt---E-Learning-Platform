@@ -244,6 +244,40 @@ class AuthService {
         }
         return (0, order_mapper_1.toOrderDTO)(order);
     }
+    async cancelOrder(orderId) {
+        const order = await this._orderRepsitory.getOrderById(orderId);
+        if (!order)
+            throw new Error("Order not found");
+        if (order.status === "paid")
+            throw new Error("Cannot cancel a paid order");
+        const updated = await this._orderRepsitory.cancelOrder(orderId, "failed");
+        if (!updated) {
+            throw new Error("failed to update the order");
+        }
+        return (0, order_mapper_1.toOrderDTO)(updated);
+    }
+    async retryPayment(orderId) {
+        const existingOrder = await this._orderRepsitory.getOrderById(orderId);
+        if (!existingOrder) {
+            throw new Error("Order not found");
+        }
+        if (existingOrder.status === "paid") {
+            throw new Error("Order already paid");
+        }
+        const course = await this._courseRepository.findCourseById(existingOrder.courseId.toString());
+        if (!course)
+            throw new Error("Course not found");
+        const razorPayOrder = await razorpay_config_1.default.orders.create({
+            amount: existingOrder.amount * 100,
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`,
+        });
+        const updatedOrder = await this._orderRepsitory.updateOrderForRetry(existingOrder._id.toString(), razorPayOrder.id);
+        if (!updatedOrder) {
+            throw new Error("failed to retry the order");
+        }
+        return (0, order_mapper_1.toOrderDTO)(updatedOrder);
+    }
     async verifyPayment({ razorpay_order_id, razorpay_payment_id, razorpay_signature, }) {
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto_1.default
@@ -304,6 +338,13 @@ class AuthService {
             (0, socket_1.sendNotificationToUser)(admin.id.toString(), "you have new notification");
         }
         return { success: true };
+    }
+    async getPreviousOrder(userId, courseId) {
+        const order = await this._orderRepsitory.getPreviousOrder(userId, courseId);
+        if (!order) {
+            throw new Error("failed to get previous order");
+        }
+        return (0, order_mapper_1.toOrderDTO)(order);
     }
     async updateLectureProgress(userId, courseId, lectureId) {
         let progress = await this._progressRepository.findProgress(userId, courseId);

@@ -245,6 +245,45 @@ class Authcontroller {
             res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message });
         }
     }
+    async cancelOrder(req, res) {
+        try {
+            const { orderId } = req.params;
+            const order = await this._authService.cancelOrder(orderId);
+            res.status(statusCodes_1.httpStatus.OK).json({ success: true, data: order });
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async retryPayment(req, res) {
+        try {
+            const { orderId } = req.params;
+            const order = await this._authService.retryPayment(orderId);
+            res.status(statusCodes_1.httpStatus.OK).json(order);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    async getPreviousOrder(req, res) {
+        try {
+            const { courseId } = req.params;
+            const userId = req.user?.id;
+            const order = await this._authService.getPreviousOrder(userId, courseId);
+            if (!order) {
+                res.status(200).json({ hasOrder: false });
+                return;
+            }
+            res.status(200).json({
+                hasOrder: true,
+                order,
+            });
+        }
+        catch (err) {
+            console.error(err);
+            res.status(500).json({ message: "Failed to fetch order" });
+        }
+    }
     async verifyOrder(req, res) {
         try {
             const result = await this._authService.verifyPayment(req.body);
