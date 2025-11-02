@@ -9,6 +9,8 @@ services:
     depends_on:
       - mongo
     restart: always
+    volumes:
+      - ./server/uploads:/app/uploads
 
   frontend:
     build: ./client
