@@ -449,7 +449,8 @@ const InstructorCreateCourse: React.FC = () => {
       const response = await createCourseS(formData);
       if (response.status === 201) {
         successToast("Course created successfully!");
-        navigate(INSTRUCTOR_ROUTES.COURSES);
+        const courseId=response.data._id
+        navigate(INSTRUCTOR_ROUTES.CREATEQUIZ(courseId));
       }
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;

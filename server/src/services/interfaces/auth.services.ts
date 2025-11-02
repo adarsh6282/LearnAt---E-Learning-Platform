@@ -49,7 +49,7 @@ export interface IAuthService {
     razorpay_payment_id: string;
     razorpay_signature: string;
   }): Promise<{success:boolean}>;
-  getPreviousOrder(userId:string,courseId:string):Promise<OrderDTO>
+  getPreviousOrder(userId:string,courseId:string):Promise<OrderDTO|null>
   updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<ProgressDTO>
   getUserCourseProgress(userId: string, courseId: string): Promise<ProgressDTO>,
   fetchPurchasedInstructors(userId:string):Promise<InstructorDTO[]>

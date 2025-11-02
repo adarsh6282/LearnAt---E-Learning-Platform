@@ -3,6 +3,7 @@ import { errorToast } from "../../components/Toast";
 import { useAuth } from "../../hooks/useAuth";
 import { getCertificatesS } from "../../services/user.services";
 import type { AxiosError } from "axios";
+import { X } from "lucide-react";
 
 interface Certificate {
   _id: string;
@@ -16,6 +17,8 @@ interface Certificate {
 const UserCertificates = () => {
   const { authUser } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -52,17 +55,40 @@ const UserCertificates = () => {
             <p className="text-sm text-slate-400">
               Issued on: {new Date(cert.issuedDate).toLocaleDateString()}
             </p>
-            <a
-              href={cert.certificateUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => {
+                setSelectedPdf(cert.certificateUrl);
+                setIsModalOpen(true);
+              }}
               className="text-cyan-400 hover:underline"
             >
               View Certificate
-            </a>
+            </button>
           </li>
         ))}
       </ul>
+
+      {isModalOpen && selectedPdf && (
+        <div className="fixed inset-0 z-50 flex items-center mt-30 justify-center bg-black/70 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl h-[70vh] shadow-lg overflow-hidden relative">
+            <button
+              onClick={() => {
+                setIsModalOpen(false);
+                setSelectedPdf(null);
+              }}
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-500 z-10"
+            >
+              <X size={24} />
+            </button>
+
+            <iframe
+              src={`${selectedPdf}#navpanes=0&scrollbar=0`}
+              title="Certificate PDF"
+              className="w-full h-full border-none"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

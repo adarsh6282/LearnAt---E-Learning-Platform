@@ -8,7 +8,7 @@ import type { INotification } from "../context/NotificationContext";
 import type { Category } from "../types/category.types";
 import type { User } from "../types/user.types";
 import { createApi } from "./newApiService";
-import type { Option, Question } from "../pages/Instructor/createQuiz";
+import type { Option, Question } from "../pages/Instructor/QuizCreation";
 
 const api = createApi("instructor");
 
@@ -363,7 +363,7 @@ export const resentOtpS = async (email: string) => {
   return otp;
 };
 
-export const createQuiz = async (courseId: string, quiz: Quiz) => {
+export const quizCreate = async (courseId: string, quiz: Quiz) => {
   return await api.post(`/instructors/quiz/create-quiz/${courseId}`, quiz);
 };
 

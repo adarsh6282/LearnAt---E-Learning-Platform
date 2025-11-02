@@ -3,7 +3,11 @@ import { ICourseService } from "../../services/interfaces/course.services";
 import { httpStatus } from "../../constants/statusCodes";
 import { ICourseController } from "../../controllers/interfaces/course.interfaces";
 import { LectureFileWithMeta } from "../../services/implementation/course.services";
-import { UpdateCourseInput } from "../../models/interfaces/course.interface";
+import {
+  IChapter,
+  IModule,
+  UpdateCourseInput,
+} from "../../models/interfaces/course.interface";
 
 export class CourseController implements ICourseController {
   constructor(private _courseService: ICourseService) {}
@@ -75,7 +79,7 @@ export class CourseController implements ICourseController {
     try {
       const { courseId } = req.params;
 
-      let modulesRaw: any[] = [];
+      let modulesRaw: IModule[] = [];
       if (req.body.modules) {
         modulesRaw =
           typeof req.body.modules === "string"
@@ -107,16 +111,34 @@ export class CourseController implements ICourseController {
         category: req.body.category,
         price: req.body.price,
         isActive: req.body.isActive,
-        modules: modulesRaw.map((mod: any) => ({
+        modules: modulesRaw.map((mod: IModule) => ({
           _id: mod._id,
           title: mod.title,
           description: mod.description,
-          chapters: (mod.chapters || []).map((ch: any) => ({
+          chapters: (mod.chapters || []).map((ch: IChapter) => ({
             _id: ch._id,
             title: ch.title,
             description: ch.description,
-            existingLectures: (ch.lectures || []).filter((lec: any) => lec._id),
-            newLectures: (ch.lectures || []).filter((lec: any) => !lec._id),
+            existingLectures: (ch.lectures || []).filter(
+              (lec: {
+                _id?: string;
+                title: string;
+                description: string;
+                duration: string;
+                type: "video" | "pdf";
+                url?: string;
+              }) => lec._id
+            ),
+            newLectures: (ch.lectures || []).filter(
+              (lec: {
+                _id?: string;
+                title: string;
+                description: string;
+                duration: string;
+                type: "video" | "pdf";
+                url?: string;
+              }) => !lec._id
+            ),
           })),
         })),
         lectureFiles: lectureFilesWithMeta,

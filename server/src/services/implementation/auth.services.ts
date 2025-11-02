@@ -498,10 +498,10 @@ export class AuthService implements IAuthService {
   async getPreviousOrder(
     userId: string,
     courseId: string
-  ): Promise<OrderDTO> {
+  ): Promise<OrderDTO|null> {
     const order = await this._orderRepsitory.getPreviousOrder(userId, courseId);
     if(!order){
-      throw new Error("failed to get previous order")
+      return null
     }
     return toOrderDTO(order)
   }
