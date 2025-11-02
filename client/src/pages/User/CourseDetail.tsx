@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Star,
@@ -118,7 +118,7 @@ const CourseDetail: React.FC = () => {
             try {
               await cancelOrderS(order._id!);
               errorToast("Payment cancelled by user.");
-              await fetchCourse()
+              await fetchCourse();
             } catch (err) {
               console.error("Error cancelling order", err);
             }
@@ -135,7 +135,7 @@ const CourseDetail: React.FC = () => {
   };
 
   const handleRetryPayment = async (orderId: string) => {
-    if(!course) return
+    if (!course) return;
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
       alert("Razorpay SDK failed to load. Are you online?");
@@ -180,7 +180,7 @@ const CourseDetail: React.FC = () => {
             try {
               await cancelOrderS(order._id);
               errorToast("Retry payment cancelled by user.");
-              await fetchCourse()
+              await fetchCourse();
             } catch (err) {
               console.error("Error cancelling retry order", err);
             }
@@ -224,38 +224,39 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  const fetchCourse = async () => {
-      if (!courseId) {
-        console.warn("No courseId provided.");
-        return;
+  const fetchCourse = useCallback(async () => {
+    if (!courseId) {
+      console.warn("No courseId provided.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await getSpecificCourseS(courseId);
+      setCourse(res.data.course);
+      setIsEnrolled(res.data.isEnrolled);
+
+      const orderRes = await getUserCourseOrderS(courseId);
+      const order = orderRes.data.order;
+
+      if (orderRes.data.hasOrder && order.status === "failed") {
+        setPreviousOrder(order._id);
       }
-      try {
-        setLoading(true);
-        const res = await getSpecificCourseS(courseId);
-        setCourse(res.data.course);
-        setIsEnrolled(res.data.isEnrolled);
 
-        const orderRes = await getUserCourseOrderS(courseId);
-        const order = orderRes.data.order;
-
-        if (orderRes.data.hasOrder && order.status === "failed") {
-          setPreviousOrder(order._id);
-        }
-
-        const resReviews = await getReviewsS(courseId);
-        const normalizedReviews: Review[] = resReviews.data.reviews || [];
-        setReviews(normalizedReviews);
-      } catch (err) {
-        console.error("Error fetching course:", err);
-        setError("Failed to load course details");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const resReviews = await getReviewsS(courseId);
+      const normalizedReviews: Review[] = resReviews.data.reviews || [];
+      setReviews(normalizedReviews);
+    } catch (err) {
+      console.error("Error fetching course:", err);
+      setError("Failed to load course details");
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
 
   useEffect(() => {
     fetchCourse();
-  }, [courseId]);
+  }, [fetchCourse]);
 
   const fetchInstructor = async () => {
     try {

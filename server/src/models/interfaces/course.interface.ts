@@ -65,7 +65,7 @@ export interface UpdateCourseInput {
       description: string;
 
       existingLectures: {
-        _id: string;
+        _id?: string;
         title: string;
         description: string;
         duration: string;

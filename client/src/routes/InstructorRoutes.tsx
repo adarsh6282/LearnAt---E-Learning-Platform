@@ -27,7 +27,8 @@ import InstructorNotification from "../pages/Instructor/InstructorNotification";
 import InstructorQuizzes from "../pages/Instructor/InstructorQuizzes";
 import QuizManagement from "../pages/Instructor/QuizManagement";
 import InstructorLivePage from "../pages/Instructor/InstructorLiveSession";
-import QuizCreation from "../pages/Instructor/createQuiz";
+import QuizCreation from "../pages/Instructor/QuizCreation";
+
 
 const InstructorRoutes = () => {
   return (

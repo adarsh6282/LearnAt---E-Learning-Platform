@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Plus, Trash2, Save, CheckCircle2, Circle } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { errorToast, successToast } from "../../components/Toast";
-import { createQuiz } from "../../services/instructor.services";
+import { quizCreate } from "../../services/instructor.services";
 import type { AxiosError } from "axios";
 
 export interface Option {
@@ -170,7 +170,7 @@ const QuizCreation: React.FC = () => {
     if (!validateQuiz()) return;
 
     try {
-      await createQuiz(courseId, quiz);
+      await quizCreate(courseId, quiz);
       successToast("Quiz created successfully!");
       //   navigate(`/instructor/courses/${courseId}/manage-quizzes`);
     } catch (err: unknown) {

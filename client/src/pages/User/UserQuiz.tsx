@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getQuizS,
@@ -60,36 +60,7 @@ const UserQuizPage = () => {
     fetchQuiz();
   }, [courseId]);
 
-  useEffect(() => {
-    if (result?.passed) {
-      const timer = setTimeout(() => {
-        generateCertificate();
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [result]);
-
-  const handleSelect = (questionId: string, optionText: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionText }));
-  };
-
-  const handleSubmit = async () => {
-    if (!quiz) return;
-
-    try {
-      const res = await submitQuizS(quiz._id, courseId!, answers);
-      const { score, percentage, passed, isCertificateIssued } = res.data;
-
-      setResult({ score, percentage, passed, isCertificateIssued });
-      setSubmitted(true);
-      setShowModal(true);
-    } catch (err) {
-      console.error("Failed to submit quiz:", err);
-    }
-  };
-
-  const generateCertificate = async () => {
+  const generateCertificate = useCallback(async () => {
     if (!certificateRef.current || !quiz || !authUser?._id) return;
 
     const canvas = await html2canvas(certificateRef.current);
@@ -108,6 +79,35 @@ const UserQuizPage = () => {
         console.error("Failed to upload certificate:", err);
       }
     });
+  }, [authUser?._id, courseId, quiz]); 
+
+  useEffect(() => {
+    if (result?.passed) {
+      const timer = setTimeout(() => {
+        generateCertificate();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [result,generateCertificate]);
+
+  const handleSelect = (questionId: string, optionText: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: optionText }));
+  };
+
+  const handleSubmit = async () => {
+    if (!quiz) return;
+
+    try {
+      const res = await submitQuizS(quiz._id, courseId!, answers);
+      const { score, percentage, passed, isCertificateIssued } = res.data;
+
+      setResult({ score, percentage, passed, isCertificateIssued });
+      setSubmitted(true);
+      setShowModal(true);
+    } catch (err) {
+      console.error("Failed to submit quiz:", err);
+    }
   };
 
   const answeredQuestions = Object.keys(answers).length;

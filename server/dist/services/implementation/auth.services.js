@@ -342,7 +342,7 @@ class AuthService {
     async getPreviousOrder(userId, courseId) {
         const order = await this._orderRepsitory.getPreviousOrder(userId, courseId);
         if (!order) {
-            throw new Error("failed to get previous order");
+            return null;
         }
         return (0, order_mapper_1.toOrderDTO)(order);
     }
