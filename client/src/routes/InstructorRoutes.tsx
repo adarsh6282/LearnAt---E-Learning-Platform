@@ -99,31 +99,31 @@ const InstructorRoutes = () => {
       >
         <Route
           path={INSTRUCTOR_ROUTES.DASHBOARD}
-          element={<InstructorDashboard />}
+          element={<ProtectedRoute><InstructorDashboard /></ProtectedRoute>}
         />
         <Route
           path={INSTRUCTOR_ROUTES.CREATE_COURSE}
-          element={<InstructorCreateCourse />}
+          element={<ProtectedRoute><InstructorCreateCourse /></ProtectedRoute>}
         />
         <Route
           path={INSTRUCTOR_ROUTES.EDIT_COURSE()}
-          element={<EditCourse />}
+          element={<ProtectedRoute><EditCourse /></ProtectedRoute>}
         />
         <Route
           path={INSTRUCTOR_ROUTES.PROFILE}
-          element={<InstructorProfile />}
+          element={<ProtectedRoute><InstructorProfile /></ProtectedRoute>}
         />
         <Route
           path={INSTRUCTOR_ROUTES.REVIEWS}
-          element={<InstructorReview />}
+          element={<ProtectedRoute><InstructorReview /></ProtectedRoute>}
         />
-        <Route path={INSTRUCTOR_ROUTES.COURSES} element={<Courses />} />
+        <Route path={INSTRUCTOR_ROUTES.COURSES} element={<ProtectedRoute><Courses /></ProtectedRoute>} />
         <Route
           path={INSTRUCTOR_ROUTES.CREATEQUIZ()}
           element={<QuizCreation />}
         />
-        <Route path={INSTRUCTOR_ROUTES.MANAGE_QUIZ()} element={<QuizManagement />} />
-        <Route path={INSTRUCTOR_ROUTES.QUIZ} element={<InstructorQuizzes />} />
+        <Route path={INSTRUCTOR_ROUTES.MANAGE_QUIZ()} element={<ProtectedRoute><QuizManagement /></ProtectedRoute>} />
+        <Route path={INSTRUCTOR_ROUTES.QUIZ} element={<ProtectedRoute><InstructorQuizzes /></ProtectedRoute>} />
         <Route
           path="/instructors/live/:sessionId"
           element={
@@ -135,12 +135,12 @@ const InstructorRoutes = () => {
 
         <Route
           path={INSTRUCTOR_ROUTES.EARNINGS}
-          element={<Earnings role="instructors" />}
+          element={<ProtectedRoute><Earnings role="instructors" /></ProtectedRoute>}
         />
-        <Route path={INSTRUCTOR_ROUTES.ENROLLMENTS} element={<Enrollments />} />
+        <Route path={INSTRUCTOR_ROUTES.ENROLLMENTS} element={<ProtectedRoute><Enrollments /></ProtectedRoute>} />
         <Route
           path={INSTRUCTOR_ROUTES.NOTIFICATIONS}
-          element={<InstructorNotification />}
+          element={<ProtectedRoute><InstructorNotification /></ProtectedRoute>}
         />
       </Route>
     </>

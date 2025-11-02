@@ -39,14 +39,14 @@ const UserRoutes = () => {
       <Route element={<UserProviderWrapper />}>
         <Route path={USER_ROUTES.HOME} element={<LandingPage />} />
         <Route path={USER_ROUTES.REGISTER} element={<UserRegister />} />
-        <Route path={USER_ROUTES.COURSE_VIEW()} element={<CourseView />} />
+        <Route path={USER_ROUTES.COURSE_VIEW()} element={<ProtectedRoute><CourseView /></ProtectedRoute>} />
         <Route
           path={USER_ROUTES.NOTIFICATIONS}
-          element={<UserNotification />}
+          element={<ProtectedRoute><UserNotification /></ProtectedRoute>}
         />
         <Route
           path={USER_ROUTES.PURCHASE_HISTORY}
-          element={<PurchaseHistory />}
+          element={<ProtectedRoute><PurchaseHistory /></ProtectedRoute>}
         />
         <Route path={USER_ROUTES.LOGIN} element={<UserLogin />} />
         <Route
@@ -60,16 +60,16 @@ const UserRoutes = () => {
         <Route path={USER_ROUTES.CHAT_PAGE} element={<ChatPage />}>
           <Route path=":chatId" element={<ChatWindow />} />
         </Route>
-        <Route path={USER_ROUTES.VIDEO_CALL()} element={<VideoCall />} />
+        <Route path={USER_ROUTES.VIDEO_CALL()} element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
         <Route
           path={USER_ROUTES.PURCHASED_COURSES}
-          element={<PurchasedCourses />}
+          element={<ProtectedRoute><PurchasedCourses /></ProtectedRoute>}
         />
         <Route
           path={USER_ROUTES.CHANGE_PASSWORD}
           element={<ChangePassword />}
         />
-        <Route path={USER_ROUTES.CERTIFICATES} element={<UserCertificates />} />
+        <Route path={USER_ROUTES.CERTIFICATES} element={<ProtectedRoute><UserCertificates/></ProtectedRoute>} />
         <Route
           path={USER_ROUTES.FORGOT_PASSWORD}
           element={<ForgotPassword role="users" />}
