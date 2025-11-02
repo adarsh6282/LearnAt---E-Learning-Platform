@@ -304,6 +304,47 @@ export class Authcontroller implements IAuthController {
     }
   }
 
+  async cancelOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const {orderId}=req.params
+      const order = await this._authService.cancelOrder(orderId);
+      res.status(httpStatus.OK).json({ success: true, data: order });
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async retryPayment(req: Request, res: Response): Promise<void> {
+    try {
+    const { orderId } = req.params;
+    const order = await this._authService.retryPayment(orderId);
+    res.status(httpStatus.OK).json(order);
+  } catch (err) {
+    console.log(err)
+  }
+  }
+
+  async getPreviousOrder(req: UserRequest, res: Response): Promise<void> {
+    try {
+    const { courseId } = req.params;
+    const userId = req.user?.id;
+
+    const order = await this._authService.getPreviousOrder(userId!, courseId);
+    if (!order) {
+      res.status(200).json({ hasOrder: false });
+      return
+    }
+
+    res.status(200).json({
+      hasOrder: true,
+      order,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch order" });
+  }
+  }
+
   async verifyOrder(req: Request, res: Response): Promise<void> {
     try {
       const result = await this._authService.verifyPayment(req.body);

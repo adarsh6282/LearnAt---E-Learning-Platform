@@ -23,6 +23,24 @@ class OrderRepository {
             createdAt: plainOrder.createdAt,
         };
     }
+    async getOrderById(orderId) {
+        return await orderModel_1.default.findById(orderId);
+    }
+    async cancelOrder(orderId, status) {
+        return await orderModel_1.default.findByIdAndUpdate(orderId, { status: status }, { new: true });
+    }
+    async updateOrderForRetry(orderId, newRazorpayOrderId) {
+        return await orderModel_1.default.findByIdAndUpdate(orderId, {
+            $set: {
+                razorpayOrderId: newRazorpayOrderId,
+                status: "created",
+                updatedAt: new Date(),
+            },
+        }, { new: true });
+    }
+    async getPreviousOrder(userId, courseId) {
+        return await orderModel_1.default.findOne({ userId, courseId });
+    }
     async markOrderAsPaid(orderId) {
         return await orderModel_1.default.findByIdAndUpdate(orderId, { status: "paid" });
     }
@@ -141,7 +159,7 @@ class OrderRepository {
             .limit(limit)
             .sort({ createdAt: -1 });
         const purchasedCourses = courses
-            .filter(order => order.courseId)
+            .filter((order) => order.courseId)
             .map((order) => {
             const course = order.courseId;
             return {

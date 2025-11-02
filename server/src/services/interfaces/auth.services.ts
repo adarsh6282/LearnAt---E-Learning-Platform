@@ -38,6 +38,8 @@ export interface IAuthService {
   getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:CourseDTO[],total:number,totalPages:number}>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: CourseDTO; isEnrolled: boolean }>;
   createOrder(courseId: string, userId: string): Promise<OrderDTO>;
+  cancelOrder(orderId:string):Promise<OrderDTO>
+  retryPayment(orderId:string):Promise<OrderDTO>
   verifyPayment({
     razorpay_order_id,
     razorpay_payment_id,
@@ -47,6 +49,7 @@ export interface IAuthService {
     razorpay_payment_id: string;
     razorpay_signature: string;
   }): Promise<{success:boolean}>;
+  getPreviousOrder(userId:string,courseId:string):Promise<OrderDTO>
   updateLectureProgress(userId:string,courseId:string,lectureId:string):Promise<ProgressDTO>
   getUserCourseProgress(userId: string, courseId: string): Promise<ProgressDTO>,
   fetchPurchasedInstructors(userId:string):Promise<InstructorDTO[]>

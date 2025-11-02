@@ -44,7 +44,11 @@ import {
 } from "../../Mappers/notification.mapper";
 import { ComplaintDTO } from "../../DTO/complaint.dto";
 import { toComplaintDTO } from "../../Mappers/complaint.mapper";
-import { IQuiz, Option, Question } from "../../models/interfaces/quiz.interface";
+import {
+  IQuiz,
+  Option,
+  Question,
+} from "../../models/interfaces/quiz.interface";
 import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 import { ILiveSessionRepository } from "../../repository/interfaces/livesession.interface";
 
@@ -351,6 +355,45 @@ export class AuthService implements IAuthService {
     return toOrderDTO(order);
   }
 
+  async cancelOrder(orderId: string): Promise<OrderDTO> {
+    const order = await this._orderRepsitory.getOrderById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    if (order.status === "paid") throw new Error("Cannot cancel a paid order");
+    const updated = await this._orderRepsitory.cancelOrder(orderId, "failed");
+    if(!updated){
+      throw new Error("failed to update the order")
+    }
+    return toOrderDTO(updated);
+  }
+
+  async retryPayment(orderId: string): Promise<OrderDTO> {
+    const existingOrder = await this._orderRepsitory.getOrderById(orderId);
+    if (!existingOrder) {
+      throw new Error("Order not found");
+    }
+    if (existingOrder.status === "paid") {
+      throw new Error("Order already paid");
+    }
+    const course = await this._courseRepository.findCourseById(
+      existingOrder.courseId.toString()
+    );
+    if (!course) throw new Error("Course not found");
+    const razorPayOrder = await razorpay.orders.create({
+      amount: existingOrder.amount * 100,
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+    });
+    const updatedOrder = await this._orderRepsitory.updateOrderForRetry(
+      existingOrder._id!.toString(),
+      razorPayOrder.id
+    );
+    if(!updatedOrder){
+      throw new Error("failed to retry the order")
+    }
+    return toOrderDTO(updatedOrder);
+  }
+
   async verifyPayment({
     razorpay_order_id,
     razorpay_payment_id,
@@ -452,6 +495,17 @@ export class AuthService implements IAuthService {
     return { success: true };
   }
 
+  async getPreviousOrder(
+    userId: string,
+    courseId: string
+  ): Promise<OrderDTO> {
+    const order = await this._orderRepsitory.getPreviousOrder(userId, courseId);
+    if(!order){
+      throw new Error("failed to get previous order")
+    }
+    return toOrderDTO(order)
+  }
+
   async updateLectureProgress(
     userId: string,
     courseId: string,
@@ -475,7 +529,7 @@ export class AuthService implements IAuthService {
       );
     }
     const course = await this._courseRepository.findCourseById(courseId);
-    
+
     const totalLectures =
       course?.modules?.reduce((moduleAcc, mod) => {
         const chapterLectures = mod.chapters?.reduce(
