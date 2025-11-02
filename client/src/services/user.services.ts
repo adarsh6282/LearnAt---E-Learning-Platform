@@ -127,6 +127,14 @@ export const CreateOrderS = async (courseId: string) => {
   return await api.post<IOrder>("/users/orders", { courseId });
 };
 
+export const cancelOrderS = async(orderId:string)=>{
+  return await api.put(`/users/cancel-order/${orderId}`)
+}
+
+export const RetryPaymentS=async(orderId:string)=>{
+  return await api.put(`/users/retrypayment/${orderId}`)
+}
+
 export const verifyResS = async (data: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -134,6 +142,10 @@ export const verifyResS = async (data: {
 }) => {
   return await api.post<VerifyResponse>("/users/orders/verify", data);
 };
+
+export const getUserCourseOrderS=async(courseId:string)=>{
+  return await api.get(`/users/course-order/${courseId}`)
+}
 
 export const getReviewsS = async (courseId: string) => {
   return await api.get<{ reviews: Review[] }>(

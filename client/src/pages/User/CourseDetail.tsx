@@ -15,12 +15,15 @@ import { loadRazorpayScript } from "../../utils/loadRazorpay";
 import { errorToast, successToast } from "../../components/Toast";
 import type { CourseViewType } from "../../types/user.types";
 import {
+  cancelOrderS,
   CreateOrderS,
   fetchProgress,
   getInstructor,
   getReviewsS,
   getSpecificCourseS,
+  getUserCourseOrderS,
   postReviewS,
+  RetryPaymentS,
   verifyResS,
 } from "../../services/user.services";
 import type { Review } from "../../types/review.types";
@@ -41,6 +44,7 @@ const CourseDetail: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState({ rating: 0, text: "" });
   const [isCompleted, setIsCompleted] = useState<boolean>();
+  const [previousOrder, setPreviousOrder] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -109,6 +113,17 @@ const CourseDetail: React.FC = () => {
             errorToast("Payment verification failed.");
           }
         },
+        modal: {
+          ondismiss: async function () {
+            try {
+              await cancelOrderS(order._id!);
+              errorToast("Payment cancelled by user.");
+              await fetchCourse()
+            } catch (err) {
+              console.error("Error cancelling order", err);
+            }
+          },
+        },
       };
 
       const razor = new window.Razorpay(options);
@@ -116,6 +131,68 @@ const CourseDetail: React.FC = () => {
     } catch (err) {
       console.error("Error in payment", err);
       errorToast("Course is purchased or payment in progress");
+    }
+  };
+
+  const handleRetryPayment = async (orderId: string) => {
+    if(!course) return
+    const isScriptLoaded = await loadRazorpayScript();
+    if (!isScriptLoaded) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
+    try {
+      const { data: order } = await RetryPaymentS(orderId);
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: course.title,
+        description: course.description,
+        order_id: order.razorpayOrderId,
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            const verifyRes = await verifyResS({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.data.success) {
+              successToast("Payment Successful! You are enrolled.");
+              setIsEnrolled(true);
+            } else {
+              errorToast("Payment verification failed.");
+            }
+          } catch (err) {
+            console.error("Error verifying retry payment", err);
+            errorToast("Something went wrong verifying payment.");
+          }
+        },
+        modal: {
+          ondismiss: async function () {
+            try {
+              await cancelOrderS(order._id);
+              errorToast("Retry payment cancelled by user.");
+              await fetchCourse()
+            } catch (err) {
+              console.error("Error cancelling retry order", err);
+            }
+          },
+        },
+      };
+
+      const razor = new window.Razorpay(options);
+      razor.open();
+    } catch (err) {
+      console.error("Error retrying payment", err);
+      errorToast("Unable to retry payment. Please try again later.");
     }
   };
 
@@ -147,8 +224,7 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchCourse = async () => {
+  const fetchCourse = async () => {
       if (!courseId) {
         console.warn("No courseId provided.");
         return;
@@ -157,8 +233,14 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         const res = await getSpecificCourseS(courseId);
         setCourse(res.data.course);
-        console.log(course)
         setIsEnrolled(res.data.isEnrolled);
+
+        const orderRes = await getUserCourseOrderS(courseId);
+        const order = orderRes.data.order;
+
+        if (orderRes.data.hasOrder && order.status === "failed") {
+          setPreviousOrder(order._id);
+        }
 
         const resReviews = await getReviewsS(courseId);
         const normalizedReviews: Review[] = resReviews.data.reviews || [];
@@ -171,6 +253,7 @@ const CourseDetail: React.FC = () => {
       }
     };
 
+  useEffect(() => {
     fetchCourse();
   }, [courseId]);
 
@@ -412,7 +495,8 @@ const CourseDetail: React.FC = () => {
                                 >
                                   <div>
                                     <h5 className="font-medium text-slate-100">
-                                      Chapter {chapterIndex + 1}: {chapter.title}
+                                      Chapter {chapterIndex + 1}:{" "}
+                                      {chapter.title}
                                     </h5>
                                     <p className="text-xs text-slate-400 mt-1">
                                       {chapter.description}
@@ -616,6 +700,13 @@ const CourseDetail: React.FC = () => {
                   onClick={() => navigate(USER_ROUTES.COURSE_VIEW(courseId))}
                 >
                   Continue to Course
+                </button>
+              ) : previousOrder ? (
+                <button
+                  onClick={() => handleRetryPayment(previousOrder)}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3 px-4 rounded-full font-semibold hover:scale-105 transition-all duration-300 mb-4"
+                >
+                  Retry Payment
                 </button>
               ) : (
                 <button
