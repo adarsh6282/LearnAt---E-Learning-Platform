@@ -23,6 +23,7 @@ const GoogleVerify: React.FC = () => {
 
         if (response.status === 200) {
           localStorage.setItem('usersToken', token)
+          await new Promise((resolve) => setTimeout(resolve, 800));
           navigate('/home')
         }
          else {
