@@ -25,16 +25,15 @@ const review_routes_1 = __importDefault(require("./routes/review.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const message_routes_1 = __importDefault(require("./routes/message.routes"));
 (0, db_config_1.default)();
+const allowedOrigins = [
+    'https://learnat.vercel.app',
+    'http://localhost:5173'
+];
 app.use((0, cors_1.default)({
-    origin: (origin, callback) => {
-        if (!origin || origin === process.env.FRONTEND_URL) {
-            callback(null, true);
-        }
-        else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 const server = http_1.default.createServer(app);
 (0, socket_1.initSocket)(server);

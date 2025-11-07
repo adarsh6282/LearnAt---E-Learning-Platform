@@ -86,7 +86,7 @@ class InstructorAuthController {
                 path: "/api/instructors",
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res.status(statusCodes_1.httpStatus.OK).json({ instructor, token });
@@ -105,7 +105,7 @@ class InstructorAuthController {
                 path: "/api/instructors",
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res.status(statusCodes_1.httpStatus.CREATED).json({
@@ -357,7 +357,7 @@ class InstructorAuthController {
         res.clearCookie("instructorRefreshToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             path: "/instructors",
         });
         res.status(200).json({ message: "Logged out successfully" });

@@ -41,7 +41,7 @@ export class Authcontroller implements IAuthController {
         httpOnly: true,
         path: "/api/users",
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -67,7 +67,7 @@ export class Authcontroller implements IAuthController {
         path: "/api/users",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -99,8 +99,8 @@ export class Authcontroller implements IAuthController {
     res.cookie("userRefreshToken", refreshToken, {
       httpOnly: true,
       path: "/api/users",
-      secure: process.env.NOD_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: Number(process.env.COOKIE_MAXAGE),
     });
 
@@ -465,7 +465,7 @@ export class Authcontroller implements IAuthController {
     res.clearCookie("userRefreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/api/users",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });

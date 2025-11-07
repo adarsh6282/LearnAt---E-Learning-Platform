@@ -23,7 +23,7 @@ export class AdminController implements IAdminController {
         path: "/api/admin",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -563,7 +563,7 @@ export class AdminController implements IAdminController {
     res.clearCookie("adminRefreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/admin",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });

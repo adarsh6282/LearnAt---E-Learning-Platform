@@ -19,7 +19,7 @@ class AdminController {
                 path: "/api/admin",
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -459,7 +459,7 @@ class AdminController {
         res.clearCookie("adminRefreshToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             path: "/admin",
         });
         res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });

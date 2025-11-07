@@ -34,7 +34,7 @@ class Authcontroller {
                 httpOnly: true,
                 path: "/api/users",
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -55,7 +55,7 @@ class Authcontroller {
                 path: "/api/users",
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -81,8 +81,8 @@ class Authcontroller {
         res.cookie("userRefreshToken", refreshToken, {
             httpOnly: true,
             path: "/api/users",
-            secure: process.env.NOD_ENV === "production",
-            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: Number(process.env.COOKIE_MAXAGE),
         });
         const redirectUrl = process.env.GOOGLE_VERIFY_URL;
@@ -271,17 +271,17 @@ class Authcontroller {
             const userId = req.user?.id;
             const order = await this._authService.getPreviousOrder(userId, courseId);
             if (!order) {
-                res.status(200).json({ hasOrder: false });
+                res.status(statusCodes_1.httpStatus.OK).json({ hasOrder: false });
                 return;
             }
-            res.status(200).json({
+            res.status(statusCodes_1.httpStatus.OK).json({
                 hasOrder: true,
                 order,
             });
         }
         catch (err) {
             console.error(err);
-            res.status(500).json({ message: "Failed to fetch order" });
+            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to fetch order" });
         }
     }
     async verifyOrder(req, res) {
@@ -369,7 +369,7 @@ class Authcontroller {
         res.clearCookie("userRefreshToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             path: "/api/users",
         });
         res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });
