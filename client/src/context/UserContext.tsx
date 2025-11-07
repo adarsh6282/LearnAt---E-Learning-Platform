@@ -30,7 +30,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    getUserProfile();
+    const timer=setTimeout(() => {
+      getUserProfile()
+    }, 800);
+    return ()=>clearTimeout(timer)
   }, []);
 
   return (
