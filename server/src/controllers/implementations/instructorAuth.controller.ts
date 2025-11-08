@@ -116,7 +116,7 @@ export class InstructorAuthController implements IInstructorController {
         await this._instructorAuthService.loginInstructor(email, password);
 
       res.cookie("instructorRefreshToken", instructorRefreshToken, {
-        path: "/api/instructors",
+        path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -140,7 +140,7 @@ export class InstructorAuthController implements IInstructorController {
         await this._instructorAuthService.verifyOtp(instructorData);
 
       res.cookie("instructorRefreshToken", instructorRefreshToken, {
-        path: "/api/instructors",
+        path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -464,7 +464,7 @@ export class InstructorAuthController implements IInstructorController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/instructors",
+      path: "/",
     });
     res.status(200).json({ message: "Logged out successfully" });
   }

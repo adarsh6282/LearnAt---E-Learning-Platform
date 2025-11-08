@@ -39,7 +39,7 @@ export class Authcontroller implements IAuthController {
 
       res.cookie("userRefreshToken", userRefreshToken, {
         httpOnly: true,
-        path: "/api/users",
+        path: "/",
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: Number(process.env.COOKIE_MAXAGE),
@@ -64,7 +64,7 @@ export class Authcontroller implements IAuthController {
         await this._authService.verifyOtp(userData);
 
       res.cookie("userRefreshToken", userRefreshToken, {
-        path: "/api/users",
+        path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -98,7 +98,7 @@ export class Authcontroller implements IAuthController {
 
     res.cookie("userRefreshToken", refreshToken, {
       httpOnly: true,
-      path: "/api/users",
+      path: "/",
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: Number(process.env.COOKIE_MAXAGE),
@@ -466,7 +466,7 @@ export class Authcontroller implements IAuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/api/users",
+      path: "/",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });
   }

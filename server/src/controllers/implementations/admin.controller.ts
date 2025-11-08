@@ -20,7 +20,7 @@ export class AdminController implements IAdminController {
       } = await this._adminService.login(email, password);
 
       res.cookie("adminRefreshToken", adminRefreshToken, {
-        path: "/api/admin",
+        path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -564,7 +564,7 @@ export class AdminController implements IAdminController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/admin",
+      path: "/",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });
   }
