@@ -120,6 +120,7 @@ export class InstructorAuthController implements IInstructorController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -144,6 +145,7 @@ export class InstructorAuthController implements IInstructorController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -464,6 +466,7 @@ export class InstructorAuthController implements IInstructorController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
       path: "/",
     });
     res.status(200).json({ message: "Logged out successfully" });
