@@ -118,9 +118,9 @@ export class InstructorAuthController implements IInstructorController {
       res.cookie("instructorRefreshToken", instructorRefreshToken, {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+        secure: true,
+        sameSite: "none",
+        domain: "learnat.serveftp.com",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -143,9 +143,9 @@ export class InstructorAuthController implements IInstructorController {
       res.cookie("instructorRefreshToken", instructorRefreshToken, {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+        secure: true,
+        sameSite: "none",
+        domain: "learnat.serveftp.com",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -464,9 +464,9 @@ export class InstructorAuthController implements IInstructorController {
   async logOut(req: Request, res: Response): Promise<void> {
     res.clearCookie("instructorRefreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+      secure: true,
+      sameSite: "none",
+      domain: "learnat.serveftp.com",
       path: "/",
     });
     res.status(200).json({ message: "Logged out successfully" });
@@ -748,30 +748,32 @@ export class InstructorAuthController implements IInstructorController {
 
   async updateQuiz(req: Request, res: Response): Promise<void> {
     try {
-      const {quizId}=req.params
-      const instructor=req.instructor?.id
-      const updateData=req.body
+      const { quizId } = req.params;
+      const instructor = req.instructor?.id;
+      const updateData = req.body;
 
-      console.log(updateData)
+      console.log(updateData);
 
-      if(!instructor){
-        res.status(httpStatus.UNAUTHORIZED).json({message:"Instructor not found"})
-        return
+      if (!instructor) {
+        res
+          .status(httpStatus.UNAUTHORIZED)
+          .json({ message: "Instructor not found" });
+        return;
       }
-      await this._instructorAuthService.updateQuiz(quizId,updateData)
-      res.status(httpStatus.OK).json({message:"Quiz Updated Successfull"})
+      await this._instructorAuthService.updateQuiz(quizId, updateData);
+      res.status(httpStatus.OK).json({ message: "Quiz Updated Successfull" });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 
   async endSession(req: Request, res: Response): Promise<void> {
     try {
-      const {isLive,sessionId}=req.body
-      await this._livesessionService.endSession(isLive,sessionId)
-      res.status(httpStatus.OK).json({message:"Session Ended"})
+      const { isLive, sessionId } = req.body;
+      await this._livesessionService.endSession(isLive, sessionId);
+      res.status(httpStatus.OK).json({ message: "Session Ended" });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 }

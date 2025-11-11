@@ -14,7 +14,7 @@ export class Authcontroller implements IAuthController {
     private _authService: IAuthService,
     private _messageService: IMessageService,
     private _certificateService: ICertificateService,
-    private _livesessionService:ILiveSessionService
+    private _livesessionService: ILiveSessionService
   ) {}
 
   async signup(req: Request, res: Response): Promise<void> {
@@ -40,9 +40,9 @@ export class Authcontroller implements IAuthController {
       res.cookie("userRefreshToken", userRefreshToken, {
         httpOnly: true,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+        secure: true,
+        sameSite: "none",
+        domain: "learnat.serveftp.com",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -67,9 +67,9 @@ export class Authcontroller implements IAuthController {
       res.cookie("userRefreshToken", userRefreshToken, {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+        secure: true,
+        sameSite: "none",
+        domain: "learnat.serveftp.com",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -101,9 +101,9 @@ export class Authcontroller implements IAuthController {
     res.cookie("userRefreshToken", refreshToken, {
       httpOnly: true,
       path: "/",
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+      secure: true,
+      sameSite: "none",
+      domain: "learnat.serveftp.com",
       maxAge: Number(process.env.COOKIE_MAXAGE),
     });
 
@@ -309,43 +309,45 @@ export class Authcontroller implements IAuthController {
 
   async cancelOrder(req: Request, res: Response): Promise<void> {
     try {
-      const {orderId}=req.params
+      const { orderId } = req.params;
       const order = await this._authService.cancelOrder(orderId);
       res.status(httpStatus.OK).json({ success: true, data: order });
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   }
 
   async retryPayment(req: Request, res: Response): Promise<void> {
     try {
-    const { orderId } = req.params;
-    const order = await this._authService.retryPayment(orderId);
-    res.status(httpStatus.OK).json(order);
-  } catch (err) {
-    console.log(err)
-  }
+      const { orderId } = req.params;
+      const order = await this._authService.retryPayment(orderId);
+      res.status(httpStatus.OK).json(order);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async getPreviousOrder(req: UserRequest, res: Response): Promise<void> {
     try {
-    const { courseId } = req.params;
-    const userId = req.user?.id;
+      const { courseId } = req.params;
+      const userId = req.user?.id;
 
-    const order = await this._authService.getPreviousOrder(userId!, courseId);
-    if (!order) {
-      res.status(httpStatus.OK).json({ hasOrder: false });
-      return
+      const order = await this._authService.getPreviousOrder(userId!, courseId);
+      if (!order) {
+        res.status(httpStatus.OK).json({ hasOrder: false });
+        return;
+      }
+
+      res.status(httpStatus.OK).json({
+        hasOrder: true,
+        order,
+      });
+    } catch (err) {
+      console.error(err);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: "Failed to fetch order" });
     }
-
-    res.status(httpStatus.OK).json({
-      hasOrder: true,
-      order,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to fetch order" });
-  }
   }
 
   async verifyOrder(req: Request, res: Response): Promise<void> {
@@ -467,9 +469,9 @@ export class Authcontroller implements IAuthController {
   async logOut(req: Request, res: Response): Promise<void> {
     res.clearCookie("userRefreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+      secure: true,
+      sameSite: "none",
+      domain: "learnat.serveftp.com",
       path: "/",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });
@@ -700,7 +702,7 @@ export class Authcontroller implements IAuthController {
   async submitQuiz(req: UserRequest, res: Response): Promise<void> {
     try {
       const { quizId } = req.params;
-      const { answers,courseId } = req.body;
+      const { answers, courseId } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -731,53 +733,63 @@ export class Authcontroller implements IAuthController {
 
   async createCertificate(req: Request, res: Response): Promise<void> {
     try {
-    const { userId, courseId } = req.body;
-    const file = req.file;
+      const { userId, courseId } = req.body;
+      const file = req.file;
 
-    if (!userId || !courseId || !file) {
-      res.status(400).json({ message: "Missing required data" });
-      return
+      if (!userId || !courseId || !file) {
+        res.status(400).json({ message: "Missing required data" });
+        return;
+      }
+
+      const certificate = await this._certificateService.createCertificate({
+        user: userId,
+        course: courseId,
+        file: file,
+      });
+
+      res.status(httpStatus.CREATED).json({ certificate });
+    } catch (err) {
+      console.error(err);
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ message: "Server error" });
     }
-
-    const certificate = await this._certificateService.createCertificate({
-      user:userId,
-      course:courseId,
-      file:file
-    });
-
-    res.status(httpStatus.CREATED).json({ certificate });
-  } catch (err) {
-    console.error(err);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
-  }
   }
 
   async getSessionToken(req: UserRequest, res: Response): Promise<void> {
     try {
       const { sessionId, role } = req.query;
-      const userId=req.user?.id
+      const userId = req.user?.id;
       if (role !== "instructor" && role !== "user") {
         res.status(400).json({ error: "Invalid role" });
         return;
       }
-      const {token,appId, roomId, courseId} = await this._livesessionService.generateToken(
-        sessionId as string,
-        userId as string,
-        role as "user"|"instructor"
-      );
-      res.status(httpStatus.OK).json({ token,appId, roomId, userId, courseId });
+      const { token, appId, roomId, courseId } =
+        await this._livesessionService.generateToken(
+          sessionId as string,
+          userId as string,
+          role as "user" | "instructor"
+        );
+      res
+        .status(httpStatus.OK)
+        .json({ token, appId, roomId, userId, courseId });
     } catch (error) {
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message });
+      res
+        .status(httpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: (error as Error).message });
     }
   }
 
-    async getLiveSessionByCourseId(req: Request, res: Response): Promise<void> {
+  async getLiveSessionByCourseId(req: Request, res: Response): Promise<void> {
     try {
       const { courseId } = req.params;
-      const liveSession = await this._livesessionService.getLiveSessionByCourseId(courseId);
+      const liveSession =
+        await this._livesessionService.getLiveSessionByCourseId(courseId);
 
       if (!liveSession) {
-        res.status(httpStatus.NOT_FOUND).json({ message: "No active live session found." });
+        res
+          .status(httpStatus.NOT_FOUND)
+          .json({ message: "No active live session found." });
         return;
       }
 

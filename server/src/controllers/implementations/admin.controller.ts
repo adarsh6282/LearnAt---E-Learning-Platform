@@ -22,9 +22,9 @@ export class AdminController implements IAdminController {
       res.cookie("adminRefreshToken", adminRefreshToken, {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+        secure: true,
+        sameSite:"none",
+        domain:"learnat.serveftp.com",
         maxAge: Number(process.env.COOKIE_MAXAGE),
       });
 
@@ -563,9 +563,9 @@ export class AdminController implements IAdminController {
   async logOut(req: Request, res: Response): Promise<void> {
     res.clearCookie("adminRefreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      domain:process.env.NODE_ENV === "production" ? "learnat.serveftp.com" : "localhost",
+      secure: true,
+      sameSite: "none",
+      domain:"learnat.serveftp.com",
       path: "/",
     });
     res.status(httpStatus.OK).json({ message: "Logged out successfully" });
