@@ -66,7 +66,7 @@ export function createApi(role: Role) {
         originalRequest._retry = true;
         try {
           const res = await axios.post<{ token: string }>(
-            `http://localhost:3000/api${config.refreshUrl}`,
+            `${import.meta.env.VITE_BASE_LINK}${config.refreshUrl}`,
             {},
             { withCredentials: true }
           );
