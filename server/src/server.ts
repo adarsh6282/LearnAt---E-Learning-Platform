@@ -40,14 +40,12 @@ app.use(
   })
 );
 
-const server = http.createServer(app);
-initSocket(server);
 
 app.use(nocache());
 app.use(helmet());
 app.use(morgan("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit:"100mb"}));
+app.use(express.urlencoded({limit:"100mb", extended: true }));
 app.use(cookieParser());
 
 app.use("/api/users", userRoutes);
@@ -57,6 +55,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/instructors/courses", courseRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
+
+const server = http.createServer(app);
+initSocket(server);
 
 server.listen(process.env.PORT, () => {
   console.log(`server started`);
