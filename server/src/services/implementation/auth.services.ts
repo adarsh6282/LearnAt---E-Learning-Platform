@@ -1,7 +1,7 @@
 import { IAuthService } from "../interfaces/auth.services";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
 import { IUser } from "../../models/interfaces/auth.interface";
-import generateOtp, { otpExpiry } from "../../utils/otpGenerator";
+import generateOtp, { generateOtpExpiry } from "../../utils/otpGenerator";
 import { sendMail } from "../../utils/sendMail";
 import bcrypt from "bcrypt";
 import { IOtpRepository } from "../../repository/interfaces/otp.interface";
@@ -90,6 +90,7 @@ export class AuthService implements IAuthService {
     if (existingUser) throw new Error("User already exists");
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -157,6 +158,7 @@ export class AuthService implements IAuthService {
     }
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -215,6 +217,7 @@ export class AuthService implements IAuthService {
     }
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,

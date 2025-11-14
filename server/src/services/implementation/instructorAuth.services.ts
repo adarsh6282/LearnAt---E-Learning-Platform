@@ -2,7 +2,7 @@ import { IInstructorAuthService } from "../interfaces/instructorAuth.services";
 import { IInstructorAuthRepository } from "../../repository/interfaces/instructorAuth.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import bcrypt from "bcrypt";
-import generateOtp, { otpExpiry } from "../../utils/otpGenerator";
+import generateOtp, { generateOtpExpiry } from "../../utils/otpGenerator";
 import { IOtpRepository } from "../../repository/interfaces/otp.interface";
 import { IAuthRepository } from "../../repository/interfaces/auth.interface";
 import { IAdminRepository } from "../../repository/interfaces/admin.interface";
@@ -82,6 +82,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -197,6 +198,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -259,6 +261,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
+    const otpExpiry=generateOtpExpiry()
 
     await this._otpRepository.saveOTP({
       email: email,
