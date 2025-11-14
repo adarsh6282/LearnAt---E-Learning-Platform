@@ -200,8 +200,8 @@ export const giveComplaintS = async (
   });
 };
 
-export const getCertificatesS = async (userId: string) => {
-  return await api.get<Certificate[]>(`/users/certificates/${userId}`);
+export const getCertificatesS = async (userId: string,page:number,limit:number) => {
+  return await api.get<{certificates:Certificate[],totalPages:number}>(`/users/certificates/${userId}?page=${page}&limit=${limit}`);
 };
 
 export const changePasswordS = async (formData: {

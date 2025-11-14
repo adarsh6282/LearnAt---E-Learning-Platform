@@ -35,13 +35,11 @@ app.use((0, cors_1.default)({
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
-const server = http_1.default.createServer(app);
-(0, socket_1.initSocket)(server);
 app.use((0, nocache_1.default)());
 app.use((0, helmet_1.default)());
 app.use((0, morgan_1.default)("dev"));
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json({ limit: "100mb" }));
+app.use(express_1.default.urlencoded({ limit: "100mb", extended: true }));
 app.use((0, cookie_parser_1.default)());
 app.use("/api/users", user_routes_1.default);
 app.use("/api/users/reviews", review_routes_1.default);
@@ -50,6 +48,8 @@ app.use("/api/admin", admin_routes_1.default);
 app.use("/api/instructors/courses", course_routes_1.default);
 app.use("/api/chats", chat_routes_1.default);
 app.use("/api/messages", message_routes_1.default);
+const server = http_1.default.createServer(app);
+(0, socket_1.initSocket)(server);
 server.listen(process.env.PORT, () => {
     console.log(`server started`);
 });

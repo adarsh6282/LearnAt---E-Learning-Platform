@@ -60,7 +60,17 @@ export interface IAuthService {
   getPurchases(userId:string,page:number,limit:number):Promise<{ purchases: IPurchase[]; total: number; totalPages: number }>
   changePassword(userId:string,oldPassword:string,newPassword:string,confirmPassword:string):Promise<void>
   getSpecificInstructor(instructorId:string):Promise<InstructorDTO>
-  getCertificates(userId:string,page:number,limit:number):Promise<{_id:string,user:string,course:string,courseTitle:string,certificateUrl:string,issuedDate:Date}[]>
+  getCertificates(userId:string,page:number,limit:number):Promise<{
+    certificates: {
+      _id: string;
+      user: string;
+      course: string;
+      courseTitle: string;
+      certificateUrl: string;
+      issuedDate: Date;
+    }[];
+    totalPages: number;
+  }>
   getCategory():Promise<string[]|null>
   purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
   getQuiz(courseId:string):Promise<IQuiz|null>

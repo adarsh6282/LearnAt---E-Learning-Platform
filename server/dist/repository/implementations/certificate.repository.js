@@ -17,16 +17,27 @@ class CertificateRepository {
         console.log("Certificate saved:", cert);
         return cert;
     }
-    async getCertificates(userId) {
-        const certificates = await certificateModel_1.default.find({ user: userId }).populate("course", "title");
-        return certificates.map((cert) => ({
-            _id: cert._id.toString(),
-            user: userId,
-            course: cert.course.toString(),
-            courseTitle: cert.course.title,
-            certificateUrl: cert.certificateUrl,
-            issuedDate: cert.issuedDate,
-        }));
+    async getCertificates(userId, page, limit) {
+        const skip = (page - 1) * limit;
+        const [certificates, total] = await Promise.all([
+            certificateModel_1.default.find({ user: userId })
+                .populate("course", "title")
+                .skip(skip)
+                .limit(limit),
+            certificateModel_1.default.countDocuments(),
+        ]);
+        const totalPages = Math.ceil(total / limit);
+        return {
+            certificates: certificates.map((cert) => ({
+                _id: cert._id.toString(),
+                user: userId,
+                course: cert.course._id.toString(),
+                courseTitle: cert.course.title,
+                certificateUrl: cert.certificateUrl,
+                issuedDate: cert.issuedDate,
+            })),
+            totalPages: totalPages,
+        };
     }
 }
 exports.CertificateRepository = CertificateRepository;

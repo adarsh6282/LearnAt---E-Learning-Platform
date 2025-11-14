@@ -16,10 +16,11 @@ class AdminController {
             const { email, password } = req.body;
             const { token, email: adminEmail, adminRefreshToken, } = await this._adminService.login(email, password);
             res.cookie("adminRefreshToken", adminRefreshToken, {
-                path: "/api/admin",
+                path: "/",
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: true,
+                sameSite: "none",
+                domain: "learnat.serveftp.com",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -458,9 +459,10 @@ class AdminController {
     async logOut(req, res) {
         res.clearCookie("adminRefreshToken", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            path: "/admin",
+            secure: true,
+            sameSite: "none",
+            domain: "learnat.serveftp.com",
+            path: "/",
         });
         res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });
     }

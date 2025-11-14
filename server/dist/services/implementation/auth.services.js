@@ -438,8 +438,9 @@ class AuthService {
     async purchasedCourses(userId, page, limit) {
         return await this._orderRepsitory.purchasedCourses(userId, page, limit);
     }
-    async getCertificates(userId) {
-        return await this._certificateRepository.getCertificates(userId);
+    async getCertificates(userId, page, limit) {
+        const { certificates, totalPages } = await this._certificateRepository.getCertificates(userId, page, limit);
+        return { certificates: certificates, totalPages };
     }
     async getQuiz(courseId) {
         if (!courseId) {

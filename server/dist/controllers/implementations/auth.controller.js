@@ -32,9 +32,10 @@ class Authcontroller {
             const { user, token, userRefreshToken } = await this._authService.loginUser(email, password);
             res.cookie("userRefreshToken", userRefreshToken, {
                 httpOnly: true,
-                path: "/api/users",
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                path: "/",
+                secure: true,
+                sameSite: "none",
+                domain: "learnat.serveftp.com",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -52,10 +53,11 @@ class Authcontroller {
             const userData = req.body;
             const { user, token, userRefreshToken } = await this._authService.verifyOtp(userData);
             res.cookie("userRefreshToken", userRefreshToken, {
-                path: "/api/users",
+                path: "/",
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: true,
+                sameSite: "none",
+                domain: "learnat.serveftp.com",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res
@@ -80,9 +82,10 @@ class Authcontroller {
         const refreshToken = (0, jwt_1.generateRefreshToken)(id, email, "user");
         res.cookie("userRefreshToken", refreshToken, {
             httpOnly: true,
-            path: "/api/users",
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
+            secure: true,
+            sameSite: "none",
+            domain: "learnat.serveftp.com",
             maxAge: Number(process.env.COOKIE_MAXAGE),
         });
         const redirectUrl = process.env.GOOGLE_VERIFY_URL;
@@ -281,7 +284,9 @@ class Authcontroller {
         }
         catch (err) {
             console.error(err);
-            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Failed to fetch order" });
+            res
+                .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                .json({ message: "Failed to fetch order" });
         }
     }
     async verifyOrder(req, res) {
@@ -368,9 +373,10 @@ class Authcontroller {
     async logOut(req, res) {
         res.clearCookie("userRefreshToken", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            path: "/api/users",
+            secure: true,
+            sameSite: "none",
+            domain: "learnat.serveftp.com",
+            path: "/",
         });
         res.status(statusCodes_1.httpStatus.OK).json({ message: "Logged out successfully" });
     }
@@ -518,8 +524,8 @@ class Authcontroller {
                     .json({ message: "user not authorized" });
                 return;
             }
-            const certificates = await this._authService.getCertificates(user, page, limit);
-            res.status(statusCodes_1.httpStatus.OK).json(certificates);
+            const { certificates, totalPages } = await this._authService.getCertificates(user, page, limit);
+            res.status(statusCodes_1.httpStatus.OK).json({ certificates, totalPages });
         }
         catch (err) {
             console.log(err);
@@ -593,13 +599,15 @@ class Authcontroller {
             const certificate = await this._certificateService.createCertificate({
                 user: userId,
                 course: courseId,
-                file: file
+                file: file,
             });
             res.status(statusCodes_1.httpStatus.CREATED).json({ certificate });
         }
         catch (err) {
             console.error(err);
-            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
+            res
+                .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                .json({ message: "Server error" });
         }
     }
     async getSessionToken(req, res) {
@@ -611,10 +619,14 @@ class Authcontroller {
                 return;
             }
             const { token, appId, roomId, courseId } = await this._livesessionService.generateToken(sessionId, userId, role);
-            res.status(statusCodes_1.httpStatus.OK).json({ token, appId, roomId, userId, courseId });
+            res
+                .status(statusCodes_1.httpStatus.OK)
+                .json({ token, appId, roomId, userId, courseId });
         }
         catch (error) {
-            res.status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR).json({ error: error.message });
+            res
+                .status(statusCodes_1.httpStatus.INTERNAL_SERVER_ERROR)
+                .json({ error: error.message });
         }
     }
     async getLiveSessionByCourseId(req, res) {
@@ -622,7 +634,9 @@ class Authcontroller {
             const { courseId } = req.params;
             const liveSession = await this._livesessionService.getLiveSessionByCourseId(courseId);
             if (!liveSession) {
-                res.status(statusCodes_1.httpStatus.NOT_FOUND).json({ message: "No active live session found." });
+                res
+                    .status(statusCodes_1.httpStatus.NOT_FOUND)
+                    .json({ message: "No active live session found." });
                 return;
             }
             res.status(statusCodes_1.httpStatus.OK).json(liveSession);

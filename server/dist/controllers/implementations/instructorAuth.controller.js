@@ -83,10 +83,11 @@ class InstructorAuthController {
             const { email, password } = req.body;
             const { instructor, token, instructorRefreshToken } = await this._instructorAuthService.loginInstructor(email, password);
             res.cookie("instructorRefreshToken", instructorRefreshToken, {
-                path: "/api/instructors",
+                path: "/",
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: true,
+                sameSite: "none",
+                domain: "learnat.serveftp.com",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res.status(statusCodes_1.httpStatus.OK).json({ instructor, token });
@@ -102,10 +103,11 @@ class InstructorAuthController {
             const instructorData = req.body;
             const { instructor, token, instructorRefreshToken } = await this._instructorAuthService.verifyOtp(instructorData);
             res.cookie("instructorRefreshToken", instructorRefreshToken, {
-                path: "/api/instructors",
+                path: "/",
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+                secure: true,
+                sameSite: "none",
+                domain: "learnat.serveftp.com",
                 maxAge: Number(process.env.COOKIE_MAXAGE),
             });
             res.status(statusCodes_1.httpStatus.CREATED).json({
@@ -356,9 +358,10 @@ class InstructorAuthController {
     async logOut(req, res) {
         res.clearCookie("instructorRefreshToken", {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            path: "/instructors",
+            secure: true,
+            sameSite: "none",
+            domain: "learnat.serveftp.com",
+            path: "/",
         });
         res.status(200).json({ message: "Logged out successfully" });
     }
@@ -602,7 +605,9 @@ class InstructorAuthController {
             const updateData = req.body;
             console.log(updateData);
             if (!instructor) {
-                res.status(statusCodes_1.httpStatus.UNAUTHORIZED).json({ message: "Instructor not found" });
+                res
+                    .status(statusCodes_1.httpStatus.UNAUTHORIZED)
+                    .json({ message: "Instructor not found" });
                 return;
             }
             await this._instructorAuthService.updateQuiz(quizId, updateData);

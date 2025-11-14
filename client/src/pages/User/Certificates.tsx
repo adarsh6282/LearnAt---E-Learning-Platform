@@ -4,6 +4,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { getCertificatesS } from "../../services/user.services";
 import type { AxiosError } from "axios";
 import { X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import Pagination from "../../components/Pagination";
 
 interface Certificate {
   _id: string;
@@ -17,10 +19,20 @@ interface Certificate {
 const UserCertificates = () => {
   const { authUser } = useAuth();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1");
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const itemsPerPage = 1;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   useEffect(() => {
     if (!authUser) return;
@@ -28,8 +40,9 @@ const UserCertificates = () => {
     const fetchCertificates = async () => {
       setLoading(true);
       try {
-        const res = await getCertificatesS(authUser._id!);
-        setCertificates(res.data);
+        const res = await getCertificatesS(authUser._id!,currentPage,itemsPerPage);
+        setCertificates(res.data.certificates);
+        setTotalPages(res.data.totalPages)
       } catch (err: unknown) {
         const error = err as AxiosError<{ message: string }>;
         errorToast(error.response?.data?.message ?? "Something went wrong");
@@ -39,7 +52,7 @@ const UserCertificates = () => {
     };
 
     fetchCertificates();
-  }, [authUser]);
+  }, [authUser,currentPage,itemsPerPage]);
 
   if (loading) return <p>Loading certificates...</p>;
 
@@ -89,6 +102,11 @@ const UserCertificates = () => {
           </div>
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };

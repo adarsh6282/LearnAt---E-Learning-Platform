@@ -672,17 +672,19 @@ export class AuthService implements IAuthService {
     return await this._orderRepsitory.purchasedCourses(userId, page, limit);
   }
 
-  async getCertificates(userId: string): Promise<
-    {
+  async getCertificates(userId: string,page:number,limit:number): Promise<{
+    certificates: {
       _id: string;
       user: string;
       course: string;
       courseTitle: string;
       certificateUrl: string;
       issuedDate: Date;
-    }[]
-  > {
-    return await this._certificateRepository.getCertificates(userId);
+    }[];
+    totalPages: number;
+  }> {
+    const {certificates,totalPages} = await this._certificateRepository.getCertificates(userId,page,limit);
+    return {certificates:certificates,totalPages}
   }
 
   async getQuiz(courseId: string): Promise<IQuiz | null> {

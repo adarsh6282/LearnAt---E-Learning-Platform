@@ -642,12 +642,12 @@ export class Authcontroller implements IAuthController {
           .json({ message: "user not authorized" });
         return;
       }
-      const certificates = await this._authService.getCertificates(
+      const {certificates,totalPages} = await this._authService.getCertificates(
         user,
         page,
         limit
       );
-      res.status(httpStatus.OK).json(certificates);
+      res.status(httpStatus.OK).json({certificates,totalPages});
     } catch (err) {
       console.log(err);
     }
