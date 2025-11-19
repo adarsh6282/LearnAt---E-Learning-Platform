@@ -6,6 +6,7 @@ import { ProgressDTO } from "../../DTO/progress.dto";
 import { UserDTO } from "../../DTO/user.dto";
 import { IUser } from "../../models/interfaces/auth.interface";
 import { IComplaint } from "../../models/interfaces/complaint.interface";
+import { ICoupon } from "../../models/interfaces/coupon.interface";
 import { IQuiz } from "../../models/interfaces/quiz.interface";
 import { IPurchase, PurchasedCourse } from "../../repository/implementations/order.repository";
 
@@ -37,9 +38,9 @@ export interface IAuthService {
   ): Promise<UserDTO>;
   getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:CourseDTO[],total:number,totalPages:number}>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: CourseDTO; isEnrolled: boolean }>;
-  createOrder(courseId: string, userId: string): Promise<OrderDTO>;
+  createOrder(courseId: string, userId: string,couponCode?:string): Promise<OrderDTO>;
   cancelOrder(orderId:string):Promise<OrderDTO>
-  retryPayment(orderId:string):Promise<OrderDTO>
+  retryPayment(orderId: string,couponCode?:string):Promise<OrderDTO>
   verifyPayment({
     razorpay_order_id,
     razorpay_payment_id,
@@ -75,4 +76,5 @@ export interface IAuthService {
   purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
   getQuiz(courseId:string):Promise<IQuiz|null>
   submitQuiz(quizId:string,userId:string,courseId:string,answers:{[key:string]:string}):Promise<{ score: number; percentage: number; passed: boolean;isCertificateIssued: boolean; }>
+  getCouponsForCourse(courseId:string):Promise<ICoupon[]|null>
 }

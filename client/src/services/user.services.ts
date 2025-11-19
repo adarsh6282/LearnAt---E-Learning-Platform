@@ -123,16 +123,16 @@ export const getCoursesS = async (
   );
 };
 
-export const CreateOrderS = async (courseId: string) => {
-  return await api.post<IOrder>("/users/orders", { courseId });
+export const CreateOrderS = async (courseId: string,couponCode?:string) => {
+  return await api.post<IOrder>("/users/orders", { courseId,couponCode });
 };
 
 export const cancelOrderS = async(orderId:string)=>{
   return await api.put(`/users/cancel-order/${orderId}`)
 }
 
-export const RetryPaymentS=async(orderId:string)=>{
-  return await api.put(`/users/retrypayment/${orderId}`)
+export const RetryPaymentS=async(orderId:string,couponCode?:string)=>{
+  return await api.put(`/users/retrypayment/${orderId}`,{couponCode})
 }
 
 export const verifyResS = async (data: {
@@ -404,3 +404,7 @@ export const makeCertificate = async (formData: FormData) => {
 export const getLiveToken = async (sessionId: string, role: string) => {
   return await api.get(`/users/live/token?sessionId=${sessionId}&role=${role}`);
 };
+
+export const getCouponsByCourseS=async(courseId:string)=>{
+  return await api.get(`/users/course/coupons/${courseId}`)
+}

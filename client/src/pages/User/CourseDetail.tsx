@@ -18,6 +18,7 @@ import {
   cancelOrderS,
   CreateOrderS,
   fetchProgress,
+  getCouponsByCourseS,
   getInstructor,
   getReviewsS,
   getSpecificCourseS,
@@ -31,12 +32,25 @@ import { USER_ROUTES } from "../../constants/routes.constants";
 import type { IInstructorProfile } from "../../types/instructor.types";
 import Navbar from "../../components/Navbar";
 
+interface Coupon {
+  _id: string;
+  courseId: string;
+  code: string;
+  discount: number;
+  expiresAt: Date;
+  maxUses: number;
+  usedCount: number;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseViewType | null>(null);
   const [openModules, setOpenModules] = useState<number[]>([]);
   const [openChapters, setOpenChapters] = useState<string[]>([]);
   const instructorId = course?.instructor?._id;
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [discountedPrice, setDiscountedPrice] = useState<number | null>(null);
   const [instructor, setInstructor] = useState<IInstructorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -50,6 +64,8 @@ const CourseDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "curriculum" | "instructor" | "reviews"
   >("overview");
+
+  console.log(coupons);
 
   const toggleModule = (index: number) => {
     setOpenModules((prev) =>
@@ -76,6 +92,19 @@ const CourseDetail: React.FC = () => {
     fetchIsCourseCompleted();
   }, [courseId]);
 
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        if (!courseId) return;
+        const res = await getCouponsByCourseS(courseId);
+        setCoupons(res.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCoupons();
+  }, [courseId]);
+
   const handlePayment = async () => {
     if (!course?._id) return;
     const courseId = course._id;
@@ -86,7 +115,7 @@ const CourseDetail: React.FC = () => {
     }
 
     try {
-      const { data: order } = await CreateOrderS(courseId);
+      const { data: order } = await CreateOrderS(courseId,selectedCoupon?.code);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -117,6 +146,8 @@ const CourseDetail: React.FC = () => {
           ondismiss: async function () {
             try {
               await cancelOrderS(order._id!);
+              setSelectedCoupon(null)
+              setDiscountedPrice(null)
               errorToast("Payment cancelled by user.");
               await fetchCourse();
             } catch (err) {
@@ -143,7 +174,7 @@ const CourseDetail: React.FC = () => {
     }
 
     try {
-      const { data: order } = await RetryPaymentS(orderId);
+      const { data: order } = await RetryPaymentS(orderId,selectedCoupon?.code);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -179,6 +210,8 @@ const CourseDetail: React.FC = () => {
           ondismiss: async function () {
             try {
               await cancelOrderS(order._id);
+              setSelectedCoupon(null)
+              setDiscountedPrice(null)
               errorToast("Retry payment cancelled by user.");
               await fetchCourse();
             } catch (err) {
@@ -205,6 +238,25 @@ const CourseDetail: React.FC = () => {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const handleApplyCoupon = (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    if (!course) {
+      return;
+    }
+
+    const discountAmount = (course.price * coupon.discount) / 100;
+    const newPrice = course.price - discountAmount;
+
+    setDiscountedPrice(newPrice);
+    successToast(`Applied coupon: ${coupon.code}`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setSelectedCoupon(null);
+    setDiscountedPrice(null);
+    successToast("Coupon removed");
   };
 
   const handleSubmitReview = async () => {
@@ -736,8 +788,76 @@ const CourseDetail: React.FC = () => {
                 </div>
               </div>
             </div>
+            {!isEnrolled && (
+              <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-cyan-400/20">
+                <h4 className="text-slate-100 font-semibold mb-2">
+                  Available Coupons
+                </h4>
+
+                {selectedCoupon ? (
+                  <div className="p-3 bg-slate-800 rounded-lg flex justify-between items-center">
+                    <div>
+                      <p className="text-green-400 font-semibold">
+                        {selectedCoupon.code}
+                      </p>
+                      <p className="text-slate-400 text-xs">
+                        {selectedCoupon.discount}% OFF applied
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {coupons.length === 0 ? (
+                      <p className="text-slate-400 text-sm">
+                        No coupons available.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {coupons.map((c) => (
+                          <div
+                            key={c._id}
+                            className="flex justify-between items-center p-2 bg-slate-800 rounded-lg"
+                          >
+                            <div>
+                              <p className="text-cyan-300 font-semibold">
+                                {c.code}
+                              </p>
+                              <p className="text-slate-400 text-xs">
+                                {c.discount}% off · Expires:{" "}
+                                {new Date(c.expiresAt).toDateString()}
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={() => handleApplyCoupon(c)}
+                              className="bg-cyan-500 text-white px-3 py-1 rounded text-sm hover:bg-cyan-600"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {discountedPrice && (
+                  <div className="mt-3 text-center text-green-400 font-bold text-lg">
+                    New Price: ₹{discountedPrice}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
         {isInstructorModalOpen && course.instructor && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg w-11/12 max-w-md p-6 relative">

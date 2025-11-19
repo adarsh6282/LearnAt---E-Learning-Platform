@@ -38,5 +38,6 @@ export interface IAuthController{
     createCertificate(req: Request, res: Response):Promise<void>
     getSessionToken(req: Request, res: Response): Promise<void>
     getLiveSessionByCourseId(req: Request, res: Response): Promise<void>
+    getCouponsForCourse(req: Request, res: Response): Promise<void>
     logOut(req:Request,res:Response):Promise<void>
 }

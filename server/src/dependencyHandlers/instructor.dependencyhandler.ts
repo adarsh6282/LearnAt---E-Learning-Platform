@@ -2,6 +2,7 @@ import { InstructorAuthController } from "../controllers/implementations/instruc
 import { AdminRepository } from "../repository/implementations/admin.repository";
 import { AuthRepository } from "../repository/implementations/auth.repository";
 import { CategoryRepository } from "../repository/implementations/category.repository";
+import { CouponRepository } from "../repository/implementations/coupon.repository";
 import { CourseRepository } from "../repository/implementations/course.repository";
 import { InstructorAuth } from "../repository/implementations/instructorAuth.repository";
 import { LiveSessionRepository } from "../repository/implementations/livesession.repository";
@@ -29,6 +30,7 @@ const categoryRepository = new CategoryRepository();
 const messageRepository=new MessageRepository()
 const liveSessionRepository=new LiveSessionRepository()
 const notificationRepository = new NotificationRepository();
+const couponRepository = new CouponRepository()
 const messageService=new MessageService(messageRepository)
 const livesessionService=new LiveSessionService(liveSessionRepository,courseRepository)
 const instructorAuthService = new InstructorAuthSerivce(
@@ -42,7 +44,8 @@ const instructorAuthService = new InstructorAuthSerivce(
   walletRepository,
   categoryRepository,
   notificationRepository,
-  quizRepository
+  quizRepository,
+  couponRepository
 );
 export const instructorAuthController = new InstructorAuthController(
   instructorAuthService,

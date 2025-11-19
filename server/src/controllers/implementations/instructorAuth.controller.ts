@@ -776,4 +776,15 @@ export class InstructorAuthController implements IInstructorController {
       console.log(err);
     }
   }
+
+  async addCoupon(req: Request, res: Response): Promise<void> {
+    try {
+      const {code,discount,expiresAt,maxUses}=req.body
+      const {courseId}=req.params
+      await this._instructorAuthService.addCoupon(code,discount,expiresAt,maxUses,courseId)
+      res.status(httpStatus.CREATED).json({message:"Coupon Created Successfully"})
+    } catch (err) {
+      console.log(err)
+    }
+  }
 }

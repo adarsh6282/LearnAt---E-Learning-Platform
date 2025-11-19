@@ -409,3 +409,7 @@ export const startLiveSession = async (
     `/instructors/live/token?sessionId=${sessionId}&userId=${userId}&role=${role}`
   );
 };
+
+export const createCouponS=async(courseId:string,couponData:{code:string,discount:string,expiresAt:string,maxUses:string})=>{
+  return await api.post(`/instructors/courses/coupons/${courseId}`,couponData)
+}

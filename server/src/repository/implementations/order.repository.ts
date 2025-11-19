@@ -45,29 +45,23 @@ export class OrderRepository implements IOrderRepository {
     return await Order.findById(orderId);
   }
 
-  async cancelOrder(orderId: string, status: string): Promise<IOrder | null> {
+  async cancelOrder(orderId:string,status:string,couponCode:string,amount:number,discountamount:number): Promise<IOrder | null> {
     return await Order.findByIdAndUpdate(
       orderId,
-      { status: status },
+      { status: status,couponCode:couponCode, amount:amount,discountAmount:discountamount },
       { new: true }
     );
   }
 
   async updateOrderForRetry(
     orderId: string,
-    newRazorpayOrderId: string
+    updateFields:Partial<IOrder>
   ): Promise<IOrder | null> {
     return await Order.findByIdAndUpdate(
-      orderId,
-      {
-        $set: {
-          razorpayOrderId: newRazorpayOrderId,
-          status: "created",
-          updatedAt: new Date(),
-        },
-      },
-      { new: true }
-    );
+    orderId,
+    updateFields,
+    { new: true }
+  );
   }
 
   async getPreviousOrder(

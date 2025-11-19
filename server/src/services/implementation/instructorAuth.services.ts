@@ -42,6 +42,8 @@ import {
 import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 import { QuizDTO } from "../../DTO/quiz.dto";
 import { toQuizDTO } from "../../Mappers/quiz.mapper";
+import { ICoupon } from "../../models/interfaces/coupon.interface";
+import { ICouponRepository } from "../../repository/interfaces/coupon.interface";
 
 interface Dashboard {
   totalUsers: number;
@@ -60,7 +62,8 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     private _walletRepository: IWalletRepository,
     private _categoryRepository: ICategoryRepository,
     private _notificationRepository: INotificationRepository,
-    private _quizRepository: IQuizRepository
+    private _quizRepository: IQuizRepository,
+    private _couponRepository: ICouponRepository
   ) {}
 
   async registerInstructor(email: string): Promise<void> {
@@ -581,5 +584,34 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     return toQuizDTO(quiz);
+  }
+
+  async addCoupon(code: string, discount: string, expiresAt: string, maxUses: string, courseId: string): Promise<ICoupon | null> {
+    if (!code || !discount || !expiresAt || !maxUses) {
+        throw new Error("All fields are required");
+      }
+
+      const discountNum = Number(discount);
+      if (isNaN(discountNum) || discountNum <= 0 || discountNum > 100) {
+        throw new Error("Discount must be between 1 and 100");
+      }
+
+      const maxUsesNum = Number(maxUses);
+      if (isNaN(maxUsesNum) || maxUsesNum < 1) {
+        throw new Error("Max uses must be at least 1");
+      }
+
+      const expiryDate = new Date(expiresAt);
+      if (expiryDate < new Date()) {
+        throw new Error("Expiry date must be in the future");
+      }
+
+      const existing = await this._couponRepository.findCouponByCode(code)
+      if (existing) {
+        throw new Error("Coupon code already exists");
+      }
+
+      return await this._couponRepository.addCoupon(courseId,code,discountNum,expiryDate,maxUsesNum)
+
   }
 }

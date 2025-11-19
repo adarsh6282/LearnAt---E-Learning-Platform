@@ -121,6 +121,7 @@ router.post("/submitquiz/:quizId",authRole(["user"]),authController.submitQuiz.b
 router.post("/create-certificate",uploadCertificate.single("certificate"),authController.createCertificate.bind(authController))
 router.get("/live/token",authRole(["user"]),authController.getSessionToken.bind(authController))
 router.get("/course/live/:courseId",authRole(["user"]),authController.getLiveSessionByCourseId.bind(authController))
+router.get(`/course/coupons/:courseId`,authRole(["user"]),authController.getCouponsForCourse.bind(authController))
 router.post("/logout", authController.logOut.bind(authController));
 
 export default router;

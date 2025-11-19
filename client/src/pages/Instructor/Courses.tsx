@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import type { ICourse } from "../../types/course.types";
-import { createLiveSessionS, getInstructorCoursesS } from "../../services/instructor.services";
+import {
+  createCouponS,
+  createLiveSessionS,
+  getInstructorCoursesS,
+} from "../../services/instructor.services";
 import Pagination from "../../components/Pagination";
 import { INSTRUCTOR_ROUTES } from "../../constants/routes.constants";
+import { errorToast, successToast } from "../../components/Toast";
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<ICourse[]>([]);
@@ -12,6 +17,14 @@ const Courses: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [couponData, setCouponData] = useState({
+    code: "",
+    discount: "",
+    expiresAt: "",
+    maxUses: "",
+  });
   const itemsPerPage = 3;
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,21 +63,38 @@ const Courses: React.FC = () => {
   }, [currentPage, itemsPerPage, debounce]);
 
   const handleCreateLiveSession = async (courseId: string) => {
-  try {
-    const res = await createLiveSessionS(courseId);
-    const session = res.data;
+    try {
+      const res = await createLiveSessionS(courseId);
+      const session = res.data;
 
-    navigate(`/instructors/live/${session._id}`);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to start live session");
-  }
-};
+      navigate(`/instructors/live/${session._id}`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start live session");
+    }
+  };
 
   useEffect(() => {
     const pageParam = parseInt(searchParams.get("page") || "1");
     setCurrentPage(pageParam);
   }, [searchParams]);
+
+  const handleCreateCoupon = async () => {
+    if (!couponData.code || !couponData.discount || !couponData.expiresAt) {
+      alert("All fields are required");
+      return;
+    }
+
+    try {
+      await createCouponS(selectedCourseId, couponData);
+      successToast("Coupon created successfully");
+      setCouponData({ code: "", discount: "", expiresAt: "", maxUses: "" });
+      setIsCouponModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      errorToast("Failed to create coupon");
+    }
+  };
 
   if (!token) return null;
 
@@ -138,6 +168,15 @@ const Courses: React.FC = () => {
                   >
                     Create Live Session
                   </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCourseId(course._id);
+                      setIsCouponModalOpen(true);
+                    }}
+                    className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 w-full"
+                  >
+                    Create Coupon
+                  </button>
                 </div>
               </div>
             ))}
@@ -151,6 +190,68 @@ const Courses: React.FC = () => {
             />
           )}
         </>
+      )}
+      {isCouponModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white w-96 p-6 rounded-lg shadow-lg relative">
+            <h2 className="text-xl font-bold mb-4">Create Coupon</h2>
+
+            <button
+              onClick={() => setIsCouponModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-black"
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Coupon Code"
+                value={couponData.code}
+                onChange={(e) =>
+                  setCouponData({ ...couponData, code: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+
+              <input
+                type="number"
+                placeholder="Discount %"
+                value={couponData.discount}
+                onChange={(e) =>
+                  setCouponData({ ...couponData, discount: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+
+              <input
+                type="date"
+                value={couponData.expiresAt}
+                onChange={(e) =>
+                  setCouponData({ ...couponData, expiresAt: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+
+              <input
+                type="number"
+                placeholder="Max Limit"
+                value={couponData.maxUses}
+                onChange={(e) =>
+                  setCouponData({ ...couponData, maxUses: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+
+              <button
+                onClick={handleCreateCoupon}
+                className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+              >
+                Save Coupon
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

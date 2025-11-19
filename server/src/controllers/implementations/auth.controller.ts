@@ -294,9 +294,9 @@ export class Authcontroller implements IAuthController {
 
   async buyCourse(req: UserRequest, res: Response): Promise<void> {
     try {
-      const { courseId } = req.body;
+      const { courseId,couponCode } = req.body;
       const userId = req.user?.id;
-      const order = await this._authService.createOrder(courseId!, userId!);
+      const order = await this._authService.createOrder(courseId!, userId!,couponCode);
       res.status(httpStatus.OK).json(order);
     } catch (err: unknown) {
       console.error(err);
@@ -320,7 +320,8 @@ export class Authcontroller implements IAuthController {
   async retryPayment(req: Request, res: Response): Promise<void> {
     try {
       const { orderId } = req.params;
-      const order = await this._authService.retryPayment(orderId);
+      const {couponCode}=req.body
+      const order = await this._authService.retryPayment(orderId,couponCode);
       res.status(httpStatus.OK).json(order);
     } catch (err) {
       console.log(err);
@@ -798,6 +799,16 @@ export class Authcontroller implements IAuthController {
       res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
         error: (error as Error).message,
       });
+    }
+  }
+
+  async getCouponsForCourse(req: Request, res: Response): Promise<void> {
+    try {
+      const {courseId}=req.params
+      const coupons=await this._authService.getCouponsForCourse(courseId)
+      res.status(httpStatus.OK).json(coupons)
+    } catch (err) {
+      console.log(err)
     }
   }
 }

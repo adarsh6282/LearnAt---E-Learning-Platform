@@ -9,6 +9,8 @@ export interface IOrder {
   razorpaySignature?: string;
   amount: number;
   status: "created" | "paid" | "failed";
+  couponCode?:string
+  discountAmount?:number
   currency?:string
   createdAt?: Date;
 }

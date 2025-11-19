@@ -4,6 +4,7 @@ import { AuthRepository } from "../repository/implementations/auth.repository";
 import { CategoryRepository } from "../repository/implementations/category.repository";
 import { CertificateRepository } from "../repository/implementations/certificate.repository";
 import { ComplaintRepository } from "../repository/implementations/complaint.repository";
+import { CouponRepository } from "../repository/implementations/coupon.repository";
 import { CourseRepository } from "../repository/implementations/course.repository";
 import { InstructorAuth } from "../repository/implementations/instructorAuth.repository";
 import { LiveSessionRepository } from "../repository/implementations/livesession.repository";
@@ -36,6 +37,7 @@ import { MessageService } from "../services/implementation/message.service";
     const categoryRepository=new CategoryRepository()
     const messageRepository=new MessageRepository()
     const liveSessionRepository=new LiveSessionRepository()
+    const couponRepository = new CouponRepository()
     const livesessionService=new LiveSessionService(liveSessionRepository,courseRepository)
     const messageService=new MessageService(messageRepository)
     const certificateService=new CertificateService(certificateRepository)
@@ -54,7 +56,8 @@ import { MessageService } from "../services/implementation/message.service";
       categoryRepository,
       quizRepository,
       quizResultRepository,
-      liveSessionRepository
+      liveSessionRepository,
+      couponRepository
     );
 
     export const authController=new Authcontroller(authService,messageService,certificateService,livesessionService)

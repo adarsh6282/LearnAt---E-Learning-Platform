@@ -8,6 +8,8 @@ const orderSchema = new mongoose.Schema({
   razorpaySignature: {type:String},
   amount: {type:Number},
   status: { type: String, enum: ['created', 'paid', 'failed'], default: 'created' },
+  couponCode: { type: String },
+  discountAmount: { type: Number },
   createdAt: { type: Date, default: Date.now },
 });
 

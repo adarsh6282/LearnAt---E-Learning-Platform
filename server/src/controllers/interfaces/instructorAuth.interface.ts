@@ -33,5 +33,6 @@ export interface IInstructorController {
   createSession(req: Request, res: Response): Promise<void>;
   getSessionToken(req: Request, res: Response): Promise<void>;
   endSession(req: Request, res: Response): Promise<void>;
+  addCoupon(req: Request, res: Response): Promise<void>;
   logOut(req: Request, res: Response): Promise<void>;
 }

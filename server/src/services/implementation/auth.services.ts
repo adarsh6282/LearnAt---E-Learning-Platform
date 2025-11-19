@@ -51,6 +51,8 @@ import {
 } from "../../models/interfaces/quiz.interface";
 import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 import { ILiveSessionRepository } from "../../repository/interfaces/livesession.interface";
+import { ICoupon } from "../../models/interfaces/coupon.interface";
+import { ICouponRepository } from "../../repository/interfaces/coupon.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -68,7 +70,8 @@ export class AuthService implements IAuthService {
     private _categoryRepository: ICategoryRepository,
     private _quizRepository: IQuizRepository,
     private _quizResultRepository: IQuizResultRepository,
-    private _livesessionRepository: ILiveSessionRepository
+    private _livesessionRepository: ILiveSessionRepository,
+    private _couponRepository: ICouponRepository
   ) {}
 
   async registerUser(email: string): Promise<void> {
@@ -90,7 +93,7 @@ export class AuthService implements IAuthService {
     if (existingUser) throw new Error("User already exists");
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -158,7 +161,7 @@ export class AuthService implements IAuthService {
     }
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -217,7 +220,7 @@ export class AuthService implements IAuthService {
     }
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -316,7 +319,11 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async createOrder(courseId: string, userId: string): Promise<OrderDTO> {
+  async createOrder(
+    courseId: string,
+    userId: string,
+    couponCode?: string
+  ): Promise<OrderDTO> {
     const course = await this._courseRepository.findCourseById(courseId);
     if (!course) {
       throw new Error("Course dont't exist");
@@ -332,23 +339,46 @@ export class AuthService implements IAuthService {
       throw new Error("Course is purchased or payment in progress");
     }
 
+    const originalAmount = course.price;
+    let finalAmount = course.price;
+    let appliedCoupon = null;
+
+    if (couponCode) {
+      const coupon = await this._couponRepository.findCouponByCode(couponCode);
+
+      if (!coupon) throw new Error("Invalid coupon");
+
+      if (coupon.courseId.toString() !== courseId)
+        throw new Error("Coupon does not belong to this course");
+
+      if (coupon.expiresAt < new Date()) throw new Error("Coupon has expired");
+
+      if (coupon.usedCount >= coupon.maxUses)
+        throw new Error("Coupon usage limit reached");
+
+      const discountAmount = (finalAmount * coupon.discount) / 100;
+      finalAmount = Math.round(finalAmount - discountAmount);
+
+      appliedCoupon = coupon;
+    }
+
     const options = {
-      amount: course.price * 100,
+      amount: finalAmount * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
 
     const razorpayOrder = await razorpay.orders.create(options);
 
-    const amount = course.price;
-
     const order = await this._orderRepsitory.createOrderRecord({
       userId,
       courseId,
-      amount: amount,
+      amount: originalAmount,
+      discountAmount: finalAmount,
       currency: "INR",
       razorpayOrderId: razorpayOrder.id,
       status: "created",
+      couponCode: appliedCoupon?.code || "",
     });
 
     if (!order) {
@@ -363,14 +393,26 @@ export class AuthService implements IAuthService {
     if (!order) throw new Error("Order not found");
 
     if (order.status === "paid") throw new Error("Cannot cancel a paid order");
-    const updated = await this._orderRepsitory.cancelOrder(orderId, "failed");
-    if(!updated){
-      throw new Error("failed to update the order")
+
+    const course = await this._courseRepository.findCourseById(
+      order.courseId.toString()
+    );
+    if (!course) throw new Error("Course not found");
+
+    const updated = await this._orderRepsitory.cancelOrder(
+      orderId,
+      "failed",
+      "",
+      order.amount,
+      0
+    );
+    if (!updated) {
+      throw new Error("failed to update the order");
     }
     return toOrderDTO(updated);
   }
 
-  async retryPayment(orderId: string): Promise<OrderDTO> {
+  async retryPayment(orderId: string,couponCode?:string): Promise<OrderDTO> {
     const existingOrder = await this._orderRepsitory.getOrderById(orderId);
     if (!existingOrder) {
       throw new Error("Order not found");
@@ -382,17 +424,48 @@ export class AuthService implements IAuthService {
       existingOrder.courseId.toString()
     );
     if (!course) throw new Error("Course not found");
+
+    const originalAmount = course.price;
+    let finalAmount = course.price
+    let appliedCoupon=null
+
+    if(couponCode){
+      const coupon = await this._couponRepository.findCouponByCode(couponCode);
+      if (!coupon) throw new Error("Coupon is no longer valid");
+
+      if (coupon.courseId.toString() !== course._id.toString())
+        throw new Error("Coupon does not belong to this course");
+
+      if (coupon.expiresAt < new Date()) throw new Error("Coupon has expired");
+
+      if (coupon.usedCount >= coupon.maxUses)
+        throw new Error("Coupon usage limit reached");
+
+      const discountAmount = (finalAmount * coupon.discount) / 100;
+      finalAmount = Math.round(finalAmount - discountAmount);
+
+      appliedCoupon=coupon
+    }
+
     const razorPayOrder = await razorpay.orders.create({
-      amount: existingOrder.amount * 100,
+      amount: finalAmount * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     });
+
     const updatedOrder = await this._orderRepsitory.updateOrderForRetry(
       existingOrder._id!.toString(),
-      razorPayOrder.id
+      {
+        razorpayOrderId: razorPayOrder.id,
+        couponCode:appliedCoupon?.code||"",
+        discountAmount: finalAmount,
+        amount:originalAmount,
+        status: "created",
+      }
     );
-    if(!updatedOrder){
-      throw new Error("failed to retry the order")
+
+    if (!updatedOrder) {
+      throw new Error("failed to retry the order");
     }
     return toOrderDTO(updatedOrder);
   }
@@ -421,6 +494,10 @@ export class AuthService implements IAuthService {
     if (!order) throw new Error("Order not found");
 
     await this._orderRepsitory.markOrderAsPaid(order._id!);
+
+    if(order.couponCode){
+      await this._couponRepository.updateUsedCount(order.couponCode)
+    }
 
     const user = await this._userRepository.findById(order.userId);
 
@@ -501,12 +578,12 @@ export class AuthService implements IAuthService {
   async getPreviousOrder(
     userId: string,
     courseId: string
-  ): Promise<OrderDTO|null> {
+  ): Promise<OrderDTO | null> {
     const order = await this._orderRepsitory.getPreviousOrder(userId, courseId);
-    if(!order){
-      return null
+    if (!order) {
+      return null;
     }
-    return toOrderDTO(order)
+    return toOrderDTO(order);
   }
 
   async updateLectureProgress(
@@ -675,7 +752,11 @@ export class AuthService implements IAuthService {
     return await this._orderRepsitory.purchasedCourses(userId, page, limit);
   }
 
-  async getCertificates(userId: string,page:number,limit:number): Promise<{
+  async getCertificates(
+    userId: string,
+    page: number,
+    limit: number
+  ): Promise<{
     certificates: {
       _id: string;
       user: string;
@@ -686,8 +767,9 @@ export class AuthService implements IAuthService {
     }[];
     totalPages: number;
   }> {
-    const {certificates,totalPages} = await this._certificateRepository.getCertificates(userId,page,limit);
-    return {certificates:certificates,totalPages}
+    const { certificates, totalPages } =
+      await this._certificateRepository.getCertificates(userId, page, limit);
+    return { certificates: certificates, totalPages };
   }
 
   async getQuiz(courseId: string): Promise<IQuiz | null> {
@@ -751,5 +833,10 @@ export class AuthService implements IAuthService {
     );
 
     return { score, percentage, passed, isCertificateIssued };
+  }
+
+  async getCouponsForCourse(courseId: string): Promise<ICoupon[] | null> {
+    const coupons = await this._couponRepository.findCouponsForCourse(courseId);
+    return coupons;
   }
 }

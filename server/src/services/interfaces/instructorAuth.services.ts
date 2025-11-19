@@ -5,6 +5,7 @@ import { NotificationDTO } from "../../DTO/notification.dto";
 import { QuizDTO } from "../../DTO/quiz.dto";
 import { ReviewDTO } from "../../DTO/review.dto";
 import { UserDTO } from "../../DTO/user.dto";
+import { ICoupon } from "../../models/interfaces/coupon.interface";
 import { IInstructor } from "../../models/interfaces/instructorAuth.interface";
 import { InstructorQuizResponse, IQuiz } from "../../models/interfaces/quiz.interface";
 import { ITransaction, IWallet } from "../../models/interfaces/wallet.interface";
@@ -52,5 +53,6 @@ export interface IInstructorAuthService{
     restoreQuiz(quizId:string):Promise<QuizDTO>
     getQuiz(quizId:string):Promise<QuizDTO>
     updateQuiz(quizId:string,updateData:Partial<IQuiz>):Promise<QuizDTO>
+    addCoupon(code:string,discount:string,expiresAt:string,maxUses:string,courseId:string):Promise<ICoupon|null>
     getDashboard(instructorId:string):Promise<Dashboard|null>
 }
