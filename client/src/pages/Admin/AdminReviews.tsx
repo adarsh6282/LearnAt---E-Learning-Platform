@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Pagination from "../../components/Pagination";
-import { deleteReviewS, getReviewForAdminS, hideReviewS, unHideReviewS } from "../../services/admin.services";
+import {
+  deleteReviewS,
+  getReviewForAdminS,
+  hideReviewS,
+  unHideReviewS,
+} from "../../services/admin.services";
 
 interface Review {
   _id: string;
@@ -16,7 +21,7 @@ interface Review {
 const AdminReviews = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debounce,setDebounce]=useState("")
+  const [debounce, setDebounce] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [totalPages, setTotalPages] = useState<number>(1);
   const pageParam = parseInt(searchParams.get("page") || "1");
@@ -25,26 +30,26 @@ const AdminReviews = () => {
   const [sortOption, setSortOption] = useState("date");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
-  useEffect(()=>{
-    const timeout=setTimeout(() => {
-      setDebounce(searchQuery)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounce(searchQuery);
     }, 300);
-    return ()=>clearTimeout(timeout)
-  },[searchQuery])
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-          const res = await getReviewForAdminS(
-            currentPage,
-            itemsPerPage,
-            debounce,
-            ratingFilter,
-            sortOption
-          );
-          setReviews(res.data.reviews);
-          setTotalPages(res.data.totalPages);
-        } catch (err) {
+        const res = await getReviewForAdminS(
+          currentPage,
+          itemsPerPage,
+          debounce,
+          ratingFilter,
+          sortOption
+        );
+        setReviews(res.data.reviews);
+        setTotalPages(res.data.totalPages);
+      } catch (err) {
         console.log(err);
       }
     };
@@ -62,21 +67,21 @@ const AdminReviews = () => {
   };
 
   const handleHide = async (id: string) => {
-    await hideReviewS(id)
+    await hideReviewS(id);
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: true } : r))
     );
   };
 
   const handleUnhide = async (id: string) => {
-    await unHideReviewS(id)
+    await unHideReviewS(id);
     setReviews((prev) =>
       prev.map((r) => (r._id === id ? { ...r, isHidden: false } : r))
     );
   };
 
   const handleDelete = async (id: string) => {
-    await deleteReviewS(id)
+    await deleteReviewS(id);
     setReviews((prev) => prev.filter((r) => r._id !== id));
   };
 
@@ -86,17 +91,17 @@ const AdminReviews = () => {
         All Course Reviews
       </h1>
 
-      <div className="mb-6 max-w-md">
+      <div className="mb-6 flex flex-wrap items-center gap-4">
         <input
           type="text"
           placeholder="Search by course title or instructor..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-60"
         />
 
         <select
-          className="px-3 py-2 border rounded"
+          className="px-3 py-2 border rounded w-full sm:w-40"
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value)}
         >
@@ -107,7 +112,7 @@ const AdminReviews = () => {
         </select>
 
         <select
-          className="px-3 py-2 border rounded"
+          className="px-3 py-2 border rounded w-full sm:w-32"
           value={ratingFilter ?? ""}
           onChange={(e) =>
             setRatingFilter(e.target.value ? parseInt(e.target.value) : null)
