@@ -413,3 +413,11 @@ export const startLiveSession = async (
 export const createCouponS=async(courseId:string,couponData:{code:string,discount:string,expiresAt:string,maxUses:string})=>{
   return await api.post(`/instructors/courses/coupons/${courseId}`,couponData)
 }
+
+export const getInstructorCoupons=async()=>{
+  return await api.get("/instructors/coupons")
+}
+
+export const editCoupon=async(id:string,code:string,discount:string,expiresAt:string,maxUses:string)=>{
+  return await api.put(`/instructors/coupons/${id}`,{code,discount,expiresAt,maxUses})
+}

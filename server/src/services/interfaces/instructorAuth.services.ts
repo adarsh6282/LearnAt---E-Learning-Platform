@@ -53,6 +53,8 @@ export interface IInstructorAuthService{
     restoreQuiz(quizId:string):Promise<QuizDTO>
     getQuiz(quizId:string):Promise<QuizDTO>
     updateQuiz(quizId:string,updateData:Partial<IQuiz>):Promise<QuizDTO>
-    addCoupon(code:string,discount:string,expiresAt:string,maxUses:string,courseId:string):Promise<ICoupon|null>
+    addCoupon(code:string,discount:string,expiresAt:string,maxUses:string,courseId:string,instructorId:string):Promise<ICoupon|null>
+    getCouponsForInstructors(instructorId:string):Promise<ICoupon[]|null>
+    updateCoupon(id:string,instructorId:string,code:string,discount:string,expiresAt:string,maxUses:string):Promise<ICoupon|null>
     getDashboard(instructorId:string):Promise<Dashboard|null>
 }

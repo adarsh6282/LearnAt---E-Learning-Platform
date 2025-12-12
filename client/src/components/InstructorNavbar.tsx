@@ -8,6 +8,7 @@ import {
   LogOut,
   ListCheck,
   BookmarkCheck,
+  TicketPercentIcon
 } from "lucide-react";
 import { BiChat } from "react-icons/bi";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -79,17 +80,15 @@ const InstructorNavbar = () => {
     { name: "Enrollments", icon: BookmarkCheck },
     { name: "Chat", icon: BiChat },
     { name: "Quiz", icon: MdQuiz },
+    { name: "Coupon", icon: TicketPercentIcon}
   ];
 
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="w-64 bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 shadow-2xl border-r border-blue-700/30 flex flex-col justify-between">
         <div>
-          <div className="flex items-center justify-center p-6 border-b border-blue-700/30">
+          <div className="flex items-center justify-center p-2 border-b border-blue-700/30">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">I</span>
-              </div>
               <span className="text-white font-bold text-xl">
                 Instructor Panel
               </span>

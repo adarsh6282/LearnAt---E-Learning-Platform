@@ -145,6 +145,8 @@ router.post("/live/create-session",authRole(["instructor"]),instructorAuthContro
 router.get("/live/token",authRole(["instructor"]),instructorAuthController.getSessionToken.bind(instructorAuthController))
 router.patch("/live/end-live",authRole(["instructor"]),instructorAuthController.endSession.bind(instructorAuthController))
 router.post("/courses/coupons/:courseId",authRole(["instructor"]),instructorAuthController.addCoupon.bind(instructorAuthController))
+router.get("/coupons",authRole(["instructor"]),instructorAuthController.getCouponsForInstructors.bind(instructorAuthController))
+router.put("/coupons/:id",authRole(["instructor"]),instructorAuthController.updateCoupon.bind(instructorAuthController))
 router.post(
   "/logout",
   instructorAuthController.logOut.bind(instructorAuthController)

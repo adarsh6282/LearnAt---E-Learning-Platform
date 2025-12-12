@@ -1,6 +1,7 @@
 import { ICoupon } from "../../models/interfaces/coupon.interface";
 import { ICouponRepository } from "../interfaces/coupon.interface";
 import Coupon from "../../models/implementations/couponModel";
+import { InstructorAuth } from "./instructorAuth.repository";
 
 export class CouponRepository implements ICouponRepository {
   async addCoupon(
@@ -8,7 +9,8 @@ export class CouponRepository implements ICouponRepository {
     code: string,
     discount: number,
     expiresAt: Date,
-    maxUses: number
+    maxUses: number,
+    instructorId:string
   ): Promise<ICoupon | null> {
     return await Coupon.create({
       courseId,
@@ -16,6 +18,7 @@ export class CouponRepository implements ICouponRepository {
       discount,
       expiresAt,
       maxUses,
+      instructorId
     });
   }
 
@@ -33,5 +36,17 @@ export class CouponRepository implements ICouponRepository {
       { $inc: { usedCount: 1 } },
       { new: true }
     );
+  }
+
+  async getCouponsForInstructors(instructorId: string): Promise<ICoupon[] | null> {
+    return await Coupon.find({instructorId:instructorId})
+  }
+
+  async findCouponById(id: string): Promise<ICoupon | null> {
+    return await Coupon.findById(id)
+  }
+
+  async updateCoupon(id:string,code: string, discount: number, expiresAt: string, maxUses: number): Promise<ICoupon | null> {
+    return await Coupon.findByIdAndUpdate(id,{code,discount,expiresAt,maxUses},{new:true})
   }
 }

@@ -85,7 +85,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -201,7 +201,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -264,7 +264,7 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const otp = generateOtp();
-    const otpExpiry=generateOtpExpiry()
+    const otpExpiry = generateOtpExpiry();
 
     await this._otpRepository.saveOTP({
       email: email,
@@ -501,8 +501,8 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     };
 
     const createdQuiz = await this._quizRepository.createQuiz(quizData);
-    if(!createdQuiz){
-      throw new Error("failed to create quiz")
+    if (!createdQuiz) {
+      throw new Error("failed to create quiz");
     }
     return toQuizDTO(createdQuiz);
   }
@@ -519,9 +519,12 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     if (!updateData.questions || !Array.isArray(updateData.questions)) {
       throw new Error("Invalid questions data");
     }
-    const updatedQuiz = await this._quizRepository.updateQuizById(quizId, updateData);
-    if(!updatedQuiz){
-      throw new Error("failed to update the quiz")
+    const updatedQuiz = await this._quizRepository.updateQuizById(
+      quizId,
+      updateData
+    );
+    if (!updatedQuiz) {
+      throw new Error("failed to update the quiz");
     }
     return toQuizDTO(updatedQuiz);
   }
@@ -556,10 +559,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const updated = await this._quizRepository.changeStatus(quizId, true);
-    if(!updated){
-      throw new Error("failed to delete the quiz")
+    if (!updated) {
+      throw new Error("failed to delete the quiz");
     }
-    return toQuizDTO(updated)
+    return toQuizDTO(updated);
   }
 
   async restoreQuiz(quizId: string): Promise<QuizDTO> {
@@ -570,10 +573,10 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     }
 
     const updated = await this._quizRepository.changeStatus(quizId, false);
-    if(!updated){
-      throw new Error("failed to delete the quiz")
+    if (!updated) {
+      throw new Error("failed to delete the quiz");
     }
-    return toQuizDTO(updated)
+    return toQuizDTO(updated);
   }
 
   async getQuiz(quizId: string): Promise<QuizDTO> {
@@ -586,32 +589,78 @@ export class InstructorAuthSerivce implements IInstructorAuthService {
     return toQuizDTO(quiz);
   }
 
-  async addCoupon(code: string, discount: string, expiresAt: string, maxUses: string, courseId: string): Promise<ICoupon | null> {
+  async addCoupon(
+    code: string,
+    discount: string,
+    expiresAt: string,
+    maxUses: string,
+    courseId: string,
+    instructorId: string
+  ): Promise<ICoupon | null> {
     if (!code || !discount || !expiresAt || !maxUses) {
-        throw new Error("All fields are required");
-      }
+      throw new Error("All fields are required");
+    }
 
-      const discountNum = Number(discount);
-      if (isNaN(discountNum) || discountNum <= 0 || discountNum > 100) {
-        throw new Error("Discount must be between 1 and 100");
-      }
+    const discountNum = Number(discount);
+    if (isNaN(discountNum) || discountNum <= 0 || discountNum > 100) {
+      throw new Error("Discount must be between 1 and 100");
+    }
 
-      const maxUsesNum = Number(maxUses);
-      if (isNaN(maxUsesNum) || maxUsesNum < 1) {
-        throw new Error("Max uses must be at least 1");
-      }
+    const maxUsesNum = Number(maxUses);
+    if (isNaN(maxUsesNum) || maxUsesNum < 1) {
+      throw new Error("Max uses must be at least 1");
+    }
 
-      const expiryDate = new Date(expiresAt);
-      if (expiryDate < new Date()) {
-        throw new Error("Expiry date must be in the future");
-      }
+    const expiryDate = new Date(expiresAt);
+    if (expiryDate < new Date()) {
+      throw new Error("Expiry date must be in the future");
+    }
 
-      const existing = await this._couponRepository.findCouponByCode(code)
-      if (existing) {
-        throw new Error("Coupon code already exists");
-      }
+    const existing = await this._couponRepository.findCouponByCode(code);
+    if (existing) {
+      throw new Error("Coupon code already exists");
+    }
 
-      return await this._couponRepository.addCoupon(courseId,code,discountNum,expiryDate,maxUsesNum)
+    return await this._couponRepository.addCoupon(
+      courseId,
+      code,
+      discountNum,
+      expiryDate,
+      maxUsesNum,
+      instructorId
+    );
+  }
 
+  async getCouponsForInstructors(
+    instructorId: string
+  ): Promise<ICoupon[] | null> {
+    const coupons =
+      await this._couponRepository.getCouponsForInstructors(instructorId);
+    return coupons;
+  }
+
+  async updateCoupon(
+    id: string,
+    instructorId: string,
+    code: string,
+    discount: string,
+    expiresAt: string,
+    maxUses: string
+  ): Promise<ICoupon | null> {
+    const coupon = await this._couponRepository.findCouponById(id);
+
+    if (!coupon) throw new Error("No Coupon exist");
+
+    if (coupon.instructorId.toString() !== instructorId.toString()) {
+      throw new Error("Not authorized to update");
+    }
+
+    return await this._couponRepository.updateCoupon(
+      id,
+      code,
+      Number(discount),
+      expiresAt,
+      Number(maxUses)
+    );
   }
 }

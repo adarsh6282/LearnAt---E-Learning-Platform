@@ -24,6 +24,12 @@ const couponSchema = new Schema<ICoupon>(
       max: 100,
     },
 
+    instructorId:{
+      type:Schema.Types.ObjectId,
+      ref: "Instructor",
+      required:true
+    },
+
     expiresAt: {
       type: Date,
       required: true,

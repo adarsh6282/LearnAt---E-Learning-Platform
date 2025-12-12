@@ -226,6 +226,7 @@ const Courses: React.FC = () => {
 
               <input
                 type="date"
+                placeholder="expiry date"
                 value={couponData.expiresAt}
                 onChange={(e) =>
                   setCouponData({ ...couponData, expiresAt: e.target.value })

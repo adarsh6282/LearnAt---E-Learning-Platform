@@ -780,9 +780,37 @@ export class InstructorAuthController implements IInstructorController {
   async addCoupon(req: Request, res: Response): Promise<void> {
     try {
       const {code,discount,expiresAt,maxUses}=req.body
+      const instructor=req.instructor?.id
       const {courseId}=req.params
-      await this._instructorAuthService.addCoupon(code,discount,expiresAt,maxUses,courseId)
+      await this._instructorAuthService.addCoupon(code,discount,expiresAt,maxUses,courseId,instructor!)
       res.status(httpStatus.CREATED).json({message:"Coupon Created Successfully"})
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async getCouponsForInstructors(req: Request, res: Response): Promise<void> {
+    try {
+      const instructor=req.instructor?.id
+      if(!instructor){
+        res.status(httpStatus.UNAUTHORIZED).json({message:"Instructor not found"})
+        return
+      }
+
+      const coupons=await this._instructorAuthService.getCouponsForInstructors(instructor)
+      res.status(httpStatus.OK).json(coupons)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  async updateCoupon(req: Request, res: Response): Promise<void> {
+    try {
+      const instructorId=req.instructor?.id
+      const {id}=req.params
+      const {code,discount,expiresAt,maxUses}=req.body
+      const updated=await this._instructorAuthService.updateCoupon(id,instructorId!,code,discount,expiresAt,maxUses)
+      res.status(httpStatus.OK).json(updated)
     } catch (err) {
       console.log(err)
     }

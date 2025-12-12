@@ -28,6 +28,7 @@ import InstructorQuizzes from "../pages/Instructor/InstructorQuizzes";
 import QuizManagement from "../pages/Instructor/QuizManagement";
 import InstructorLivePage from "../pages/Instructor/InstructorLiveSession";
 import QuizCreation from "../pages/Instructor/QuizCreation";
+import InstructorCoupons from "../pages/Instructor/CouponManagement";
 
 
 const InstructorRoutes = () => {
@@ -142,6 +143,7 @@ const InstructorRoutes = () => {
           path={INSTRUCTOR_ROUTES.NOTIFICATIONS}
           element={<ProtectedRoute><InstructorNotification /></ProtectedRoute>}
         />
+      <Route path="/instructors/coupon" element={<InstructorCoupons/>}/>
       </Route>
     </>
   );

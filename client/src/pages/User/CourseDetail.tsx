@@ -115,7 +115,10 @@ const CourseDetail: React.FC = () => {
     }
 
     try {
-      const { data: order } = await CreateOrderS(courseId,selectedCoupon?.code);
+      const { data: order } = await CreateOrderS(
+        courseId,
+        selectedCoupon?.code
+      );
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -146,8 +149,8 @@ const CourseDetail: React.FC = () => {
           ondismiss: async function () {
             try {
               await cancelOrderS(order._id!);
-              setSelectedCoupon(null)
-              setDiscountedPrice(null)
+              setSelectedCoupon(null);
+              setDiscountedPrice(null);
               errorToast("Payment cancelled by user.");
               await fetchCourse();
             } catch (err) {
@@ -174,7 +177,10 @@ const CourseDetail: React.FC = () => {
     }
 
     try {
-      const { data: order } = await RetryPaymentS(orderId,selectedCoupon?.code);
+      const { data: order } = await RetryPaymentS(
+        orderId,
+        selectedCoupon?.code
+      );
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_ID,
@@ -210,8 +216,8 @@ const CourseDetail: React.FC = () => {
           ondismiss: async function () {
             try {
               await cancelOrderS(order._id);
-              setSelectedCoupon(null)
-              setDiscountedPrice(null)
+              setSelectedCoupon(null);
+              setDiscountedPrice(null);
               errorToast("Retry payment cancelled by user.");
               await fetchCourse();
             } catch (err) {
@@ -820,29 +826,31 @@ const CourseDetail: React.FC = () => {
                       </p>
                     ) : (
                       <div className="space-y-2">
-                        {coupons.map((c) => (
-                          <div
-                            key={c._id}
-                            className="flex justify-between items-center p-2 bg-slate-800 rounded-lg"
-                          >
-                            <div>
-                              <p className="text-cyan-300 font-semibold">
-                                {c.code}
-                              </p>
-                              <p className="text-slate-400 text-xs">
-                                {c.discount}% off · Expires:{" "}
-                                {new Date(c.expiresAt).toDateString()}
-                              </p>
-                            </div>
-
-                            <button
-                              onClick={() => handleApplyCoupon(c)}
-                              className="bg-cyan-500 text-white px-3 py-1 rounded text-sm hover:bg-cyan-600"
+                        {coupons
+                          .filter((c) => new Date(c.expiresAt) > new Date())
+                          .map((c) => (
+                            <div
+                              key={c._id}
+                              className="flex justify-between items-center p-2 bg-slate-800 rounded-lg"
                             >
-                              Apply
-                            </button>
-                          </div>
-                        ))}
+                              <div>
+                                <p className="text-cyan-300 font-semibold">
+                                  {c.code}
+                                </p>
+                                <p className="text-slate-400 text-xs">
+                                  {c.discount}% off · Expires:{" "}
+                                  {new Date(c.expiresAt).toDateString()}
+                                </p>
+                              </div>
+
+                              <button
+                                onClick={() => handleApplyCoupon(c)}
+                                className="bg-cyan-500 text-white px-3 py-1 rounded text-sm hover:bg-cyan-600"
+                              >
+                                Apply
+                              </button>
+                            </div>
+                          ))}
                       </div>
                     )}
                   </>
