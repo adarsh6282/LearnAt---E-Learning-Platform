@@ -4,7 +4,6 @@ import {
   editCoupon,
   getInstructorCoupons,
 } from "../../services/instructor.services";
-import { string } from "yup";
 
 interface Coupon {
   _id: string;
