@@ -1,19 +1,19 @@
-import { toast } from "react-toastify";
+import {toast} from "react-hot-toast";
 
 export const successToast = (message: string) => {
   toast.success(message, {
-    position: "top-center",
-    autoClose: 1500,
-    pauseOnHover: true,
-    theme: "colored",
+    style: {
+      background: "#22c55e",
+      color: "#fff",
+    },
   });
 };
 
 export const errorToast = (message: string) => {
   toast.error(message, {
-    position: "top-center",
-    autoClose: 1500,
-    pauseOnHover: true,
-    theme: "colored",
+    style: {
+      background: "#ef4444",
+      color: "#fff",
+    },
   });
 };

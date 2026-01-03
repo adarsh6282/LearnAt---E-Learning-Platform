@@ -8,7 +8,7 @@ import {
   MdVideocamOff,
   MdCallEnd,
 } from "react-icons/md";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 const InstructorVideoCall = () => {
   const { chatId } = useParams();
@@ -91,7 +91,13 @@ const InstructorVideoCall = () => {
 
       if (localVideoEl) localVideoEl.srcObject = null;
       if (remoteVideoEl) remoteVideoEl.srcObject = null;
-      toast.info("the other user missed or ended the call");
+      toast("The other user missed or ended the call", {
+        icon: "ℹ️",
+        style: {
+          background: "#3b82f6",
+          color: "#fff",
+        },
+      });
       navigate(-1);
     });
 

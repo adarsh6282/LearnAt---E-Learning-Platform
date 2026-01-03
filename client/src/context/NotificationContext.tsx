@@ -11,7 +11,7 @@ import { useAuth } from "../hooks/useAuth";
 import useAdmin from "../hooks/useAdmin";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import {
   instructorNotification,
   markAsReadInstructor,
@@ -41,8 +41,7 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
-const NotificationContext =
-  createContext<NotificationContextType | null>(null);
+const NotificationContext = createContext<NotificationContextType | null>(null);
 
 export const NotificationProvider = ({
   children,
@@ -92,7 +91,7 @@ export const NotificationProvider = ({
     } finally {
       setLoading(false);
     }
-  },[userId,role])
+  }, [userId, role]);
 
   const markAsRead = async (notificationId: string) => {
     if (!userId || !role) return;
@@ -132,7 +131,7 @@ export const NotificationProvider = ({
     if (userId && role) {
       fetchNotifications();
     }
-  }, [userId, role,fetchNotifications]);
+  }, [userId, role, fetchNotifications]);
 
   useEffect(() => {
     if (!userId) return;
@@ -147,14 +146,21 @@ export const NotificationProvider = ({
     });
 
     socketRef.current.on("newNotification", (message: string) => {
-      toast.info(message || "You have a new message");
+      toast(message || "You have a new message", {
+        icon: "ℹ️",
+        style: {
+          background: "#3b82f6",
+          color: "#fff",
+        },
+      });
+
       fetchNotifications();
     });
 
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [userId,fetchNotifications]);
+  }, [userId, fetchNotifications]);
 
   return (
     <NotificationContext.Provider
@@ -171,4 +177,4 @@ export const NotificationProvider = ({
   );
 };
 
-export default NotificationContext
+export default NotificationContext;

@@ -8,7 +8,7 @@ import {
   MdVideocamOff,
   MdCallEnd,
 } from "react-icons/md";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 
 const VideoCall = () => {
   const { chatId } = useParams();
@@ -16,9 +16,9 @@ const VideoCall = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const targetId = searchParams.get("target");
-  const calleName=searchParams.get("calleName")
+  const calleName = searchParams.get("calleName");
 
-  console.log(calleName)
+  console.log(calleName);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -95,7 +95,14 @@ const VideoCall = () => {
 
       if (localVideoEl) localVideoEl.srcObject = null;
       if (remoteVideoEl) remoteVideoEl.srcObject = null;
-      toast.info("the other user missed or ended the call")
+      toast("The other user missed or ended the call", {
+        icon: "ℹ️",
+        style: {
+          background: "#3b82f6",
+          color: "#fff",
+        },
+      });
+
       navigate(-1);
     });
 
@@ -113,7 +120,7 @@ const VideoCall = () => {
       socket.off("end-call");
       socket.off("incoming-call");
     };
-  }, [chatId,navigate]);
+  }, [chatId, navigate]);
 
   const startCall = async () => {
     try {
@@ -136,7 +143,7 @@ const VideoCall = () => {
 
       socket.emit("incoming-call", {
         callerId: socket.id,
-        calleName:calleName,
+        calleName: calleName,
         chatId,
         receiverId: targetId,
       });

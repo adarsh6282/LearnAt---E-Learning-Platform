@@ -1,4 +1,4 @@
-import { ToastContainer } from "react-toastify";
+import { Toaster } from "react-hot-toast";
 import UserRoutes from "./routes/UserRoutes";
 import InstructorRoutes from "./routes/InstructorRoutes";
 import { BrowserRouter, Routes } from "react-router-dom";
@@ -12,7 +12,13 @@ function App() {
         {UserRoutes()}
         {InstructorRoutes()}
       </Routes>
-      <ToastContainer />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 1500,
+        }}
+        
+      />
     </BrowserRouter>
   );
 }
