@@ -6,6 +6,7 @@ import {
   markLectureWatchedS,
 } from "../../services/user.services";
 import type { CourseViewType, Lecture } from "../../types/user.types";
+import teacherGif from "../../assets/Teacher.gif";
 import {
   BookOpen,
   CheckCircle,
@@ -105,15 +106,20 @@ const CoursePage = () => {
   };
 
   if (!course) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white">
-        <BookOpen className="w-16 h-16 mb-4 animate-bounce text-cyan-400" />
-        <p className="mt-2 text-xl font-semibold text-gray-300">
-          Loading your course...
-        </p>
-      </div>
-    );
-  }
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white">
+      <img
+        src={teacherGif}
+        alt="Loading..."
+        className="w-64 h-64 object-contain"
+      />
+      <p className="mt-4 text-xl font-semibold text-gray-300">
+        Loading your course...
+      </p>
+
+    </div>
+  );
+}
 
   const allLessons = course.modules?.flatMap((m) => 
     m.chapters.flatMap((c) => c.lessons)
