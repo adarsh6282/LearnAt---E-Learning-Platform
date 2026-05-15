@@ -469,7 +469,7 @@ export class InstructorAuthController implements IInstructorController {
       domain: "learnat.serveftp.com",
       path: "/",
     });
-    res.status(200).json({ message: "Logged out successfully" });
+    res.status(httpStatus.OK).json({ message: "Logged out successfully" });
   }
 
   async getPurchasedStudents(req: Request, res: Response): Promise<void> {
@@ -742,7 +742,7 @@ export class InstructorAuthController implements IInstructorController {
       );
       res.status(httpStatus.OK).json({ token });
     } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
+      res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: (error as Error).message });
     }
   }
 

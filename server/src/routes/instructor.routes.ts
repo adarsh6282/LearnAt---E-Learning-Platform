@@ -2,153 +2,154 @@ import { Router } from "express";
 import upload from "../utils/multer";
 import authRole from "../middlewares/authRole";
 import { instructorAuthController } from "../dependencyHandlers/instructor.dependencyhandler";
+import { INSTRUCTOR_ROUTES } from "../constants/routes";
 
 const router = Router();
 
 router.post(
-  "/register",
+  INSTRUCTOR_ROUTES.REGISTER,
   upload.single("resume"),
   instructorAuthController.signup.bind(instructorAuthController)
 );
 router.post(
-  "/refresh-token",
+  INSTRUCTOR_ROUTES.REFRESH_TOKEN,
   instructorAuthController.refreshToken.bind(instructorAuthController)
 );
 router.post(
-  "/login",
+  INSTRUCTOR_ROUTES.LOGIN,
   instructorAuthController.signin.bind(instructorAuthController)
 );
 router.post(
-  "/verify-otp",
+  INSTRUCTOR_ROUTES.VERIFY_OTP,
   instructorAuthController.verifyOtp.bind(instructorAuthController)
 );
 router.post(
-  "/forgotpassword",
+  INSTRUCTOR_ROUTES.FORGOT_PASSWORD,
   instructorAuthController.forgotPassword.bind(instructorAuthController)
 );
 router.post(
-  "/reset-verify-otp",
+  INSTRUCTOR_ROUTES.RESET_VERIFY_OTP,
   instructorAuthController.verifyForgotOtp.bind(instructorAuthController)
 );
 router.put(
-  "/resetpassword",
+  INSTRUCTOR_ROUTES.RESET_PASSWORD,
   instructorAuthController.resetPassword.bind(instructorAuthController)
 );
 router.post(
-  "/resend-otp",
+  INSTRUCTOR_ROUTES.RESEND_OTP,
   instructorAuthController.resentOtp.bind(instructorAuthController)
 );
 router.get(
-  "/profile",
+  INSTRUCTOR_ROUTES.PROFILE,
   authRole(["instructor"]),
   instructorAuthController.getProfile.bind(instructorAuthController)
 );
 router.get(
-  "/courses",
+  INSTRUCTOR_ROUTES.COURSES,
   authRole(["instructor"]),
   instructorAuthController.getCourses.bind(instructorAuthController)
 );
 router.put(
-  "/reapply",
+  INSTRUCTOR_ROUTES.REAPPLY,
   authRole(["instructor"]),
   upload.single("resume"),
   instructorAuthController.reApply.bind(instructorAuthController)
 );
 router.get(
-  "/courses/:courseId",
+  INSTRUCTOR_ROUTES.COURSE_BY_ID,
   authRole(["instructor"]),
   instructorAuthController.getCoursesById.bind(instructorAuthController)
 );
 router.get(
-  "/category",
+  INSTRUCTOR_ROUTES.CATEGORY,
   authRole(["instructor"]),
   instructorAuthController.getCategory.bind(instructorAuthController)
 );
 router.get(
-  "/reviews",
+  INSTRUCTOR_ROUTES.REVIEWS,
   authRole(["instructor"]),
   instructorAuthController.getInstructorReviews.bind(instructorAuthController)
 );
 router.get(
-  "/enrollments",
+  INSTRUCTOR_ROUTES.ENROLLMENTS,
   authRole(["instructor"]),
   instructorAuthController.getEnrollments.bind(instructorAuthController)
 );
 router.put(
-  "/profile",
+  INSTRUCTOR_ROUTES.PROFILE,
   authRole(["instructor"]),
   upload.single("profilePicture"),
   instructorAuthController.updateProfile.bind(instructorAuthController)
 );
 router.get(
-  "/wallet",
+  INSTRUCTOR_ROUTES.WALLET,
   authRole(["instructor"]),
   instructorAuthController.getWallet.bind(instructorAuthController)
 );
 router.get(
-  "/dashboard",
+  INSTRUCTOR_ROUTES.DASHBOARD,
   authRole(["instructor"]),
   instructorAuthController.getDashboard.bind(instructorAuthController)
 );
 router.get(
-  "/course-stats",
+  INSTRUCTOR_ROUTES.COURSE_STATS,
   authRole(["instructor"]),
   instructorAuthController.getCourseStats.bind(instructorAuthController)
 );
 router.get(
-  "/income-stats",
+  INSTRUCTOR_ROUTES.INCOME_STATS,
   authRole(["instructor"]),
   instructorAuthController.getIncomeStats.bind(instructorAuthController)
 );
 router.get(
-  "/users/purchased",
+  INSTRUCTOR_ROUTES.PURCHASED_USERS,
   authRole(["instructor"]),
   instructorAuthController.getPurchasedStudents.bind(instructorAuthController)
 );
 router.get(
-  "/notifications/:userId",
+  INSTRUCTOR_ROUTES.NOTIFICATIONS,
   instructorAuthController.getNotifications.bind(instructorAuthController)
 );
 router.put(
-  "/notifications/read/:notificationId",
+  INSTRUCTOR_ROUTES.MARK_NOTIFICATION_READ,
   instructorAuthController.markAsRead.bind(instructorAuthController)
 );
 router.get(
-  "/chats/unread-counts",
+  INSTRUCTOR_ROUTES.UNREAD_CHAT_COUNTS,
   authRole(["instructor"]),
   instructorAuthController.getUnreadCounts.bind(instructorAuthController)
 );
 router.post(
-  "/messages/mark-as-read/:chatId",
+  INSTRUCTOR_ROUTES.MARK_MESSAGES_READ,
   authRole(["instructor"]),
   instructorAuthController.markRead.bind(instructorAuthController)
 );
 router.post(
-  "/quiz/create-quiz/:courseId",
+  INSTRUCTOR_ROUTES.CREATE_QUIZ,
   authRole(["instructor"]),
   instructorAuthController.createQuiz.bind(instructorAuthController)
 );
 router.get(
-  "/quiz",
+  INSTRUCTOR_ROUTES.QUIZZES,
   authRole(["instructor"]),
   instructorAuthController.getQuizzes.bind(instructorAuthController)
 );
 router.patch(
-  "/delete/quiz/:quizId",
+  INSTRUCTOR_ROUTES.DELETE_QUIZ,
   authRole(["instructor"]),
   instructorAuthController.deleteQuiz.bind(instructorAuthController)
 );
-router.put("/quiz/:quizId",authRole(["instructor"]),instructorAuthController.updateQuiz.bind(instructorAuthController))
-router.patch("/restore/quiz/:quizId",authRole(["instructor"]),instructorAuthController.restoreQuiz.bind(instructorAuthController))
-router.get("/quiz/:quizId",authRole(["instructor"]),instructorAuthController.getQuiz.bind(instructorAuthController))
-router.post("/live/create-session",authRole(["instructor"]),instructorAuthController.createSession.bind(instructorAuthController))
-router.get("/live/token",authRole(["instructor"]),instructorAuthController.getSessionToken.bind(instructorAuthController))
-router.patch("/live/end-live",authRole(["instructor"]),instructorAuthController.endSession.bind(instructorAuthController))
-router.post("/courses/coupons/:courseId",authRole(["instructor"]),instructorAuthController.addCoupon.bind(instructorAuthController))
-router.get("/coupons",authRole(["instructor"]),instructorAuthController.getCouponsForInstructors.bind(instructorAuthController))
-router.put("/coupons/:id",authRole(["instructor"]),instructorAuthController.updateCoupon.bind(instructorAuthController))
+router.put(INSTRUCTOR_ROUTES.QUIZ_BY_ID,authRole(["instructor"]),instructorAuthController.updateQuiz.bind(instructorAuthController))
+router.patch(INSTRUCTOR_ROUTES.RESTORE_QUIZ,authRole(["instructor"]),instructorAuthController.restoreQuiz.bind(instructorAuthController))
+router.get(INSTRUCTOR_ROUTES.QUIZ_BY_ID,authRole(["instructor"]),instructorAuthController.getQuiz.bind(instructorAuthController))
+router.post(INSTRUCTOR_ROUTES.CREATE_LIVE_SESSION,authRole(["instructor"]),instructorAuthController.createSession.bind(instructorAuthController))
+router.get(INSTRUCTOR_ROUTES.LIVE_TOKEN,authRole(["instructor"]),instructorAuthController.getSessionToken.bind(instructorAuthController))
+router.patch(INSTRUCTOR_ROUTES.END_LIVE_SESSION,authRole(["instructor"]),instructorAuthController.endSession.bind(instructorAuthController))
+router.post(INSTRUCTOR_ROUTES.ADD_COURSE_COUPON,authRole(["instructor"]),instructorAuthController.addCoupon.bind(instructorAuthController))
+router.get(INSTRUCTOR_ROUTES.COUPONS,authRole(["instructor"]),instructorAuthController.getCouponsForInstructors.bind(instructorAuthController))
+router.put(INSTRUCTOR_ROUTES.UPDATE_COUPON,authRole(["instructor"]),instructorAuthController.updateCoupon.bind(instructorAuthController))
 router.post(
-  "/logout",
+  INSTRUCTOR_ROUTES.LOGOUT,
   instructorAuthController.logOut.bind(instructorAuthController)
 );
 

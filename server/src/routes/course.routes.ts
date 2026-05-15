@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import authRole from "../middlewares/authRole";
 import { courseController } from "../dependencyHandlers/course.dependencyhandler";
+import { COURSE_ROUTES } from "../constants/routes";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -9,7 +10,7 @@ const upload = multer({ storage: storage });
 const router = Router();
 
 router.post(
-  "/",
+  COURSE_ROUTES.CREATE,
   authRole(["instructor"]),
   upload.fields([
     { name: "lessonFiles", maxCount: 50 },
@@ -18,7 +19,7 @@ router.post(
   courseController.createCourse.bind(courseController)
 );
 router.put(
-  "/editcourse/:courseId",
+  COURSE_ROUTES.UPDATE,
   authRole(["instructor"]),
   upload.fields([
     { name: "lectureFiles", maxCount: 50 },

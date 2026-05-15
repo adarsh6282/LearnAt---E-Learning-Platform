@@ -1,143 +1,144 @@
 import { Router } from "express";
 import authRole from "../middlewares/authRole";
 import { adminController } from "../dependencyHandlers/admin.dependencyhandler";
+import { ADMIN_ROUTES } from "../constants/routes";
 
 const router = Router();
 
-router.post("/login", adminController.login.bind(adminController));
+router.post(ADMIN_ROUTES.LOGIN, adminController.login.bind(adminController));
 router.post(
-  "/refresh-token",
+  ADMIN_ROUTES.REFRESH_TOKEN,
   adminController.refreshToken.bind(adminController)
 );
 router.get(
-  "/users",
+  ADMIN_ROUTES.USERS,
   authRole(["admin"]),
   adminController.getAllUsers.bind(adminController)
 );
 router.get(
-  "/tutors",
+  ADMIN_ROUTES.TUTORS,
   authRole(["admin"]),
   adminController.getAllTutors.bind(adminController)
 );
 router.put(
-  "/users/block/:email",
+  ADMIN_ROUTES.BLOCK_UNBLOCK_USER,
   authRole(["admin"]),
   adminController.blockUnblockUser.bind(adminController)
 );
 router.put(
-  "/tutors/block/:email",
+  ADMIN_ROUTES.BLOCK_UNBLOCK_TUTOR,
   authRole(["admin"]),
   adminController.blockUnblockTutor.bind(adminController)
 );
 router.get(
-  "/dashboard",
+  ADMIN_ROUTES.DASHBOARD,
   authRole(["admin"]),
   adminController.getDashboard.bind(adminController)
 );
 router.put(
-  "/tutors/verify",
+  ADMIN_ROUTES.VERIFY_TUTOR,
   authRole(["admin"]),
   adminController.approveTutor.bind(adminController)
 );
 router.get(
-  "/category",
+  ADMIN_ROUTES.CATEGORY,
   authRole(["admin", "instructor"]),
   adminController.getCatgeories.bind(adminController)
 );
 router.post(
-  "/category",
+  ADMIN_ROUTES.CATEGORY,
   authRole(["admin"]),
   adminController.addCategory.bind(adminController)
 );
 router.patch(
-  `/category/delete/:id`,
+  ADMIN_ROUTES.DELETE_CATEGORY,
   authRole(["admin"]),
   adminController.deleteCategory.bind(adminController)
 );
 router.patch(
-  `/category/restore/:id`,
+  ADMIN_ROUTES.RESTORE_CATEGORY,
   authRole(["admin"]),
   adminController.restoreCategory.bind(adminController)
 );
 router.get(
-  "/courses",
+  ADMIN_ROUTES.COURSES,
   authRole(["admin"]),
   adminController.getCourses.bind(adminController)
 );
 router.put(
-  "/courses/:id",
+  ADMIN_ROUTES.COURSE_ACTION,
   authRole(["admin"]),
   adminController.softDeleteCourse.bind(adminController)
 );
 router.put(
-  "/courses/recover/:id",
+  ADMIN_ROUTES.RECOVER_COURSE,
   authRole(["admin"]),
   adminController.recoverCourse.bind(adminController)
 );
 router.get(
-  "/reviews",
+  ADMIN_ROUTES.REVIEWS,
   authRole(["admin"]),
   adminController.getAllReviews.bind(adminController)
 );
 router.put(
-  "/reviews/:id/hide",
+  ADMIN_ROUTES.HIDE_REVIEW,
   authRole(["admin"]),
   adminController.hideReview.bind(adminController)
 );
 router.put(
-  "/reviews/:id/unhide",
+  ADMIN_ROUTES.UNHIDE_REVIEW,
   authRole(["admin"]),
   adminController.unhideReview.bind(adminController)
 );
 router.delete(
-  "/reviews/:id/",
+  ADMIN_ROUTES.DELETE_REVIEW,
   authRole(["admin"]),
   adminController.deleteReview.bind(adminController)
 );
 router.delete(
-  "/tutors/reject/:email",
+  ADMIN_ROUTES.REJECT_TUTOR,
   authRole(["admin"]),
   adminController.rejectTutor.bind(adminController)
 );
 router.get(
-  "/wallet",
+  ADMIN_ROUTES.WALLET,
   authRole(["admin"]),
   adminController.getWallet.bind(adminController)
 );
 router.get(
-  "/complaints",
+  ADMIN_ROUTES.COMPLAINTS,
   authRole(["admin"]),
   adminController.getComplaints.bind(adminController)
 );
 router.put(
-  "/complaints/:id",
+  ADMIN_ROUTES.RESPONSE_COMPLAINT,
   authRole(["admin"]),
   adminController.responseComplaint.bind(adminController)
 );
 router.get(
-  "/course-status",
+  ADMIN_ROUTES.COURSE_STATUS,
   adminController.getCourseStats.bind(adminController)
 );
 router.get(
-  "/income-status",
+  ADMIN_ROUTES.INCOME_STATUS,
   adminController.getIncomeStats.bind(adminController)
 );
 router.get(
-  "/courses/:courseId",
+  ADMIN_ROUTES.SPECIFIC_COURSE,
   adminController.getSpecificCourseforAdmin.bind(adminController)
 );
 router.get(
-  "/tutor-view/:id",authRole(["admin"]),
+  ADMIN_ROUTES.SPECIFIC_TUTOR,authRole(["admin"]),
   adminController.getSpecificTutor.bind(adminController)
 );
 router.get(
-  "/notifications/:userId",
+  ADMIN_ROUTES.NOTIFICATIONS,
   adminController.getNotifications.bind(adminController)
 );
 router.put(
-  "/notifications/read/:notificationId",
+  ADMIN_ROUTES.MARK_NOTIFICATION_READ,
   adminController.markAsRead.bind(adminController)
 );
-router.post("/logout", adminController.logOut.bind(adminController));
+router.post(ADMIN_ROUTES.LOGOUT, adminController.logOut.bind(adminController));
 
 export default router;
