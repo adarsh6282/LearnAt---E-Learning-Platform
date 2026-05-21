@@ -9,6 +9,7 @@ import { userLoginS } from "../../services/user.services";
 import { USER_ROUTES } from "../../constants/routes.constants";
 import UserContext from "../../context/UserContext";
 import type { AxiosError } from "axios";
+import { demoemail,demopassword } from "../../constants/demo.constants";
 
 export default function UserLogin() {
   const [showPassword, setShowPassword] = useState(false);
@@ -82,7 +83,7 @@ export default function UserLogin() {
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
-              {({ isSubmitting, isValid, dirty }) => (
+              {({ isSubmitting, isValid, dirty, setValues }) => (
                 <Form>
                   <div className="space-y-6">
                     <div className="space-y-2">
@@ -150,6 +151,20 @@ export default function UserLogin() {
                       >
                         {isSubmitting ? "Signing in..." : "Sign in"}
                       </button>
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValues({
+                                email:demoemail,
+                                password:demopassword
+                              })
+                            }}
+                            className="w-full flex justify-center py-3 px-4 mt-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 transition-all duration-200"
+                          >
+                            Use Demo Credentials
+                          </button>
+                        </div>
                     </div>
                   </div>
                 </Form>
