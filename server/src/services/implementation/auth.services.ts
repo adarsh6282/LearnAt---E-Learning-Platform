@@ -31,8 +31,8 @@ import { UserDTO } from "../../DTO/user.dto";
 import { toUserDTO } from "../../Mappers/user.mapper";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { toInstructorDTO } from "../../Mappers/instructor.mapper";
-import { CourseDTO } from "../../DTO/course.dto";
-import { toCourseDTO, toCourseDTOList } from "../../Mappers/course.mapper";
+import { CourseDTO, DisplayCourseDTO } from "../../DTO/course.dto";
+import { toCourseDTO, toCourseDTOList, toDisplayCourseDTO, toDisplayCourseDTOList } from "../../Mappers/course.mapper";
 import { OrderDTO } from "../../DTO/order.dto";
 import { toOrderDTO } from "../../Mappers/order.mapper";
 import { ProgressDTO } from "../../DTO/progress.dto";
@@ -281,7 +281,7 @@ export class AuthService implements IAuthService {
     category: string,
     minPrice: number,
     maxPrice: number
-  ): Promise<{ courses: CourseDTO[]; total: number; totalPages: number }> {
+  ): Promise<{ courses: DisplayCourseDTO[]; total: number; totalPages: number }> {
     const { courses, total, totalPages } =
       await this._courseRepository.findCourses(
         page,
@@ -292,7 +292,7 @@ export class AuthService implements IAuthService {
         maxPrice
       );
 
-    return { courses: toCourseDTOList(courses), total, totalPages };
+    return { courses: toDisplayCourseDTOList(courses), total, totalPages };
   }
 
   async getCategory(): Promise<string[] | null> {

@@ -1,4 +1,4 @@
-import { CourseDTO } from "../DTO/course.dto";
+import { CourseDTO, DisplayCourseDTO } from "../DTO/course.dto";
 import { ICourse } from "../models/interfaces/course.interface";
 
 export const toCourseDTO = (course: ICourse): CourseDTO => ({
@@ -30,6 +30,22 @@ export const toCourseDTO = (course: ICourse): CourseDTO => ({
     })),
   })),
 });
+
+export const toDisplayCourseDTO = (course: ICourse): DisplayCourseDTO => ({
+  _id: course._id.toString(),
+  title: course.title,
+  description: course.description,
+  category: course.category,
+  price: course.price,
+  isActive: course.isActive,
+  thumbnail: course.thumbnail ?? "",
+});
+
+export const toDisplayCourseDTOList = (
+  courses: ICourse[]
+): DisplayCourseDTO[] => {
+  return courses.map(toDisplayCourseDTO);
+};
 
 export const toCourseDTOList=(courses:ICourse[]):CourseDTO[]=>{
     return courses.map(toCourseDTO)

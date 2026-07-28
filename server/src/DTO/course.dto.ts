@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { IInstructor } from "../models/interfaces/instructorAuth.interface";
 
 export interface CourseDTO {
     _id:string
@@ -33,4 +34,14 @@ interface Module{
     title:string,
     description:string,
     chapters:Chapter[]
+}
+
+export interface DisplayCourseDTO {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  isActive: boolean;
+  thumbnail: string;
 }

@@ -1,4 +1,4 @@
-import { CourseDTO } from "../../DTO/course.dto";
+import { CourseDTO, DisplayCourseDTO } from "../../DTO/course.dto";
 import { InstructorDTO } from "../../DTO/instructor.dto";
 import { NotificationDTO } from "../../DTO/notification.dto";
 import { OrderDTO } from "../../DTO/order.dto";
@@ -36,7 +36,7 @@ export interface IAuthService {
       profilePicture,
     }: { name?: string; phone?: string; profilePicture?: Express.Multer.File }
   ): Promise<UserDTO>;
-  getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:CourseDTO[],total:number,totalPages:number}>;
+  getCoursesService(page:number,limit:number,search:string,category:string,minPrice:number,maxPrice:number): Promise<{courses:DisplayCourseDTO[],total:number,totalPages:number}>;
   findCourseByIdService(courseId: string,userId:string): Promise<{ course: CourseDTO; isEnrolled: boolean }>;
   createOrder(courseId: string, userId: string,couponCode?:string): Promise<OrderDTO>;
   cancelOrder(orderId:string):Promise<OrderDTO>
