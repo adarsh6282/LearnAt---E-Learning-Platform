@@ -8,9 +8,13 @@ import {
   FaGlobe,
   FaHandshake,
 } from "react-icons/fa";
+import { LuTelescope } from "react-icons/lu";
 import Navbar from "../../components/Navbar";
+import { useNavigate } from "react-router-dom";
 
 const AboutPage = () => {
+  const navigate = useNavigate();
+
   const values = [
     {
       icon: <FaLightbulb />,
@@ -82,34 +86,29 @@ const AboutPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 overflow-x-hidden relative">
-        <Navbar/>
-      <div className="fixed top-[10%] left-[10%] w-2.5 h-2.5 bg-cyan-400/30 rounded-full animate-pulse" />
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
       <div
-        className="fixed top-[20%] right-[20%] w-4 h-4 bg-fuchsia-400/30 rounded-full animate-bounce"
-        style={{ animationDelay: "2s" }}
-      />
-      <div
-        className="fixed bottom-[30%] left-[30%] w-2 h-2 bg-cyan-400/30 rounded-full animate-ping"
-        style={{ animationDelay: "4s" }}
-      />
-      <div
-        className="fixed bottom-[20%] right-[10%] w-3 h-3 bg-fuchsia-400/30 rounded-full animate-pulse"
-        style={{ animationDelay: "1s" }}
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "0.3cm 0.3cm",
+        }}
       />
 
-      <section className="pt-32 pb-20">
+      <Navbar />
+
+      <section className="pt-32 pb-20 relative">
         <div className="max-w-6xl mx-auto px-5 text-center">
           <h1
-            className="text-5xl sm:text-6xl font-extrabold mb-6 bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-indigo-600 bg-clip-text text-transparent animate-pulse"
-            style={{
-              animationDuration: "3s",
-              animationIterationCount: "infinite",
-            }}
+            className="font-ornate text-5xl sm:text-6xl font-extrabold mb-6 text-white"
           >
-            About Learn At
+            About{" "}
+            <span className="text-green-400 font-black italic drop-shadow-lg">
+              Learn At
+            </span>
           </h1>
-          <p className="text-xl sm:text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="font-subtext text-xl sm:text-2xl text-neutral-400 max-w-3xl mx-auto leading-relaxed">
             Empowering minds, transforming futures through accessible,
             world-class education.
           </p>
@@ -118,16 +117,21 @@ const AboutPage = () => {
 
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-5">
-          <div className="bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 sm:p-12 hover:ring-white/20 transition-all duration-300">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-full flex items-center justify-center text-3xl">
+          <div className="bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 sm:p-12 transition-all duration-500 hover:ring-green-500/20">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-green-500 text-black rounded-full flex items-center justify-center text-3xl">
                 <FaRocket />
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-                Our Story
+              <h2
+                className=" font-ornate text-3xl sm:text-4xl font-bold text-white"
+              >
+                Our{" "}
+                <span className="text-green-400 font-black italic">
+                  Story
+                </span>
               </h2>
             </div>
-            <div className="space-y-4 text-lg text-slate-300">
+            <div className="font-description space-y-4 text-lg text-neutral-300">
               <p>
                 Learn At was born from a simple yet powerful vision: education
                 should be a right, not a privilege. We recognized that
@@ -156,27 +160,31 @@ const AboutPage = () => {
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-5">
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-all duration-300 hover:ring-white/20">
-              <div className="w-14 h-14 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-full flex items-center justify-center text-2xl mb-4">
+            <div className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-all duration-500 hover:ring-green-500/20">
+              <div className="w-14 h-14 bg-green-500 text-black rounded-full flex items-center justify-center text-2xl mb-6">
                 <FaGraduationCap />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-cyan-400">
+              <h3
+                className="font-ornate text-2xl font-bold mb-4 text-green-400"
+              >
                 Our Mission
               </h3>
-              <p className="text-slate-300 text-lg">
+              <p className="font-description text-neutral-400 text-lg">
                 To democratize education by providing accessible, high-quality
                 learning experiences that empower individuals to achieve their
                 goals, advance their careers, and transform their lives.
               </p>
             </div>
-            <div className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-all duration-300 hover:ring-white/20">
-              <div className="w-14 h-14 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-full flex items-center justify-center text-2xl mb-4">
-                <FaRocket />
+            <div className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 hover:-translate-y-2 transition-all duration-500 hover:ring-green-500/20">
+              <div className="w-14 h-14 bg-green-500 text-black rounded-full flex items-center justify-center text-2xl mb-6">
+                <LuTelescope />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-fuchsia-400">
+              <h3
+                className="font-ornate text-2xl font-bold mb-4 text-green-400"
+              >
                 Our Vision
               </h3>
-              <p className="text-slate-300 text-lg">
+              <p className="font-description text-neutral-400 text-lg">
                 To become the world's most trusted learning platform where
                 curiosity meets opportunity, and every learner—regardless of
                 background—can unlock their full potential and shape their
@@ -189,23 +197,28 @@ const AboutPage = () => {
 
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-4xl font-bold mb-12 bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-            Our Core Values
+          <h2
+            className="font-ornate text-center text-4xl font-bold mb-12 text-white"
+          >
+            Our Core{" "}
+            <span className="text-green-400 font-black italic">Values</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="font-description grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {values.map((value, i) => (
               <div
                 key={i}
-                className="group relative bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 transition-all duration-500 cursor-pointer overflow-hidden hover:-translate-y-3 hover:scale-105 hover:ring-white/20"
+                className="group relative bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 transition-all duration-500 cursor-pointer overflow-hidden hover:-translate-y-3 hover:scale-105 hover:ring-green-500/20"
               >
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-                <div className="w-14 h-14 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-full flex items-center justify-center text-2xl mb-4">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-green-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <div className="w-14 h-14 bg-green-500 text-black rounded-full flex items-center justify-center text-2xl mb-4">
                   {value.icon}
                 </div>
-                <h3 className="text-xl mb-3 font-semibold text-cyan-300">
+                <h3
+                  className="font-ornate text-xl mb-3 font-semibold text-white"
+                >
                   {value.title}
                 </h3>
-                <p className="text-slate-400">{value.description}</p>
+                <p className="text-neutral-400">{value.description}</p>
               </div>
             ))}
           </div>
@@ -214,43 +227,52 @@ const AboutPage = () => {
 
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-4xl mb-12 font-bold text-center bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-            Our Impact
+          <h2
+            className="font-ornate text-4xl mb-12 font-bold text-center text-white"
+          >
+            Our{" "}
+            <span className="text-green-400 font-black italic">Impact</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="font-description grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div
                 key={i}
-                className="bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 text-center hover:-translate-y-2 transition-all duration-300 hover:ring-white/20"
+                className="bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-8 text-center hover:-translate-y-2 transition-all duration-500 hover:ring-green-500/20"
               >
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-indigo-600 bg-clip-text text-transparent mb-2">
+                <div className="text-5xl font-extrabold text-green-400 mb-2">
                   {stat.number}
                 </div>
-                <div className="text-lg text-slate-400">{stat.label}</div>
+                <div className="text-lg text-neutral-400">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-4xl font-bold mb-12 bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-            Our Journey
+          <h2
+            className="font-ornate text-center text-4xl font-bold mb-12 text-white"
+          >
+            Our{" "}
+            <span className="text-green-400 font-black italic">Journey</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="font-description grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {milestones.map((milestone, i) => (
               <div
                 key={i}
-                className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-6 hover:-translate-y-2 transition-all duration-300 hover:ring-white/20"
+                className="group bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl p-6 hover:-translate-y-2 transition-all duration-500 hover:ring-green-500/20"
               >
-                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent mb-3">
+                <div className="text-3xl font-bold text-green-400 mb-3">
                   {milestone.year}
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-cyan-300">
+                <h3
+                  className="font-ornate text-xl font-semibold mb-2 text-white"
+                >
                   {milestone.title}
                 </h3>
-                <p className="text-slate-400 text-sm">
+                <p className="text-neutral-400 text-sm">
                   {milestone.description}
                 </p>
               </div>
@@ -259,22 +281,34 @@ const AboutPage = () => {
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-5 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            Join Our Learning Community
+      <section className="py-32 text-center">
+        <div className="max-w-4xl mx-auto px-5">
+          <h2
+            className="font-ornate text-3xl sm:text-4xl font-bold mb-6 text-white"
+          >
+            Join Our{" "}
+            <span className="text-green-400 font-black italic">
+              Learning Community
+            </span>
           </h2>
-          <p className="text-xl text-slate-400 mb-8">
+          <p className="text-xl text-neutral-400 mb-10">
             Be part of a global movement that's transforming education and
             empowering futures.
           </p>
-          <button className="bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-4 px-10 rounded-full text-lg font-medium transition-transform hover:-translate-y-1 shadow-lg">
-            Start Learning Today
+
+          <button
+            onClick={() => navigate("/users/courses")}
+            className="group/btn relative inline-flex items-center justify-center py-4 px-10 text-lg font-semibold rounded-full overflow-hidden bg-green-500 text-black transition-all duration-300 hover:-translate-y-1 shadow-lg cursor-pointer"
+          >
+            <span className="absolute inset-0 bg-black transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+            <span className="font-ornate relative z-10 transition-colors duration-500 group-hover/btn:text-green-500">
+              Start Learning Today
+            </span>
           </button>
         </div>
       </section>
 
-      <footer className="bg-slate-800 py-3 px-4 text-center text-sm text-slate-400">
+      <footer className="bg-black border-t border-white/10 py-3 px-4 text-center text-sm text-neutral-400">
         © {new Date().getFullYear()} Learn At. All rights reserved.
       </footer>
     </div>

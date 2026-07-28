@@ -57,21 +57,21 @@ const LandingPage = () => {
       <section className="pt-32 pb-20">
         <div className="max-w-6xl mx-auto px-5 flex flex-col-reverse lg:flex-row items-center gap-12">
           <div className="flex-1 text-left">
-            <h1 className="text-5xl sm:text-6xl font-extrabold mb-6 text-white">
+            <h1 className="font-subtext text-5xl sm:text-6xl font-bold mb-6 text-white">
               Empower Your Future
               <br className="hidden sm:block" /> With{" "}
-              <span className="text-green-400 font-black italic drop-shadow-lg">
+              <span className="font-ornate text-8xl text-green-400 font-black italic drop-shadow-lg">
                 Learn At
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl mb-10 text-neutral-400 max-w-md">
+            <p className=" font-description text-lg sm:text-xl mb-10 text-neutral-400 max-w-md">
               Discover top-notch courses, track your progress, and earn
               certificates. Flexible, affordable, and powerful learning — all in
               one platform.
             </p>
 
-            <div className="flex gap-4">
+            <div className="font-subtext flex gap-4">
               <button
                 onClick={() => navigate("/users/courses")}
                 className={cta + " py-4 px-10 text-base"}
@@ -99,8 +99,8 @@ const LandingPage = () => {
 
       <section id="features" className="py-16">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-center text-4xl font-bold mb-12">
-            What We Offer
+          <h2 className="font-ornate text-center text-5xl font-bold mb-12">
+            What We <span className="font-ornate text-5xl font-extrabold italic text-green-400">Thousands</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8">
             {features.map((f, i) => (
@@ -115,8 +115,8 @@ const LandingPage = () => {
                 >
                   {f.icon}
                 </div>
-                <h3 className="text-xl mb-2 font-semibold">{f.title}</h3>
-                <p className="text-neutral-400">{f.description}</p>
+                <h3 className="font-subtext text-2xl mb-2 font-bold" style={{fontWeight: 700}}>{f.title}</h3>
+                <p className="font-description text-lg text-neutral-400">{f.description}</p>
               </div>
             ))}
           </div>
@@ -125,14 +125,14 @@ const LandingPage = () => {
 
       <section className="py-16 text-center">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="text-4xl mb-8 font-bold">Trusted by Thousands</h2>
+          <h2 className="font-ornate text-5xl mb-8 font-bold">Trusted by <span className="font-ornate text-5xl font-extrabold italic text-green-400">Thousands</span></h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
             {stats.map((s, i) => (
               <div key={i}>
-                <div className="text-5xl font-extrabold text-green-400">
+                <div className="font-subtext text-6xl font-extrabold text-green-400">
                   {s.number}
                 </div>
-                <div className="text-lg text-neutral-400 mt-2">{s.label}</div>
+                <div className="font-description text-2xl text-neutral-400 mt-2">{s.label}</div>
               </div>
             ))}
           </div>
@@ -141,12 +141,12 @@ const LandingPage = () => {
 
       <section id="register" className="py-32 text-center">
         <div className="max-w-4xl mx-auto px-5">
-          <p className="mb-6 text-neutral-400">
+          <p className="font-subtext text-2xl mb-6 text-neutral-400">
             Learning has never been this easy, accessible, and impactful.
           </p>
             <button
               onClick={() => navigate("/users/courses")}
-              className={cta + " py-4 px-10 text-base"}
+              className={`font-subtext text-2xl py-4 px-10 text-base ${cta}`}
             >
               Explore Courses
             </button>
