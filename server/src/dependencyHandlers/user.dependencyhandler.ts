@@ -15,6 +15,7 @@ import { OtpRepository } from "../repository/implementations/otp.repository";
 import { ProgressRepository } from "../repository/implementations/progress.repository";
 import { QuizRepository } from "../repository/implementations/quiz.repository";
 import { QuizResultRepository } from "../repository/implementations/quizresult.repository";
+import { ReviewRepository } from "../repository/implementations/review.repository";
 import { WalletRepository } from "../repository/implementations/wallet.repository";
 import { AuthService } from "../services/implementation/auth.services";
 import { CertificateService } from "../services/implementation/certificate.service";
@@ -38,6 +39,7 @@ import { MessageService } from "../services/implementation/message.service";
     const messageRepository=new MessageRepository()
     const liveSessionRepository=new LiveSessionRepository()
     const couponRepository = new CouponRepository()
+    const reviewRepository = new ReviewRepository()
     const livesessionService=new LiveSessionService(liveSessionRepository,courseRepository)
     const messageService=new MessageService(messageRepository)
     const certificateService=new CertificateService(certificateRepository)
@@ -56,8 +58,8 @@ import { MessageService } from "../services/implementation/message.service";
       categoryRepository,
       quizRepository,
       quizResultRepository,
-      liveSessionRepository,
-      couponRepository
+      reviewRepository,
+      couponRepository,
     );
 
-    export const authController=new Authcontroller(authService,messageService,certificateService,livesessionService)
+  export const authController=new Authcontroller(authService,messageService,certificateService,livesessionService)

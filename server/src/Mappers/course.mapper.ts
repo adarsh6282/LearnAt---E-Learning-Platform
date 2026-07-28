@@ -1,6 +1,9 @@
 import { CourseDTO, DisplayCourseDTO } from "../DTO/course.dto";
 import { ICourse } from "../models/interfaces/course.interface";
 
+
+export type CourseWithRating = ICourse & {rating?:number}
+
 export const toCourseDTO = (course: ICourse): CourseDTO => ({
   _id: course._id.toString(),
   title: course.title,
@@ -31,7 +34,7 @@ export const toCourseDTO = (course: ICourse): CourseDTO => ({
   })),
 });
 
-export const toDisplayCourseDTO = (course: ICourse): DisplayCourseDTO => ({
+export const toDisplayCourseDTO = (course: CourseWithRating): DisplayCourseDTO => ({
   _id: course._id.toString(),
   title: course.title,
   description: course.description,
@@ -39,6 +42,7 @@ export const toDisplayCourseDTO = (course: ICourse): DisplayCourseDTO => ({
   price: course.price,
   isActive: course.isActive,
   thumbnail: course.thumbnail ?? "",
+  rating: course.rating??0
 });
 
 export const toDisplayCourseDTOList = (

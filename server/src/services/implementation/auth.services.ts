@@ -53,6 +53,7 @@ import { IQuizRepository } from "../../repository/interfaces/quiz.interface";
 import { ILiveSessionRepository } from "../../repository/interfaces/livesession.interface";
 import { ICoupon } from "../../models/interfaces/coupon.interface";
 import { ICouponRepository } from "../../repository/interfaces/coupon.interface";
+import { IReviewRepository } from "../../repository/interfaces/review.interface";
 
 export class AuthService implements IAuthService {
   constructor(
@@ -70,7 +71,7 @@ export class AuthService implements IAuthService {
     private _categoryRepository: ICategoryRepository,
     private _quizRepository: IQuizRepository,
     private _quizResultRepository: IQuizResultRepository,
-    private _livesessionRepository: ILiveSessionRepository,
+    private _reviewRepository:IReviewRepository,
     private _couponRepository: ICouponRepository
   ) {}
 
@@ -292,7 +293,18 @@ export class AuthService implements IAuthService {
         maxPrice
       );
 
-    return { courses: toDisplayCourseDTOList(courses), total, totalPages };
+      const coursesWithRatings = await Promise.all(
+      courses.map(async (course) => {
+        const rating = await this._reviewRepository.getAverageRating(course._id.toString());
+        return {
+          ...course.toObject(),
+          rating: rating > 0 ? Number(rating.toFixed(1)) : 0, 
+        };
+      })
+    );
+
+
+    return { courses: toDisplayCourseDTOList(coursesWithRatings), total, totalPages };
   }
 
   async getCategory(): Promise<string[] | null> {
