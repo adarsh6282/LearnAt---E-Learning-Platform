@@ -53,10 +53,10 @@ export default function Navbar() {
   }, [authUser?._id, authUser?.role]);
 
   const cta =
-    "bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300";
+    "bg-green-500 hover:bg-green-400 text-black py-2 px-5 rounded-full text-base font-semibold shadow-md shadow-green-500/20 hover:scale-105 hover:shadow-lg transition-all duration-300";
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-slate-950/80 backdrop-blur-md border-b border-cyan-400/10">
+    <nav className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-8 py-3">
         <div className="flex items-center gap-2">
           <img
@@ -70,28 +70,28 @@ export default function Navbar() {
           />
         </div>
 
-        <div className="hidden md:flex items-center gap-7 text-slate-200 text-base font-medium">
+        <div className="hidden md:flex items-center gap-7 text-neutral-300 text-base font-medium">
           <Link
             to={USER_ROUTES.COURSES}
-            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath==USER_ROUTES.COURSES?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath==USER_ROUTES.COURSES?"text-green-400":"hover:text-green-400 text-neutral-300"}`}
           >
             Courses
           </Link>
           <Link
             to="/users/about"
-            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/about"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/about"?"text-green-400":"hover:text-green-400 text-neutral-300"}`}
           >
             About
           </Link>
           <Link
             to="/users/contact"
-            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/contact"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/contact"?"text-green-400":"hover:text-green-400 text-neutral-300"}`}
           >
             Contact Us
           </Link>
           <Link
             to={USER_ROUTES.CHAT_PAGE}
-            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/chat"?"text-cyan-400":"hover:text-cyan-400 text-slate-200"}`}
+            className={`transition-colors duration-200 px-2 py-1 rounded ${currentPath=="/users/chat"?"text-green-400":"hover:text-green-400 text-neutral-300"}`}
           >
             Chats
             {unreadCount > 0 && (
@@ -104,22 +104,22 @@ export default function Navbar() {
           <>
             <Link
               to={USER_ROUTES.NOTIFICATIONS}
-              className="p-2 rounded-full hover:bg-cyan-400/10 transition-colors duration-200"
+              className="p-2 rounded-full hover:bg-green-400/10 transition-colors duration-200"
               title="Notifications"
             >
-              <Bell size={22} className="text-cyan-300" />
+              <Bell size={22} className="text-green-400" />
             </Link>
             <Link
               to={USER_ROUTES.PROFILE}
-              className="p-2 rounded-full hover:bg-cyan-400/10 transition-colors duration-200"
+              className="p-2 rounded-full hover:bg-green-400/10 transition-colors duration-200"
               title="Profile"
             >
-              <User size={22} className="text-cyan-300" />
+              <User size={22} className="text-green-400" />
             </Link>
           </>
           <button
             onClick={handleLogout}
-            className="bg-gradient-to-r from-red-500 to-pink-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 min-w-[90px]"
+            className="bg-red-600 hover:bg-red-500 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 min-w-[90px]"
           >
             Logout
           </button>
@@ -128,7 +128,7 @@ export default function Navbar() {
         <div className="md:hidden">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-cyan-300 p-2"
+            className="text-green-400 p-2"
           >
             {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
@@ -136,31 +136,31 @@ export default function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden flex flex-col items-start px-6 py-4 gap-3 bg-slate-900 border-t border-cyan-400/10 text-slate-200 text-base font-medium">
+        <div className="md:hidden flex flex-col items-start px-6 py-4 gap-3 bg-black border-t border-white/10 text-neutral-300 text-base font-medium">
           <Link
             to={USER_ROUTES.COURSES}
-            className="hover:text-cyan-400"
+            className="hover:text-green-400"
             onClick={() => setIsMenuOpen(false)}
           >
             Courses
           </Link>
           <a
             href="#about"
-            className="hover:text-cyan-400"
+            className="hover:text-green-400"
             onClick={() => setIsMenuOpen(false)}
           >
             About
           </a>
           <a
             href="#contact"
-            className="hover:text-cyan-400"
+            className="hover:text-green-400"
             onClick={() => setIsMenuOpen(false)}
           >
             Contact Us
           </a>
           <Link
             to={USER_ROUTES.CHAT_PAGE}
-            className="hover:text-cyan-400"
+            className="hover:text-green-400"
             onClick={() => setIsMenuOpen(false)}
           >
             Chats
@@ -170,14 +170,14 @@ export default function Navbar() {
             <>
               <Link
                 to={USER_ROUTES.NOTIFICATIONS}
-                className="hover:text-cyan-400"
+                className="hover:text-green-400"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Notifications
               </Link>
               <Link
                 to={USER_ROUTES.PROFILE}
-                className="hover:text-cyan-400"
+                className="hover:text-green-400"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Profile
@@ -211,7 +211,7 @@ export default function Navbar() {
                 handleLogout();
                 setIsMenuOpen(false);
               }}
-              className="bg-gradient-to-r from-red-500 to-pink-600 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 w-full"
+              className="bg-red-600 hover:bg-red-500 text-white py-2 px-5 rounded-full text-base font-semibold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 w-full"
             >
               Logout
             </button>

@@ -11,43 +11,54 @@ import { getCategory } from "../../services/user.services";
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchParams,setSearchParams]=useSearchParams()
-  const [categories,setCategories]=useState<string[]>([])
-  const pageParam=parseInt(searchParams.get("page")||"1")
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [categories, setCategories] = useState<string[]>([]);
+  const pageParam = parseInt(searchParams.get("page") || "1");
   const [currentPage, setCurrentPage] = useState<number>(pageParam);
-  const [totalPages,setTotalPages]=useState(1)
+  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 2;
-  const [total,setTotal]=useState(0)
+  const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [debounce, setDebounce] = useState({
-  search: "",
-  minPrice: 0,
-  maxPrice: 10000,
-});
+    search: "",
+    minPrice: 0,
+    maxPrice: 10000,
+  });
   const [sortBy, setSortBy] = useState<SortOption>("title");
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(()=>{
-      const timeout=setTimeout(() => {
-        setDebounce({
-          search:searchTerm,
-          minPrice:priceRange[0],
-          maxPrice:priceRange[1]
-        })
-      }, 300);
-      return ()=> clearTimeout(timeout)
-    },[searchTerm,priceRange])
+  // Reusable CTA button class matching the homepage
+  const cta =
+    "bg-green-500 hover:bg-green-400 text-black py-2 px-6 rounded-full text-sm sm:text-base font-semibold transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-green-500/20";
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebounce({
+        search: searchTerm,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+      });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchTerm, priceRange]);
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await getCoursesS(currentPage,itemsPerPage,debounce.search,selectedCategory,debounce.minPrice,debounce.maxPrice);
+        const res = await getCoursesS(
+          currentPage,
+          itemsPerPage,
+          debounce.search,
+          selectedCategory,
+          debounce.minPrice,
+          debounce.maxPrice
+        );
         setCourses(res.data.courses);
-        setTotalPages(res.data.totalPages)
-        setTotal(res.data.total)
+        setTotalPages(res.data.totalPages);
+        setTotal(res.data.total);
       } catch (err) {
         console.error("Error fetching courses:", err);
       } finally {
@@ -55,38 +66,49 @@ const Courses: React.FC = () => {
       }
     };
     fetchCourses();
-  }, [currentPage,itemsPerPage,debounce,selectedCategory]);
-
-  useEffect(()=>{
-    const fetchCategories=async()=>{
-      try{
-        const res=await getCategory()
-        setCategories(res.data)
-      }catch(err){
-        console.log(err)
-      }
-    }
-    fetchCategories()
-  },[])
+  }, [currentPage, itemsPerPage, debounce, selectedCategory]);
 
   useEffect(() => {
-      const pageParam = parseInt(searchParams.get("page") || "1");
-      setCurrentPage(pageParam);
-    }, [searchParams]);
-  
-    const handlePageChange = (page: number) => {
-      setCurrentPage(page);
-      setSearchParams({ page: page.toString() });
+    const fetchCategories = async () => {
+      try {
+        const res = await getCategory();
+        setCategories(res.data);
+      } catch (err) {
+        console.log(err);
+      }
     };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const pageParam = parseInt(searchParams.get("page") || "1");
+    setCurrentPage(pageParam);
+  }, [searchParams]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSearchParams({ page: page.toString() });
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+        <div
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+            backgroundSize: "0.3cm 0.3cm",
+          }}
+        />
         <Navbar />
-        <div className="pt-32 max-w-4xl mx-auto px-4">
-          <div className="animate-pulse space-y-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-2xl bg-slate-900/80 p-6 shadow" />
+        <div className="pt-32 max-w-6xl mx-auto px-5 relative">
+          <div className="animate-pulse space-y-8">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="h-48 rounded-3xl bg-white/5 ring-1 ring-white/10 p-6 shadow"
+              />
             ))}
           </div>
         </div>
@@ -95,21 +117,34 @@ const Courses: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "0.3cm 0.3cm",
+        }}
+      />
+
       <Navbar />
-      <div className="pt-5 pb-8 max-w-6xl mx-auto px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10">
+
+      <div className="relative pt-5 pb-20 max-w-6xl mx-auto px-5">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-12">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-indigo-600 bg-clip-text text-transparent mb-1">
-              Explore Courses
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-2">
+              Explore{" "}
+              <span className="text-green-400 font-black italic drop-shadow-lg">
+                Courses
+              </span>
             </h1>
-            <p className="text-slate-400 text-sm">
-              {total} courses available
+            <p className="text-neutral-400 text-sm">
+              {total} courses available to boost your career
             </p>
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className="sm:hidden flex items-center gap-2 px-3 py-2 rounded-full bg-slate-900/80 border border-cyan-400/20 text-cyan-300 mt-4 sm:mt-0"
+            className="sm:hidden flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 ring-1 ring-white/10 text-green-400 mt-4 sm:mt-0"
           >
             <Filter className="h-4 w-4" /> Filters
           </button>
@@ -117,11 +152,11 @@ const Courses: React.FC = () => {
 
         <div className="flex flex-col md:flex-row gap-8">
           <div className={`md:w-1/3 ${showFilters ? "" : "hidden md:block"}`}>
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 space-y-6 border border-cyan-400/10">
+            <div className="bg-white/5 backdrop-blur-md rounded-3xl shadow p-6 space-y-6 ring-1 ring-white/10 sticky top-24">
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
+                <label className="block text-sm font-medium text-neutral-200 mb-2">
                   <span className="flex items-center gap-2">
-                    <Search className="h-4 w-4 text-cyan-400" />
+                    <Search className="h-4 w-4 text-green-400" />
                     Search
                   </span>
                 </label>
@@ -130,20 +165,21 @@ const Courses: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => {
-                        if (e.repeat) e.preventDefault();
-                      }}
+                    if (e.repeat) e.preventDefault();
+                  }}
                   placeholder="Title or instructor"
-                  className="w-full px-3 py-2 bg-slate-900/80 text-slate-100 border border-cyan-400/10 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-black/40 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
+                <label className="block text-sm font-medium text-neutral-200 mb-2">
                   Category
                 </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900/80 text-slate-100 border border-cyan-400/10 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-black/40 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all [&>option]:bg-black"
                 >
                   <option value="">All Categories</option>
                   {categories.map((category) => (
@@ -153,9 +189,13 @@ const Courses: React.FC = () => {
                   ))}
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
-                  Price Range: <span className="text-cyan-400">₹{priceRange[0]} - ₹{priceRange[1]}</span>
+                <label className="block text-sm font-medium text-neutral-200 mb-2">
+                  Price Range:{" "}
+                  <span className="text-green-400 font-bold">
+                    ₹{priceRange[0]} - ₹{priceRange[1]}
+                  </span>
                 </label>
                 <div className="flex gap-2 items-center">
                   <input
@@ -166,7 +206,7 @@ const Courses: React.FC = () => {
                     onChange={(e) =>
                       setPriceRange([parseInt(e.target.value), priceRange[1]])
                     }
-                    className="w-full accent-cyan-500"
+                    className="w-full accent-green-500"
                   />
                   <input
                     type="range"
@@ -176,18 +216,19 @@ const Courses: React.FC = () => {
                     onChange={(e) =>
                       setPriceRange([priceRange[0], parseInt(e.target.value)])
                     }
-                    className="w-full accent-fuchsia-500"
+                    className="w-full accent-green-500"
                   />
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-1">
+                <label className="block text-sm font-medium text-neutral-200 mb-2">
                   Sort By
                 </label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="w-full px-3 py-2 bg-slate-900/80 text-slate-100 border border-cyan-400/10 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-black/40 text-white border border-white/10 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all [&>option]:bg-black"
                 >
                   <option value="title">Title (A-Z)</option>
                   <option value="price-low">Price (Low to High)</option>
@@ -195,6 +236,7 @@ const Courses: React.FC = () => {
                   <option value="rating">Rating</option>
                 </select>
               </div>
+
               <button
                 onClick={() => {
                   setSearchTerm("");
@@ -202,7 +244,7 @@ const Courses: React.FC = () => {
                   setPriceRange([0, 10000]);
                   setSortBy("title");
                 }}
-                className="w-full py-2 mt-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white rounded-full font-semibold hover:scale-105 transition-all duration-300"
+                className="w-full py-2 mt-2 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold border border-white/10 hover:border-green-500/50 hover:text-green-400 transition-all duration-300"
               >
                 Clear All
               </button>
@@ -211,12 +253,12 @@ const Courses: React.FC = () => {
 
           <div className="md:w-2/3">
             {courses.length === 0 ? (
-              <div className="text-center py-12">
-                <BookOpen className="mx-auto h-12 w-12 text-cyan-400" />
-                <h3 className="mt-2 text-lg font-bold text-slate-200">
+              <div className="text-center py-20 bg-white/5 backdrop-blur ring-1 ring-white/10 rounded-3xl">
+                <BookOpen className="mx-auto h-12 w-12 text-green-400" />
+                <h3 className="mt-4 text-xl font-bold text-white">
                   No courses found
                 </h3>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-neutral-400">
                   Try adjusting your search criteria.
                 </p>
               </div>
@@ -225,59 +267,64 @@ const Courses: React.FC = () => {
                 {courses.map((course) => (
                   <div
                     key={course._id}
-                    className="bg-white/5 backdrop-blur-md rounded-2xl shadow hover:shadow-lg transition-shadow duration-300 flex flex-col md:flex-row border border-cyan-400/10"
+                    className="group relative bg-white/5 backdrop-blur-md rounded-3xl overflow-hidden flex flex-col md:flex-row ring-1 ring-white/10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-500/10"
                   >
-                    <div className="md:w-48 w-full flex-shrink-0">
+                    <div className="md:w-2/5 w-full flex-shrink-0 relative overflow-hidden">
                       <img
-                        src={`${course.thumbnail}?v=${Date.now()}`}
+                        src={course.thumbnail}
                         alt={course.title}
-                        className="object-cover w-full h-40 md:h-full rounded-t-2xl md:rounded-l-2xl md:rounded-t-none"
+                        className="w-full h-48 md:h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:bg-gradient-to-r" />
                     </div>
-                    <div className="p-6 flex-1 flex flex-col justify-between">
+
+                    <div className="p-6 flex-1 flex flex-col justify-between relative">
                       <div>
-                        <h3 className="text-xl font-bold text-cyan-300 mb-1 line-clamp-2">
-                          {course.title}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mb-2">
-                          {course.rating && (
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                              <span className="ml-1">{course.rating}</span>
-                            </div>
-                          )}
-                          {course.studentsCount && (
-                            <div className="flex items-center">
-                              <Users className="h-4 w-4" />
-                              <span className="ml-1">
-                                {course.studentsCount}
-                              </span>
-                            </div>
-                          )}
-                          {course.duration && (
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4" />
-                              <span className="ml-1">{course.duration}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-bold text-fuchsia-400">
-                            ₹{course.price}
-                          </span>
-                          {course.level && (
-                            <span className="px-2 py-1 bg-cyan-100 text-cyan-800 text-xs rounded-full">
-                              {course.level}
+                        <div className="flex items-center gap-2 mb-3">
+                          {course.category && (
+                            <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-medium rounded-full border border-green-500/20 uppercase tracking-wide">
+                              {course.category}
                             </span>
                           )}
                         </div>
+
+                        <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">
+                          {course.title}
+                        </h3>
+
+                        <p className="text-neutral-400 text-sm mb-4 line-clamp-2">
+                          {course.description}
+                        </p>
+                        
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-4 w-4 ${
+                                  star <= Math.round(course.rating ?? 0)
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-gray-500"
+                                }`}
+                              />
+                            ))}
+
+                            <span className="ml-2 text-sm">
+                              {course.rating?.toFixed(1) ?? "0.0"}
+                            </span>
+                          </div>
+                        {/* </div> */}
                       </div>
-                      <div className="mt-4 flex justify-end">
+
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                        <span className="text-2xl font-extrabold text-white">
+                          ₹{course.price}
+                        </span>
                         <Link
                           to={USER_ROUTES.COURSE_DETAIL(course._id)}
-                          className="inline-flex items-center px-5 py-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white text-base font-semibold rounded-full shadow hover:scale-105 transition-all duration-300"
+                          className="group/btn relative inline-flex items-center justify-center py-2 px-6 text-sm font-semibold rounded-full overflow-hidden bg-green-500 text-black transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-green-500/20"
                         >
-                          View Course
+                          <span className="absolute inset-0 bg-white transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+                          <span className="relative z-10">View Course</span>
                         </Link>
                       </div>
                     </div>
@@ -285,7 +332,8 @@ const Courses: React.FC = () => {
                 ))}
               </div>
             )}
-            <div className="mt-8">
+
+            <div className="mt-12">
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
