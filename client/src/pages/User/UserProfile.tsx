@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import UserContext from "../../context/UserContext";
-import { Mail, User, Phone } from "lucide-react";
+import { Mail, User, Phone, Camera } from "lucide-react";
 import { errorToast } from "../../components/Toast";
 import { editProfileS } from "../../services/user.services";
 import ReportForm from "../../components/ReportForm";
@@ -42,17 +42,17 @@ const UserProfile = () => {
     }
   }, [user]);
 
-  const validateForm=()=>{
-    if(formData.name.length>20){
-      errorToast("Name cannot exceed 20 characters")
-      return false
+  const validateForm = () => {
+    if (formData.name.length > 20) {
+      errorToast("Name cannot exceed 20 characters");
+      return false;
     }
     if (!/^\d{10}$/.test(formData.phone)) {
-    errorToast("Phone number must be exactly 10 digits");
-    return false;
-  }
-    return true
-  }
+      errorToast("Phone number must be exactly 10 digits");
+      return false;
+    }
+    return true;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -63,14 +63,13 @@ const UserProfile = () => {
   };
 
   const handleSave = async () => {
-    if(!validateForm()) return
+    if (!validateForm()) return;
     setIsLoading(true);
     try {
       const formPayload = new FormData();
       formPayload.append("name", formData.name);
       formPayload.append("phone", formData.phone);
       if (selectedFile) formPayload.append("profilePicture", selectedFile);
-      console.log(selectedFile);
 
       const res = await editProfileS(formPayload);
       setUser?.(res.data);
@@ -86,28 +85,41 @@ const UserProfile = () => {
   const handleCancel = () => {
     if (!user) return;
     setFormData({ name: user.name, phone: user.phone });
+    setSelectedFile(null);
     setIsEditing(false);
   };
 
   if (!user)
-    return <div className="text-slate-100 text-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-pulse text-green-400 text-lg">Loading profile...</div>
+      </div>
+    );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 relative overflow-x-hidden">
-      <div className="fixed top-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-blob1 pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl animate-blob2 pointer-events-none" />
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "0.3cm 0.3cm",
+        }}
+      />
+
       <Navbar />
-      <div className="max-w-4xl mx-auto pt-16 px-6 relative z-10">
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+
+      <div className="relative max-w-5xl mx-auto pt-32 pb-20 px-5">
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ring-1
                 ${
                   activeTab === tab
-                    ? "bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white shadow"
-                    : "bg-white/10 text-slate-200 hover:bg-cyan-400/10"
+                    ? "bg-green-500 text-black ring-transparent shadow-lg shadow-green-500/20"
+                    : "bg-white/5 text-neutral-300 ring-white/10 hover:bg-white/10 hover:text-white hover:ring-green-500/30"
                 }`}
             >
               {tab}
@@ -115,23 +127,23 @@ const UserProfile = () => {
           ))}
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl shadow-lg">
+        <div className="bg-white/5 backdrop-blur-md p-6 sm:p-10 rounded-3xl shadow-xl ring-1 ring-white/10">
           {activeTab === "Profile" && (
             <div>
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative w-24 h-24 group">
+              <div className="flex flex-col items-center mb-10">
+                <div className="relative w-32 h-32 group">
                   <img
-                    src={user.profilePicture}
+                    src={selectedFile ? URL.createObjectURL(selectedFile) : user.profilePicture}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-cyan-400/30"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-black ring-2 ring-green-500/50 shadow-lg shadow-green-500/10"
                   />
                   {isEditing && (
                     <>
                       <label
                         htmlFor="profile-upload"
-                        className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition"
+                        className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-300 ring-2 ring-green-500/50"
                       >
-                        +
+                        <Camera className="w-6 h-6 text-green-400" />
                       </label>
                       <input
                         type="file"
@@ -145,45 +157,51 @@ const UserProfile = () => {
                     </>
                   )}
                 </div>
-                <h2 className="mt-4 text-slate-100 text-2xl font-bold">
+                <h2 className="mt-5 text-white text-3xl font-extrabold tracking-tight">
                   {user.name}
                 </h2>
-                <p className="text-slate-400">@{user.username}</p>
-                <ReportForm type="complaint" />
+                <p className="text-neutral-400 text-md">@{user.username}</p>
+                
+                <div className="mt-4">
+                  <ReportForm type="complaint" />
+                </div>
               </div>
 
-              <div className="text-center mb-6">
+              <div className="flex justify-center mb-8">
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white px-4 py-2 rounded-full font-semibold shadow hover:scale-105 transition-all"
+                  onClick={() => (isEditing ? handleCancel() : setIsEditing(true))}
+                  className="px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ring-1 bg-white/5 text-white ring-white/10 hover:bg-white/10 hover:ring-green-500/40 hover:text-green-400 cursor-pointer"
                 >
-                  {isEditing ? "Cancel" : "Edit Profile"}
+                  {isEditing ? "Cancel Editing" : "Edit Profile"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 <div>
-                  <label className="text-sm font-medium flex items-center mb-1">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email
+                  <label className="text-sm font-medium flex items-center gap-2 mb-2 text-neutral-300">
+                    <Mail className="w-4 h-4 text-green-400" />
+                    Email Address
                   </label>
-                  <p className="bg-white/10 px-3 py-2 rounded-md">
+                  <div className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/5 text-neutral-400 cursor-not-allowed">
                     {user.email}
-                  </p>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium flex items-center mb-1">
-                    <User className="w-4 h-4 mr-2" />
+                  <label className="text-sm font-medium flex items-center gap-2 mb-2 text-neutral-300">
+                    <User className="w-4 h-4 text-green-400" />
                     Username
                   </label>
-                  <p className="bg-white/10 px-3 py-2 rounded-md">
+                  <div className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/5 text-neutral-400 cursor-not-allowed">
                     {user.username}
-                  </p>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1">Full Name</label>
+                  <label className="text-sm font-medium flex items-center gap-2 mb-2 text-neutral-300">
+                    <User className="w-4 h-4 text-green-400" />
+                    Full Name
+                  </label>
                   {isEditing ? (
                     <input
                       name="name"
@@ -192,19 +210,19 @@ const UserProfile = () => {
                         if (e.repeat) e.preventDefault();
                       }}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
+                      className="w-full px-4 py-3 rounded-xl bg-black/40 text-white border border-white/10 focus:border-transparent focus:ring-2 focus:ring-green-500 outline-none transition-all"
                     />
                   ) : (
-                    <p className="bg-white/10 px-3 py-2 rounded-md">
+                    <div className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/5 text-white">
                       {user.name}
-                    </p>
+                    </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium flex items-center mb-1">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Phone
+                  <label className="text-sm font-medium flex items-center gap-2 mb-2 text-neutral-300">
+                    <Phone className="w-4 h-4 text-green-400" />
+                    Phone Number
                   </label>
                   {isEditing ? (
                     <input
@@ -214,34 +232,41 @@ const UserProfile = () => {
                         if (e.repeat) e.preventDefault();
                       }}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 rounded-md bg-white/10 text-slate-100 border border-cyan-400/10"
+                      className="w-full px-4 py-3 rounded-xl bg-black/40 text-white border border-white/10 focus:border-transparent focus:ring-2 focus:ring-green-500 outline-none transition-all"
                     />
                   ) : (
-                    <p className="bg-white/10 px-3 py-2 rounded-md">
+                    <div className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/5 text-white">
                       {user.phone}
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>
 
               {isEditing && (
-                <div className="flex gap-4 mt-6">
+                <div className="flex flex-col sm:flex-row gap-4 mt-10 max-w-xl mx-auto">
+                  <button
+                    onClick={handleCancel}
+                    className="flex-1 py-3 rounded-full bg-white/5 text-white font-semibold ring-1 ring-white/10 hover:bg-white/10 hover:ring-white/20 transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
+                  
                   <button
                     onClick={handleSave}
                     disabled={isLoading || !isFormValid()}
-                    className={`flex-1 py-2 rounded-full text-white font-semibold transition-all ${
-                      isLoading || !isFormValid()
-                        ? "bg-green-300 cursor-not-allowed"
-                        : "bg-gradient-to-r from-green-400 to-cyan-500 hover:from-green-500 hover:to-cyan-600 shadow"
-                    }`}
+                    className={`group/btn relative flex-1 inline-flex items-center justify-center py-3 px-6 text-sm font-semibold rounded-full overflow-hidden transition-all duration-300
+                      ${
+                        isLoading || !isFormValid()
+                          ? "bg-neutral-700 text-neutral-400 cursor-not-allowed shadow-none"
+                          : "bg-green-500 text-black hover:-translate-y-1 shadow-green-500/20"
+                      }`}
                   >
-                    {isLoading ? "Saving..." : "Save Changes"}
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    className="flex-1 py-2 rounded-full bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-all"
-                  >
-                    Cancel
+                    {!isLoading && !isFormValid() ? null : (
+                      <span className="absolute inset-0 bg-black transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+                    )}
+                    <span className={`relative z-10 transition-colors duration-500 ${isLoading || !isFormValid() ? "" : "group-hover/btn:text-green-500"}`}>
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </span>
                   </button>
                 </div>
               )}
@@ -253,21 +278,6 @@ const UserProfile = () => {
           {activeTab === "Change Password" && <ChangePassword />}
           {activeTab === "Certificates" && <UserCertificates />}
         </div>
-
-        <style>
-          {`
-          @keyframes blob1 {
-            0%, 100% { transform: translateY(0) scale(1);}
-            50% { transform: translateY(-30px) scale(1.1);}
-          }
-          .animate-blob1 { animation: blob1 12s ease-in-out infinite; }
-          @keyframes blob2 {
-            0%, 100% { transform: translateY(0) scale(1);}
-            50% { transform: translateY(30px) scale(1.1);}
-          }
-          .animate-blob2 { animation: blob2 14s ease-in-out infinite; }
-          `}
-        </style>
       </div>
     </div>
   );

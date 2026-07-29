@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Filter, Star, Users, Clock, BookOpen } from "lucide-react";
+import { Search, Filter, Star, BookOpen, LibraryBig } from "lucide-react";
 import Navbar from "../../components/Navbar";
 import type { Course, SortOption } from "../../types/user.types";
 import { getCoursesS } from "../../services/user.services";
@@ -28,10 +28,6 @@ const Courses: React.FC = () => {
   });
   const [sortBy, setSortBy] = useState<SortOption>("title");
   const [showFilters, setShowFilters] = useState(false);
-
-  // Reusable CTA button class matching the homepage
-  const cta =
-    "bg-green-500 hover:bg-green-400 text-black py-2 px-6 rounded-full text-sm sm:text-base font-semibold transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-green-500/20";
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -132,13 +128,13 @@ const Courses: React.FC = () => {
       <div className="relative pt-5 pb-20 max-w-6xl mx-auto px-5">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-12">
           <div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-2">
+            <h1 className="font-subtext text-4xl sm:text-5xl font-extrabold text-white mb-2">
               Explore{" "}
-              <span className="text-green-400 font-black italic drop-shadow-lg">
+              <span className="font-ornate text-green-400 font-black italic drop-shadow-lg">
                 Courses
               </span>
             </h1>
-            <p className="text-neutral-400 text-sm">
+            <p className="font-description text-neutral-400 text-lg">
               {total} courses available to boost your career
             </p>
           </div>
@@ -273,7 +269,7 @@ const Courses: React.FC = () => {
                       <img
                         src={course.thumbnail}
                         alt={course.title}
-                        className="w-full h-48 md:h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-65 object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:bg-gradient-to-r" />
                     </div>
@@ -312,7 +308,6 @@ const Courses: React.FC = () => {
                               {course.rating?.toFixed(1) ?? "0.0"}
                             </span>
                           </div>
-                        {/* </div> */}
                       </div>
 
                       <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
@@ -321,10 +316,13 @@ const Courses: React.FC = () => {
                         </span>
                         <Link
                           to={USER_ROUTES.COURSE_DETAIL(course._id)}
-                          className="group/btn relative inline-flex items-center justify-center py-2 px-6 text-sm font-semibold rounded-full overflow-hidden bg-green-500 text-black transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-green-500/20"
+                          className="group/btn relative inline-flex items-center justify-center py-2 px-6 text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 ring-1 bg-white/5 text-neutral-300 ring-white/10 hover:ring-green-500/30 hover:-translate-y-0.5"
                         >
-                          <span className="absolute inset-0 bg-white transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
-                          <span className="relative z-10">View Course</span>
+                          <span className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+                          <span className="relative z-10 flex items-center gap-2 transition-colors duration-500 group-hover/btn:text-black">
+                            <LibraryBig size={16} />
+                            View Course
+                          </span>
                         </Link>
                       </div>
                     </div>
