@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import UserContext from "../../context/UserContext";
-import { Mail, User, Phone, Camera } from "lucide-react";
+import { Mail, User, Phone, Camera, Save } from "lucide-react";
 import { errorToast } from "../../components/Toast";
 import { editProfileS } from "../../services/user.services";
 import ReportForm from "../../components/ReportForm";
@@ -254,18 +254,25 @@ const UserProfile = () => {
                   <button
                     onClick={handleSave}
                     disabled={isLoading || !isFormValid()}
-                    className={`group/btn relative flex-1 inline-flex items-center justify-center py-3 px-6 text-sm font-semibold rounded-full overflow-hidden transition-all duration-300
+                    className={`group/btn relative flex-1 inline-flex items-center justify-center py-3 px-6 text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 ring-1 cursor-pointer
                       ${
                         isLoading || !isFormValid()
-                          ? "bg-neutral-700 text-neutral-400 cursor-not-allowed shadow-none"
-                          : "bg-green-500 text-black hover:-translate-y-1 shadow-green-500/20"
+                          ? "bg-neutral-700 text-neutral-400 cursor-not-allowed ring-white/0"
+                          : "bg-white/5 text-neutral-300 ring-white/10 hover:ring-green-500/30 hover:-translate-y-0.5"
                       }`}
                   >
-                    {!isLoading && !isFormValid() ? null : (
-                      <span className="absolute inset-0 bg-black transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+                    {!isLoading && isFormValid() && (
+                      <span className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-600 ease-out"></span>
                     )}
-                    <span className={`relative z-10 transition-colors duration-500 ${isLoading || !isFormValid() ? "" : "group-hover/btn:text-green-500"}`}>
-                      {isLoading ? "Saving..." : "Save Changes"}
+                    <span className={`relative z-10 flex items-center gap-2 transition-colors duration-500 ${!isLoading && isFormValid() ? "group-hover/btn:text-black" : ""}`}>
+                      {isLoading ? (
+                        "Saving..."
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          Save Changes
+                        </>
+                      )}
                     </span>
                   </button>
                 </div>

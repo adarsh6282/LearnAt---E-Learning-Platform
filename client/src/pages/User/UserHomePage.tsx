@@ -100,7 +100,7 @@ const LandingPage = () => {
       <section id="features" className="py-16">
         <div className="max-w-6xl mx-auto px-5">
           <h2 className="font-ornate text-center text-5xl font-bold mb-12">
-            What We <span className="font-ornate text-5xl font-extrabold italic text-green-400">Thousands</span>
+            What We <span className="font-ornate text-5xl font-extrabold italic text-green-400">Offer</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8">
             {features.map((f, i) => (
