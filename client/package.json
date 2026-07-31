@@ -26,6 +26,7 @@
     "gsap": "^3.13.0",
     "html2canvas": "^1.4.1",
     "jwt-decode": "^4.0.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.510.0",
     "razorpay": "^2.9.6",
     "react": "^19.1.0",

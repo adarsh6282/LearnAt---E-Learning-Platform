@@ -75,6 +75,6 @@ export interface IAuthService {
   getCategory():Promise<string[]|null>
   purchasedCourses(userId:string,page:number,limit:number):Promise<{purchasedCourses:PurchasedCourse[],total:number,totalPages:number}>
   getQuiz(courseId:string):Promise<IQuiz|null>
-  submitQuiz(quizId:string,userId:string,courseId:string,answers:{[key:string]:string}):Promise<{ score: number; percentage: number; passed: boolean;isCertificateIssued: boolean; }>
+  submitQuiz(quizId:string,userId:string,courseId:string,answers:{[key:string]:string}):Promise<{ score: number; percentage: number; passed: boolean;isCertificateIssued: boolean;celebrate:boolean }>
   getCouponsForCourse(courseId:string):Promise<ICoupon[]|null>
 }

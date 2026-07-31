@@ -722,6 +722,7 @@ export class Authcontroller implements IAuthController {
         percentage: result.percentage,
         passed: result.passed,
         isCertificateIssued: result.isCertificateIssued,
+        celebrate:result.celebrate
       });
     } catch (err: unknown) {
       console.error(err);

@@ -807,6 +807,7 @@ export class AuthService implements IAuthService {
     percentage: number;
     passed: boolean;
     isCertificateIssued: boolean;
+    celebrate:boolean;
   }> {
     const quiz = await this._quizRepository.findQuizById(quizId);
     if (!quiz) throw new Error("Quiz not found");
@@ -844,7 +845,7 @@ export class AuthService implements IAuthService {
       isCertificateIssued
     );
 
-    return { score, percentage, passed, isCertificateIssued };
+    return { score, percentage, passed, isCertificateIssued,celebrate: isCertificateIssued };
   }
 
   async getCouponsForCourse(courseId: string): Promise<ICoupon[] | null> {
