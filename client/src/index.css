@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+.font-ornate {
+  font-family: "p22-morris-golden", serif;
+  font-weight: 400;
+}
+
+.font-description {
+  font-family: "alight-slab", serif;
+  font-weight: 600;
+}
+
+.font-subtext {
+  font-family: "alight-slab", serif;
+  font-weight: 600;
+}

@@ -41,7 +41,7 @@ export class CertificateRepository implements ICertificateReopsitory {
         }>("course", "title")
         .skip(skip)
         .limit(limit),
-      Certificate.countDocuments(),
+      Certificate.countDocuments({user:userId}),
     ]);
     const totalPages = Math.ceil(total / limit);
 

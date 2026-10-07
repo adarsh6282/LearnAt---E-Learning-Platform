@@ -32,7 +32,7 @@ interface Quiz {
 
 const UserQuizPage = () => {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
   const certificateRef = useRef<HTMLDivElement>(null);
@@ -42,9 +42,10 @@ const UserQuizPage = () => {
     percentage: number;
     passed: boolean;
     isCertificateIssued: boolean;
+    celebrate: boolean;
   } | null>(null);
+  
   const [showModal, setShowModal] = useState(false);
-
   const { courseId } = useParams<{ courseId: string }>();
 
   useEffect(() => {
@@ -86,10 +87,9 @@ const UserQuizPage = () => {
       const timer = setTimeout(() => {
         generateCertificate();
       }, 100);
-
       return () => clearTimeout(timer);
     }
-  }, [result,generateCertificate]);
+  }, [result, generateCertificate]);
 
   const handleSelect = (questionId: string, optionText: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionText }));
@@ -100,9 +100,9 @@ const UserQuizPage = () => {
 
     try {
       const res = await submitQuizS(quiz._id, courseId!, answers);
-      const { score, percentage, passed, isCertificateIssued } = res.data;
+      const { score, percentage, passed, isCertificateIssued, celebrate } = res.data;
 
-      setResult({ score, percentage, passed, isCertificateIssued });
+      setResult({ score, percentage, passed, isCertificateIssued, celebrate });
       setSubmitted(true);
       setShowModal(true);
     } catch (err) {
@@ -116,35 +116,44 @@ const UserQuizPage = () => {
 
   if (!quiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-xl font-semibold">Loading your quiz...</p>
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-400 text-xl font-semibold">Loading your quiz...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-fuchsia-500/10 backdrop-blur-sm border border-cyan-500/20 rounded-2xl p-8 mb-8 shadow-2xl">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden py-12 px-4">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "0.3cm 0.3cm",
+        }}
+      />
+
+      <div className="max-w-4xl mx-auto relative z-10 pt-24">
+        <div className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-3xl p-8 mb-8 shadow-xl">
           <div className="flex items-start gap-4">
-            <div className="bg-gradient-to-br from-cyan-500 to-purple-600 p-3 rounded-xl">
-              <BookOpen className="w-8 h-8 text-white" />
+            <div className="p-3 bg-green-500/10 ring-1 ring-green-500/20 rounded-xl text-green-400">
+              <BookOpen className="w-8 h-8" />
             </div>
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-3 bg-gradient-to-r from-cyan-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-extrabold text-white mb-3">
                 {quiz.title}
               </h1>
-              <p className="text-slate-300 text-lg leading-relaxed">{quiz.description}</p>
+              <p className="text-neutral-400 text-lg leading-relaxed">{quiz.description}</p>
               <div className="flex items-center gap-6 mt-4">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-neutral-400">
+                  <Clock className="w-4 h-4 text-green-400" />
                   <span className="text-sm">{totalQuestions} Questions</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-400">
-                  <Award className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-neutral-400">
+                  <Award className="w-4 h-4 text-green-400" />
                   <span className="text-sm">Pass: {quiz.passPercentage}%</span>
                 </div>
               </div>
@@ -153,16 +162,16 @@ const UserQuizPage = () => {
         </div>
 
         {!submitted && (
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 mb-8">
+          <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 mb-8">
             <div className="flex items-center justify-between mb-3">
               <span className="text-white font-semibold">Progress</span>
-              <span className="text-cyan-400 font-bold">
+              <span className="text-green-400 font-bold">
                 {answeredQuestions} / {totalQuestions}
               </span>
             </div>
-            <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-white/5 rounded-full h-2.5 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-fuchsia-500 transition-all duration-500 ease-out rounded-full"
+                className="h-full bg-green-500 transition-all duration-500 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -174,10 +183,10 @@ const UserQuizPage = () => {
             {quiz.questions.map((q, idx) => (
               <div
                 key={q._id}
-                className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-cyan-500/30 transition-all duration-300"
+                className="bg-white/[0.02] backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl hover:border-green-500/30 transition-all duration-300"
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="bg-gradient-to-br from-cyan-500 to-purple-600 text-white font-bold rounded-xl w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="bg-white/5 text-green-400 ring-1 ring-white/10 font-bold rounded-xl w-10 h-10 flex items-center justify-center flex-shrink-0">
                     {idx + 1}
                   </div>
                   <p className="text-white text-lg font-semibold leading-relaxed flex-1">
@@ -191,22 +200,22 @@ const UserQuizPage = () => {
                       <button
                         key={opt.text}
                         onClick={() => handleSelect(q._id, opt.text)}
-                        className={`text-left px-5 py-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] ${
+                        className={`text-left px-5 py-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.01] border ${
                           isSelected
-                            ? "bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-lg shadow-cyan-500/50"
-                            : "bg-slate-700/50 text-slate-300 hover:bg-slate-700 border border-slate-600/50"
+                            ? "bg-green-500 text-black border-transparent shadow-lg shadow-green-500/20"
+                            : "bg-white/5 text-neutral-300 hover:bg-white/10 border-white/10"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                               isSelected
-                                ? "border-white bg-white"
-                                : "border-slate-500"
+                                ? "border-black bg-black"
+                                : "border-neutral-500"
                             }`}
                           >
                             {isSelected && (
-                              <div className="w-3 h-3 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600"></div>
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
                             )}
                           </div>
                           <span>{opt.text}</span>
@@ -221,72 +230,88 @@ const UserQuizPage = () => {
             <button
               onClick={handleSubmit}
               disabled={answeredQuestions < totalQuestions}
-              className={`w-full py-4 rounded-xl font-bold text-white text-lg shadow-2xl transition-all duration-300 transform hover:scale-[1.02] ${
+              className={`group/btn relative w-full inline-flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg overflow-hidden transition-all duration-300 ring-1 ${
                 answeredQuestions < totalQuestions
-                  ? "bg-slate-700 cursor-not-allowed opacity-50"
-                  : "bg-gradient-to-r from-cyan-500 via-purple-500 to-fuchsia-500 hover:shadow-cyan-500/50"
+                  ? "bg-neutral-800 text-neutral-500 cursor-not-allowed ring-white/0"
+                  : "bg-green-500 text-black hover:ring-green-500/30 hover:-translate-y-0.5 shadow-lg shadow-green-500/20 ring-white/10"
               }`}
             >
-              {answeredQuestions < totalQuestions
-                ? `Answer ${totalQuestions - answeredQuestions} more question${
-                    totalQuestions - answeredQuestions > 1 ? "s" : ""
-                  }`
-                : "Submit Quiz"}
+              {answeredQuestions === totalQuestions && (
+                <span className="absolute inset-0 bg-black transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+              )}
+              <span className="relative z-10 flex items-center gap-2 transition-colors duration-500">
+                {answeredQuestions < totalQuestions
+                  ? `Answer ${totalQuestions - answeredQuestions} more question${
+                      totalQuestions - answeredQuestions > 1 ? "s" : ""
+                    }`
+                  : "Submit Quiz"}
+              </span>
             </button>
           </div>
         ) : null}
 
         {showModal && result && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl transform animate-in zoom-in duration-300">
-              <div className="mb-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl transform animate-in zoom-in duration-300 relative overflow-hidden">
+              <div className="absolute -top-20 -left-20 w-60 h-60 bg-green-500/10 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-green-500/10 rounded-full blur-3xl"></div>
+              
+              <div className="relative z-10">
+                <div className="mb-6">
+                  {result.passed ? (
+                    <div className="w-20 h-20 bg-green-500/10 ring-1 ring-green-500/20 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle className="w-12 h-12 text-green-400" />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-red-500/10 ring-1 ring-red-500/20 rounded-full flex items-center justify-center mx-auto">
+                      <XCircle className="w-12 h-12 text-red-400" />
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="text-3xl font-bold mb-4 text-white">
+                  {result.passed ? "Congratulations!" : "Good Attempt"}
+                </h3>
+
+                <div className="bg-black/40 rounded-xl p-6 mb-6 border border-white/5">
+                  <div className="text-5xl font-extrabold text-green-400 mb-2">
+                    {result.percentage}%
+                  </div>
+                  <p className="text-neutral-400">
+                    Score: {result.score} / {quiz.questions.length}
+                  </p>
+                </div>
+
                 {result.passed ? (
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-500/50">
-                    <CheckCircle className="w-12 h-12 text-white" />
+                  <div className="bg-green-500/[0.07] border border-green-500/20 rounded-xl p-4 mb-6">
+                    <p className="text-neutral-300 leading-relaxed">
+                      You passed the quiz! Check the <strong className="text-green-400">Certificates</strong> section in your profile to download your certificate.
+                    </p>
                   </div>
                 ) : (
-                  <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-rose-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-red-500/50">
-                    <XCircle className="w-12 h-12 text-white" />
+                  <div className="bg-red-500/[0.07] border border-red-500/20 rounded-xl p-4 mb-6">
+                    <p className="text-neutral-300 leading-relaxed">
+                      You need {quiz.passPercentage}% to pass. You can try again after 24 hours.
+                    </p>
                   </div>
                 )}
+
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    navigate(`/users/course-view/${courseId}`, { 
+                      state: { justCelebrated: result.celebrate } ,
+                      replace: true
+                    });
+                  }}
+                  className="group/btn relative w-full inline-flex items-center justify-center gap-2 py-3 px-6 text-base font-semibold rounded-full overflow-hidden transition-all duration-300 ring-1 bg-green-500 text-black hover:ring-green-500/30 hover:-translate-y-0.5 shadow-lg shadow-green-500/20"
+                >
+                  <span className="absolute inset-0 bg-black transform -translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500 ease-out"></span>
+                  <span className="relative z-10 flex items-center gap-2 transition-colors duration-500 group-hover/btn:text-green-500">
+                    Continue to Course
+                  </span>
+                </button>
               </div>
-
-              <h3 className="text-3xl font-bold mb-4 text-white">
-                {result.passed ? "Congratulations!" : "Good Attempt"}
-              </h3>
-
-              <div className="bg-slate-800/50 rounded-xl p-6 mb-6">
-                <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
-                  {result.percentage}%
-                </div>
-                <p className="text-slate-400">
-                  Score: {result.score} / {quiz.questions.length}
-                </p>
-              </div>
-
-              {result.passed ? (
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-4 mb-6">
-                  <p className="text-slate-300 leading-relaxed">
-                    You passed the quiz! Check the <strong className="text-cyan-400">Certificates</strong> section in your profile to download your certificate.
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-xl p-4 mb-6">
-                  <p className="text-slate-300 leading-relaxed">
-                    You need {quiz.passPercentage}% to pass. You can try again after 24 hours.
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={() => {
-                  setShowModal(false)
-                  navigate(`/users/courses/${courseId}`)
-                }}
-                className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
-              >
-                Close
-              </button>
             </div>
           </div>
         )}

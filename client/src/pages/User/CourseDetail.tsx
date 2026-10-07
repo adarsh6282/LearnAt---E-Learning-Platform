@@ -69,14 +69,14 @@ const CourseDetail: React.FC = () => {
 
   const toggleModule = (index: number) => {
     setOpenModules((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
 
   const toggleChapter = (moduleIndex: number, chapterIndex: number) => {
     const key = `${moduleIndex}-${chapterIndex}`;
     setOpenChapters((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     );
   };
 
@@ -117,7 +117,7 @@ const CourseDetail: React.FC = () => {
     try {
       const { data: order } = await CreateOrderS(
         courseId,
-        selectedCoupon?.code
+        selectedCoupon?.code,
       );
 
       const options = {
@@ -179,7 +179,7 @@ const CourseDetail: React.FC = () => {
     try {
       const { data: order } = await RetryPaymentS(
         orderId,
-        selectedCoupon?.code
+        selectedCoupon?.code,
       );
 
       const options = {
@@ -334,7 +334,7 @@ const CourseDetail: React.FC = () => {
         acc +
         (module.chapters?.reduce(
           (chapterAcc, chapter) => chapterAcc + (chapter.lessons?.length || 0),
-          0
+          0,
         ) || 0)
       );
     }, 0) ?? 0;
@@ -357,8 +357,12 @@ const CourseDetail: React.FC = () => {
 
   const firstLectureVideo =
     course?.modules?.[0]?.chapters?.[0]?.lessons?.find(
-      (lec) => lec.type === "video"
+      (lec) => lec.type === "video",
     )?.url || course?.modules?.[0]?.chapters?.[0]?.lessons?.[0]?.url;
+
+  const validCoupons = coupons.filter(
+    (c) => new Date(c.expiresAt) > new Date(),
+  );
 
   if (loading) {
     return (
@@ -484,7 +488,7 @@ const CourseDetail: React.FC = () => {
                       >
                         {tab.charAt(0).toUpperCase() + tab.slice(1)}
                       </button>
-                    )
+                    ),
                   )}
                 </nav>
               </div>
@@ -562,7 +566,7 @@ const CourseDetail: React.FC = () => {
                                     </p>
                                   </div>
                                   {openChapters.includes(
-                                    `${moduleIndex}-${chapterIndex}`
+                                    `${moduleIndex}-${chapterIndex}`,
                                   ) ? (
                                     <ChevronDown className="h-4 w-4 text-cyan-400 flex-shrink-0" />
                                   ) : (
@@ -572,7 +576,7 @@ const CourseDetail: React.FC = () => {
 
                                 {/* Lectures list */}
                                 {openChapters.includes(
-                                  `${moduleIndex}-${chapterIndex}`
+                                  `${moduleIndex}-${chapterIndex}`,
                                 ) && (
                                   <ul className="px-6 pb-4 space-y-2">
                                     {chapter.lessons.map((lecture) => (
@@ -747,7 +751,7 @@ const CourseDetail: React.FC = () => {
             </div>
           </div>
           <div className="lg:col-span-1">
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 sticky top-6">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow p-6 sticky top-15">
               <div className="text-center text-slate-100 mb-6">
                 <div className="text-3xl font-bold text-fuchsia-400 mb-2">
                   ₹{course.price}
@@ -820,37 +824,35 @@ const CourseDetail: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {coupons.length === 0 ? (
+                    {validCoupons.length === 0 ? (
                       <p className="text-slate-400 text-sm">
                         No coupons available.
                       </p>
                     ) : (
                       <div className="space-y-2">
-                        {coupons
-                          .filter((c) => new Date(c.expiresAt) > new Date())
-                          .map((c) => (
-                            <div
-                              key={c._id}
-                              className="flex justify-between items-center p-2 bg-slate-800 rounded-lg"
-                            >
-                              <div>
-                                <p className="text-cyan-300 font-semibold">
-                                  {c.code}
-                                </p>
-                                <p className="text-slate-400 text-xs">
-                                  {c.discount}% off · Expires:{" "}
-                                  {new Date(c.expiresAt).toDateString()}
-                                </p>
-                              </div>
-
-                              <button
-                                onClick={() => handleApplyCoupon(c)}
-                                className="bg-cyan-500 text-white px-3 py-1 rounded text-sm hover:bg-cyan-600"
-                              >
-                                Apply
-                              </button>
+                        {validCoupons.map((c) => (
+                          <div
+                            key={c._id}
+                            className="flex justify-between items-center p-2 bg-slate-800 rounded-lg"
+                          >
+                            <div>
+                              <p className="text-cyan-300 font-semibold">
+                                {c.code}
+                              </p>
+                              <p className="text-slate-400 text-xs">
+                                {c.discount}% off · Expires:{" "}
+                                {new Date(c.expiresAt).toDateString()}
+                              </p>
                             </div>
-                          ))}
+
+                            <button
+                              onClick={() => handleApplyCoupon(c)}
+                              className="bg-cyan-500 text-white px-3 py-1 rounded text-sm hover:bg-cyan-600"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   getProgressS,
   getSpecificCourseS,
@@ -7,6 +7,7 @@ import {
 } from "../../services/user.services";
 import type { CourseViewType, Lecture } from "../../types/user.types";
 import teacherGif from "../../assets/Teacher.gif";
+import celebrationAnimation from "../../assets/congratulations.json"; 
 import {
   BookOpen,
   CheckCircle,
@@ -23,9 +24,11 @@ import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import { createApi } from "../../services/newApiService";
+import Lottie from "lottie-react";
 
 const CoursePage = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const location = useLocation(); 
   const [course, setCourse] = useState<CourseViewType | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lecture | null>(null);
   const [liveSession, setLiveSession] = useState<{
@@ -36,6 +39,7 @@ const CoursePage = () => {
   const navigate = useNavigate();
   const [watchedLectures, setWatchedLectures] = useState<string[]>([]);
   const [isCertificateIssued, setIsCertificateIssued] = useState<boolean>(false);
+  const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [openModule, setOpenModule] = useState<number | null>(null);
   const [openChapter, setOpenChapter] = useState<string | null>(null);
 
@@ -56,11 +60,26 @@ const CoursePage = () => {
           ? progressRes.data.watchedLectures
           : []
       );
+
       setIsCertificateIssued(progressRes.data.isCertificateIssued || false);
     };
 
     fetchCourse();
   }, [courseId]);
+
+  useEffect(() => {
+    if (location.state?.justCelebrated) {
+      setShowCelebration(true);
+
+      const timer = setTimeout(() => {
+        setShowCelebration(false);
+      }, 4000);
+
+      window.history.replaceState({}, document.title);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const fetchLive = async () => {
@@ -85,9 +104,7 @@ const CoursePage = () => {
 
   if (!courseId) return null;
 
-  const handleTimeUpdate = async (
-    e: React.SyntheticEvent<HTMLVideoElement>
-  ) => {
+  const handleTimeUpdate = async (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
     const percent = (video.currentTime / video.duration) * 100;
 
@@ -106,60 +123,67 @@ const CoursePage = () => {
   };
 
   if (!course) {
-  return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white">
-      <img
-        src={teacherGif}
-        alt="Loading..."
-        className="w-64 h-64 object-contain"
-      />
-      <p className="mt-4 text-xl font-semibold text-gray-300">
-        Loading your course...
-      </p>
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+        <img
+          src={teacherGif}
+          alt="Loading..."
+          className="w-64 h-64 object-contain"
+        />
+        <p className="mt-4 text-xl font-semibold text-neutral-400">
+          Loading your course...
+        </p>
+      </div>
+    );
+  }
 
-    </div>
-  );
-}
-
-  const allLessons = course.modules?.flatMap((m) => 
-    m.chapters.flatMap((c) => c.lessons)
-  ) || [];
+  const allLessons =
+    course.modules?.flatMap((m) => m.chapters.flatMap((c) => c.lessons)) || [];
   const progressPercent = Math.floor(
     (watchedLectures.length / (allLessons.length || 1)) * 100
   );
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-slate-100 relative overflow-hidden">
+    <div className="min-h-full bg-black text-white relative overflow-hidden">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "0.3cm 0.3cm",
+        }}
+      />
+
       <Navbar />
 
-      <div className="flex h-[calc(100vh-5rem)]">
-        <aside className="w-96 bg-slate-900/50 backdrop-blur-xl border-r border-white/10 overflow-y-auto shadow-2xl">
-          <div className="p-6 border-b border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/80 sticky top-0 z-20 backdrop-blur-xl">
+      <div className="flex h-[calc(100vh-5rem)] relative z-10">
+        <aside className="w-96 bg-white/[0.02] backdrop-blur-xl border-r border-white/10 overflow-y-auto shadow-2xl">
+          <div className="p-6 border-b border-white/10 bg-black/30 sticky top-0 z-20 backdrop-blur-xl">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg">
-                <BookOpen className="w-6 h-6 text-white" />
+              <div className="p-2 bg-green-500/10 ring-1 ring-green-500/20 rounded-lg text-green-400">
+                <BookOpen className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold text-white">
                 {course.title}
               </h2>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl p-4 border border-white/10 shadow-lg">
+            <div className="bg-black/40 rounded-xl p-4 border border-white/5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-300">
+                <span className="text-sm font-medium text-neutral-300">
                   Overall Progress
                 </span>
-                <span className="text-lg font-bold text-cyan-400">
+                <span className="text-lg font-bold text-green-400">
                   {progressPercent}%
                 </span>
               </div>
-              <div className="w-full bg-slate-700/50 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 transition-all duration-500 ease-out rounded-full"
+                  className="h-full bg-green-500 transition-all duration-500 ease-out rounded-full"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
+              <div className="flex items-center justify-between mt-3 text-xs text-neutral-400">
                 <span className="flex items-center">
                   <CheckCircle className="w-3.5 h-3.5 mr-1 text-green-400" />
                   {watchedLectures.length} of {allLessons.length} completed
@@ -172,44 +196,42 @@ const CoursePage = () => {
             {course.modules?.map((module, moduleIndex) => (
               <div
                 key={module._id}
-                className="bg-slate-800/60 backdrop-blur-sm border border-white/20 rounded-xl overflow-hidden hover:border-cyan-500/40 transition-all duration-300"
+                className="bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-green-500/30 transition-all duration-300"
               >
                 <button
                   onClick={() =>
-                    setOpenModule(
-                      openModule === moduleIndex ? null : moduleIndex
-                    )
+                    setOpenModule(openModule === moduleIndex ? null : moduleIndex)
                   }
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-700/40 transition-colors duration-200"
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors duration-200"
                 >
                   <div className="flex items-center space-x-3 flex-1">
-                    <div className="flex-shrink-0 w-9 h-9 bg-gradient-to-br from-fuchsia-500 to-purple-600 rounded-lg flex items-center justify-center">
-                      <Layers className="w-5 h-5 text-white" />
+                    <div className="flex-shrink-0 w-9 h-9 bg-white/5 text-green-400 rounded-lg flex items-center justify-center ring-1 ring-white/10">
+                      <Layers className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
                       <span className="font-bold text-gray-100 block">
                         Module {moduleIndex + 1}: {module.title}
                       </span>
                       {module.description && (
-                        <span className="text-xs text-gray-400 line-clamp-1">
+                        <span className="text-xs text-neutral-400 line-clamp-1">
                           {module.description}
                         </span>
                       )}
                     </div>
                   </div>
                   {openModule === moduleIndex ? (
-                    <ChevronDown className="w-5 h-5 text-cyan-400 flex-shrink-0 ml-2" />
+                    <ChevronDown className="w-5 h-5 text-green-400 flex-shrink-0 ml-2" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" />
+                    <ChevronRight className="w-5 h-5 text-neutral-400 flex-shrink-0 ml-2" />
                   )}
                 </button>
 
                 {openModule === moduleIndex && (
-                  <div className="px-3 pb-3 space-y-2 bg-slate-900/40">
+                  <div className="px-3 pb-3 space-y-2 bg-black/20">
                     {module.chapters.map((chapter, chapterIndex) => (
                       <div
                         key={chapter._id}
-                        className="bg-slate-800/40 backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden"
+                        className="bg-white/[0.02] border border-white/5 rounded-lg overflow-hidden"
                       >
                         <button
                           onClick={() =>
@@ -217,10 +239,10 @@ const CoursePage = () => {
                               openChapter === chapter._id ? null : chapter._id
                             )
                           }
-                          className="w-full flex items-center justify-between p-3 text-left hover:bg-slate-700/30 transition-colors duration-200"
+                          className="w-full flex items-center justify-between p-3 text-left hover:bg-white/5 transition-colors duration-200"
                         >
                           <div className="flex items-center space-x-3 flex-1">
-                            <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">
+                            <div className="flex-shrink-0 w-7 h-7 bg-green-500/10 text-green-400 rounded-lg flex items-center justify-center text-xs font-bold ring-1 ring-green-500/20">
                               {chapterIndex + 1}
                             </div>
                             <span className="font-semibold text-sm text-gray-200 line-clamp-1">
@@ -228,14 +250,14 @@ const CoursePage = () => {
                             </span>
                           </div>
                           {openChapter === chapter._id ? (
-                            <ChevronDown className="w-4 h-4 text-cyan-400 flex-shrink-0 ml-2" />
+                            <ChevronDown className="w-4 h-4 text-green-400 flex-shrink-0 ml-2" />
                           ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                            <ChevronRight className="w-4 h-4 text-neutral-400 flex-shrink-0 ml-2" />
                           )}
                         </button>
 
                         {openChapter === chapter._id && (
-                          <div className="px-2 pb-2 space-y-1 bg-slate-900/30">
+                          <div className="px-2 pb-2 space-y-1 bg-black/30">
                             {chapter.lessons.map((lesson, lessonIndex) => {
                               const isCompleted = watchedLectures.includes(lesson._id);
                               const isActive = selectedLesson?._id === lesson._id;
@@ -246,16 +268,16 @@ const CoursePage = () => {
                                   onClick={() => setSelectedLesson(lesson)}
                                   className={`group relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-300 ${
                                     isActive
-                                      ? "bg-gradient-to-r from-cyan-600/90 to-indigo-600/90 shadow-lg shadow-cyan-500/20 scale-[1.02]"
-                                      : "hover:bg-slate-700/50 hover:translate-x-1"
+                                      ? "bg-green-500 text-black shadow-lg shadow-green-500/20 scale-[1.02]"
+                                      : "hover:bg-white/5 hover:translate-x-1 text-neutral-300"
                                   }`}
                                 >
                                   <div className="flex items-center space-x-3 flex-1 min-w-0">
                                     <span
                                       className={`flex-shrink-0 text-xs font-bold px-2 py-1 rounded ${
                                         isActive
-                                          ? "bg-white/20 text-white"
-                                          : "bg-slate-700/50 text-gray-400"
+                                          ? "bg-black/20 text-black"
+                                          : "bg-white/5 text-neutral-400"
                                       }`}
                                     >
                                       {lessonIndex + 1}
@@ -263,7 +285,7 @@ const CoursePage = () => {
                                     <div className="flex-1 min-w-0">
                                       <p
                                         className={`text-sm font-medium line-clamp-1 ${
-                                          isActive ? "text-white" : "text-gray-300"
+                                          isActive ? "text-black" : "text-gray-300"
                                         }`}
                                       >
                                         {lesson.title}
@@ -271,7 +293,7 @@ const CoursePage = () => {
                                       {lesson.duration && (
                                         <p
                                           className={`text-xs mt-0.5 flex items-center ${
-                                            isActive ? "text-cyan-100" : "text-gray-500"
+                                            isActive ? "text-black/70" : "text-neutral-500"
                                           }`}
                                         >
                                           <Clock className="w-3 h-3 mr-1" />
@@ -285,14 +307,14 @@ const CoursePage = () => {
                                     {lesson.type === "pdf" && (
                                       <FileText
                                         className={`w-4 h-4 ${
-                                          isActive ? "text-white" : "text-indigo-400"
+                                          isActive ? "text-black" : "text-green-400"
                                         }`}
                                       />
                                     )}
                                     {isCompleted && (
                                       <CheckCircle
                                         className={`w-5 h-5 ${
-                                          isActive ? "text-white" : "text-green-400"
+                                          isActive ? "text-black" : "text-green-400"
                                         }`}
                                       />
                                     )}
@@ -324,11 +346,11 @@ const CoursePage = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-4xl font-bold mb-3 bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+                  <h3 className="text-4xl font-extrabold mb-3 text-white">
                     {selectedLesson?.title || "Select a lesson to begin"}
                   </h3>
                   {selectedLesson?.duration && (
-                    <div className="flex items-center space-x-4 text-gray-400">
+                    <div className="flex items-center space-x-4 text-neutral-400">
                       <span className="flex items-center text-sm">
                         <Clock className="w-4 h-4 mr-1.5" />
                         Duration: {selectedLesson.duration}
@@ -368,7 +390,7 @@ const CoursePage = () => {
             </div>
 
             <div className="mb-8">
-              <div className="w-full aspect-video bg-slate-900 rounded-2xl overflow-hidden border border-white/20 shadow-2xl">
+              <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
                 {selectedLesson ? (
                   selectedLesson.type === "video" && selectedLesson.url ? (
                     <video
@@ -408,8 +430,8 @@ const CoursePage = () => {
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
-                        <FileText className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                        <p className="text-gray-400 text-lg">
+                        <FileText className="w-16 h-16 mx-auto mb-4 text-neutral-600" />
+                        <p className="text-neutral-400 text-lg">
                           Content not available
                         </p>
                       </div>
@@ -418,8 +440,8 @@ const CoursePage = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
-                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                      <p className="text-gray-400 text-lg">
+                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-neutral-600" />
+                      <p className="text-neutral-400 text-lg">
                         Select a lesson to begin learning
                       </p>
                     </div>
@@ -428,49 +450,47 @@ const CoursePage = () => {
               </div>
             </div>
 
-            <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl border border-white/10 shadow-xl">
+            <div className="bg-white/[0.02] backdrop-blur-xl p-8 rounded-2xl border border-white/10 shadow-xl">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-1 h-6 bg-gradient-to-b from-cyan-500 to-indigo-600 rounded-full"></div>
-                <h4 className="text-xl font-bold text-gray-200">
+                <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                <h4 className="text-xl font-bold text-white">
                   Lesson Overview
                 </h4>
               </div>
-              <p className="text-gray-300 leading-relaxed text-base">
+              <p className="text-neutral-300 leading-relaxed text-base">
                 {selectedLesson?.description ||
                   "No description provided for this lesson."}
               </p>
 
               {progressPercent === 100 && (
                 <div className="mt-8">
-                  <div className="bg-gradient-to-br from-green-900/40 to-cyan-900/40 backdrop-blur-xl p-6 rounded-2xl border border-green-400/30">
+                  <div className="bg-green-500/[0.07] backdrop-blur-xl p-6 rounded-2xl border border-green-500/20">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
-                      <div className="flex-shrink-0 p-3 bg-gradient-to-br from-green-500 to-cyan-500 rounded-xl">
-                        <Award className="w-8 h-8 text-white" />
+                      <div className="flex-shrink-0 p-3 bg-green-500/10 ring-1 ring-green-500/20 rounded-xl">
+                        <Award className="w-8 h-8 text-green-400" />
                       </div>
                       <div className="flex-1">
                         <h5 className="text-xl font-bold text-green-400 mb-2">
                           Congratulations! You completed this course!
                         </h5>
-                        <p className="text-gray-200 text-base leading-relaxed mb-4">
+                        <p className="text-neutral-300 text-base leading-relaxed mb-4">
                           You've finished all lessons. Take the quiz below to
                           earn your certificate.
                         </p>
 
                         {!isCertificateIssued ? (
                           <button
-                            onClick={() =>
-                              navigate(`/users/quiz/${course._id}`)
-                            }
-                            className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 hover:scale-105 transition-transform duration-300 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-cyan-500/30"
+                            onClick={() => navigate(`/users/quiz/${course._id}`)}
+                            className="group/btn relative inline-flex items-center justify-center gap-2 py-2.5 px-6 text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 ring-1 bg-green-500 text-black hover:ring-green-500/30 hover:-translate-y-0.5 shadow-lg shadow-green-500/20"
                           >
                             Take Quiz
                           </button>
                         ) : (
-                          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-2xl shadow-lg shadow-yellow-500/30 text-center">
-                            🎉 You've earned your certificate!
+                          <div className="text-neutral-300 text-base">
+                            🎉 You've earned your certificate! 
                             <button
                               onClick={() => navigate("/users/profile")}
-                              className="ml-2 underline font-bold"
+                              className="ml-2 text-green-400 underline font-bold hover:text-green-300"
                             >
                               Claim it on your Profile
                             </button>
@@ -485,8 +505,19 @@ const CoursePage = () => {
           </div>
         </main>
       </div>
+
+      {showCelebration && (
+        <div className="fixed inset-0 z-[1000] w-screen h-screen pointer-events-none bg-black/70 backdrop-blur-sm flex items-center justify-center">
+          <Lottie 
+            animationData={celebrationAnimation} 
+            loop={true} 
+            autoplay={true}
+            className="w-full h-full object-contain"
+          />
+        </div>
+      )}
     </div>
   );
 };
 
-export default CoursePage
+export default CoursePage;
