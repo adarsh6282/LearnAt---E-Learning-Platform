@@ -27,7 +27,7 @@ import messageRoutes from "./routes/message.routes";
 Database();
 
 const allowedOrigins=[
-    'https://learnat.vercel.app',
+    'https://learnat.site',
     'http://localhost:5173'
 ]
 
